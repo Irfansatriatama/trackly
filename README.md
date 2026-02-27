@@ -33,7 +33,7 @@
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
 | **Current Version** | `v0.2.0-alpha` |
-| **Current Phase** | Phase 2 — Layout Shell & Navigation |
+| **Current Phase** | Phase 3 — Authentication & User Session |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -582,14 +582,14 @@ Tasks:
 **Deliverable**: Full app layout visible in browser — sidebar, topbar, and content area switching between empty pages via URL hash
 
 Tasks:
-- Create `css/layout.css` — define sidebar, topbar, and main content grid
-- Build sidebar component (`js/components/sidebar.js`) — nav links with Lucide icons and labels, collapsible toggle, active state highlight
-- Build topbar component (`js/components/topbar.js`) — logo slot, page title slot, user avatar dropdown placeholder
-- Implement hash-based router in `js/core/router.js` — map all routes from section 4 to page render functions
-- Create empty page shell render function for every route (renders just a heading with the page name)
-- Wire sidebar nav links to router — clicking a link updates the hash and renders the correct page shell
-- Add `css/components.css` with base button, badge, and card styles
-- Test all routes navigate correctly without page reload
+- [x] Create `css/layout.css` — define sidebar, topbar, and main content grid
+- [x] Build sidebar component (`js/components/sidebar.js`) — nav links with Lucide icons and labels, collapsible toggle, active state highlight
+- [x] Build topbar component (`js/components/topbar.js`) — logo slot, page title slot, user avatar dropdown placeholder
+- [x] Implement hash-based router in `js/core/router.js` — map all routes from section 4 to page render functions
+- [x] Create empty page shell render function for every route (renders just a heading with the page name)
+- [x] Wire sidebar nav links to router — clicking a link updates the hash and renders the correct page shell
+- [x] Add `css/components.css` with base button, badge, and card styles
+- [x] Test all routes navigate correctly without page reload
 
 ---
 
@@ -845,14 +845,14 @@ Tasks:
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  Current Version   : v0.2.0-alpha                               ║
-║  Current Phase     : Phase 2 — Layout Shell & Navigation        ║
+║  Current Phase     : Phase 3 — Authentication & User Session    ║
 ║  Phase Status      : NOT STARTED                                ║
-║  Next Phase        : Phase 3 — Authentication & User Session    ║
+║  Next Phase        : Phase 4 — First-Run Wizard & PWA Foundation║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
 ║  [x] Phase 1  — Project Scaffolding & Structure    v0.1.0      ║
-║  [ ] Phase 2  — Layout Shell & Navigation          v0.2.0      ║
+║  [x] Phase 2  — Layout Shell & Navigation          v0.2.0      ║
 ║  [ ] Phase 3  — Authentication & User Session      v0.3.0      ║
 ║  [ ] Phase 4  — First-Run Wizard & PWA Foundation  v0.4.0      ║
 ║  [ ] Phase 5  — Member Management                  v0.5.0      ║
@@ -872,7 +872,7 @@ Tasks:
 ║  CHANGE LOG                                                     ║
 ║                                                                 ║
 ║  v0.1.0  [2026-02-27]  Initial scaffold & design system       ║
-║  v0.2.0  [PENDING]  Layout shell & navigation                   ║
+║  v0.2.0  [2026-02-28]  Layout shell, sidebar, topbar, router  ║
 ╚══════════════════════════════════════════════════════════════════╝
 ```
 
@@ -1175,4 +1175,4 @@ When given a `.zip` from a previous phase and asked to continue to the next phas
 ---
 
 *TRACKLY — Track Everything, Deliver Anything*  
-*v0.1.0-alpha | Phase 1 of 17 | Internal IT Consultant PMIS*
+*v0.2.0-alpha | Phase 3 of 17 | Internal IT Consultant PMIS*

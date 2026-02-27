@@ -5,10 +5,12 @@
  */
 
 import { initRouter, registerRoute, setNotFound, navigate } from './core/router.js';
-import { isAuthenticated } from './core/auth.js';
+import { isAuthenticated, clearSession } from './core/auth.js';
 import { openDB } from './core/db.js';
 import { appStore } from './core/store.js';
 import { debug } from './core/utils.js';
+import { initSidebar } from './components/sidebar.js';
+import { initTopbar } from './components/topbar.js';
 
 // ============================================================
 // SERVICE WORKER REGISTRATION
@@ -266,7 +268,7 @@ function renderLogin() {
 }
 
 // ============================================================
-// APP SHELL (Phase 1 — renders layout with placeholder content)
+// APP SHELL (Phase 2 — renders layout, mounts sidebar & topbar components)
 // ============================================================
 
 function renderAppShell() {
@@ -275,76 +277,8 @@ function renderAppShell() {
 
   app.innerHTML = `
     <div class="app-shell" id="appShell">
-      <!-- Sidebar -->
-      <aside class="sidebar" id="sidebar">
-        <div class="sidebar__header">
-          <div class="sidebar__logo">
-            <img src="assets/logo.svg" alt="TRACKLY" width="28" height="28" />
-            <span class="sidebar__logo-text">TRACKLY</span>
-          </div>
-          <button class="btn btn--ghost btn--icon" id="sidebarToggle" title="Toggle sidebar">
-            <i data-lucide="panel-left-close"></i>
-          </button>
-        </div>
-
-        <nav class="sidebar__nav" aria-label="Main navigation">
-          <div class="sidebar-nav-section">
-            <a href="#/dashboard" class="sidebar-nav-item" data-route="/dashboard">
-              <i data-lucide="layout-dashboard" class="sidebar-nav-item__icon"></i>
-              <span class="sidebar-nav-item__label">Dashboard</span>
-            </a>
-            <a href="#/projects" class="sidebar-nav-item" data-route="/projects">
-              <i data-lucide="folder-kanban" class="sidebar-nav-item__icon"></i>
-              <span class="sidebar-nav-item__label">Projects</span>
-            </a>
-          </div>
-
-          <div class="sidebar-nav-section">
-            <div class="sidebar-nav-label">Management</div>
-            <a href="#/clients" class="sidebar-nav-item" data-route="/clients">
-              <i data-lucide="building-2" class="sidebar-nav-item__icon"></i>
-              <span class="sidebar-nav-item__label">Clients</span>
-            </a>
-            <a href="#/members" class="sidebar-nav-item" data-route="/members">
-              <i data-lucide="users" class="sidebar-nav-item__icon"></i>
-              <span class="sidebar-nav-item__label">Members</span>
-            </a>
-            <a href="#/assets" class="sidebar-nav-item" data-route="/assets">
-              <i data-lucide="package" class="sidebar-nav-item__icon"></i>
-              <span class="sidebar-nav-item__label">Assets</span>
-            </a>
-          </div>
-
-          <div class="sidebar-nav-section">
-            <div class="sidebar-nav-label">System</div>
-            <a href="#/settings" class="sidebar-nav-item" data-route="/settings">
-              <i data-lucide="settings" class="sidebar-nav-item__icon"></i>
-              <span class="sidebar-nav-item__label">Settings</span>
-            </a>
-          </div>
-        </nav>
-
-        <div class="sidebar__footer">
-          <button class="sidebar-nav-item" id="logoutBtn" style="width: 100%;">
-            <i data-lucide="log-out" class="sidebar-nav-item__icon"></i>
-            <span class="sidebar-nav-item__label">Sign Out</span>
-          </button>
-        </div>
-      </aside>
-
-      <!-- Topbar -->
-      <header class="topbar" id="topbar">
-        <div class="topbar__left">
-          <span class="topbar__title" id="topbarTitle">TRACKLY</span>
-        </div>
-        <div class="topbar__right">
-          <div class="avatar avatar--md" title="Current User">
-            <span>AU</span>
-          </div>
-        </div>
-      </header>
-
-      <!-- Main content -->
+      <aside class="sidebar" id="sidebar" role="complementary" aria-label="Main sidebar"></aside>
+      <header class="topbar" id="topbar" role="banner"></header>
       <main class="main-content" id="main-content" role="main">
         <div class="app-loading">
           <div class="app-loading__spinner"></div>
@@ -360,31 +294,16 @@ function renderAppShell() {
 // ============================================================
 
 function initSidebarToggle() {
-  const toggle = document.getElementById('sidebarToggle');
-  const shell = document.getElementById('appShell');
-  if (!toggle || !shell) return;
-
-  const collapsed = localStorage.getItem('trackly_sidebar_collapsed') === 'true';
-  if (collapsed) shell.classList.add('is-sidebar-collapsed');
-
-  toggle.addEventListener('click', () => {
-    shell.classList.toggle('is-sidebar-collapsed');
-    const isCollapsed = shell.classList.contains('is-sidebar-collapsed');
-    localStorage.setItem('trackly_sidebar_collapsed', isCollapsed);
-    appStore.set('sidebarCollapsed', isCollapsed);
-  });
+  // Toggle is now handled by initSidebar() in sidebar.js
 }
 
 // ============================================================
-// ACTIVE NAV STATE
+// ACTIVE NAV STATE (delegated to sidebar component)
 // ============================================================
 
 function updateActiveNav() {
-  const path = window.location.hash.replace(/^#/, '');
-  document.querySelectorAll('.sidebar-nav-item[data-route]').forEach((item) => {
-    const route = item.getAttribute('data-route');
-    item.classList.toggle('is-active', path.startsWith(route));
-  });
+  // Active state is managed by sidebar.js via hashchange listener.
+  // This function is kept for compatibility with the bootstrap sequence.
 }
 
 // ============================================================
@@ -414,9 +333,22 @@ async function bootstrap() {
     return;
   }
 
-  // Render app shell for authenticated users
+  // Render app shell skeleton
   renderAppShell();
-  initSidebarToggle();
+
+  // Mount sidebar and topbar components
+  const handleLogout = () => {
+    clearSession();
+    navigate('/login');
+    // Re-bootstrap to show login page
+    const app = document.getElementById('app');
+    if (app) app.innerHTML = '';
+    renderLogin();
+  };
+
+  initSidebar(document.getElementById('sidebar'), handleLogout);
+  initTopbar(document.getElementById('topbar'), null, handleLogout);
+
   initIcons();
 
   // Register all routes
