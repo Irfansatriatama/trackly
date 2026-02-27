@@ -1011,3 +1011,272 @@
   text-decoration: none;
   color: inherit;
 }
+
+/* ============================================================
+   FIRST-RUN WIZARD — Phase 4
+   ============================================================ */
+
+.wizard-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-surface) 0%, #EFF6FF 100%);
+  padding: 24px;
+}
+
+.wizard-card {
+  width: 100%;
+  max-width: 520px;
+  animation: pageEnter 0.3s ease-out;
+}
+
+.wizard-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.wizard-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.wizard-logo__img {
+  width: 56px;
+  height: 56px;
+}
+
+.wizard-logo__name {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+/* Step indicator */
+.wizard-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 32px;
+}
+
+.wizard-step {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.wizard-step__dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  border: 2px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-text-muted);
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.wizard-step__dot.is-active {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
+
+.wizard-step__dot.is-done {
+  border-color: var(--color-success);
+  background: var(--color-success);
+  color: #fff;
+}
+
+.wizard-step__line {
+  width: 64px;
+  height: 2px;
+  background: var(--color-border);
+  transition: background 0.2s ease;
+}
+
+.wizard-step__line.is-done {
+  background: var(--color-success);
+}
+
+/* Wizard pane (individual steps) */
+.wizard-pane {
+  display: none;
+}
+.wizard-pane.is-active {
+  display: block;
+  animation: pageEnter 0.25s ease-out;
+}
+
+.wizard-pane__title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 8px;
+}
+
+.wizard-pane__subtitle {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin: 0 0 28px;
+  line-height: 1.6;
+}
+
+.wizard-pane__features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wizard-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.wizard-feature__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: #EFF6FF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.wizard-feature__icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.wizard-feature__text strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 2px;
+}
+
+.wizard-feature__text span {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* Success step */
+.wizard-success {
+  text-align: center;
+  padding: 16px 0;
+}
+
+.wizard-success__icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #DCFCE7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  color: var(--color-success);
+}
+
+.wizard-success__icon svg {
+  width: 36px;
+  height: 36px;
+}
+
+.wizard-success__title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 8px;
+}
+
+.wizard-success__text {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin: 0 0 28px;
+  line-height: 1.6;
+}
+
+.wizard-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* PWA Install Banner */
+.pwa-install-banner {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-modal);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 440px;
+  width: calc(100% - 48px);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateX(-50%) translateY(24px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);   opacity: 1; }
+}
+
+.pwa-install-banner__icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.pwa-install-banner__text {
+  flex: 1;
+}
+
+.pwa-install-banner__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 2px;
+}
+
+.pwa-install-banner__sub {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.pwa-install-banner__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}

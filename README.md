@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v0.3.0-alpha` |
-| **Current Phase** | Phase 4 — First-Run Wizard & PWA Foundation |
+| **Current Version** | `v0.4.0-alpha` |
+| **Current Phase** | Phase 5 — Member Management |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -613,13 +613,13 @@ Tasks:
 **Deliverable**: App detects no users → shows setup wizard; app is installable as PWA and works offline after first load
 
 Tasks:
-- First-run detection: on app start, if IndexedDB `users` store is empty, redirect to `#/setup` instead of `#/login`
-- Build first-run wizard page: step 1 — welcome screen; step 2 — create Admin account form (full name, username, email, password, confirm password); step 3 — success + "Go to Dashboard" button
-- Seed the first Admin user into IndexedDB on wizard completion
-- Implement `sw.js` — cache-first service worker that caches all static assets (`index.html`, all CSS, all JS, fonts, icons) on install
-- Register service worker in `index.html`
-- Add PWA install prompt logic — detect `beforeinstallprompt` event, show a dismissible banner with "Install App" button
-- Test: disconnect internet → reload page → app still works fully
+- [x] First-run detection: on app start, if IndexedDB `users` store is empty, redirect to `#/setup` instead of `#/login`
+- [x] Build first-run wizard page: step 1 — welcome screen; step 2 — create Admin account form (full name, username, email, password, confirm password); step 3 — success + "Go to Dashboard" button
+- [x] Seed the first Admin user into IndexedDB on wizard completion
+- [x] Implement `sw.js` — cache-first service worker that caches all static assets (`index.html`, all CSS, all JS, fonts, icons) on install
+- [x] Register service worker in `index.html`
+- [x] Add PWA install prompt logic — detect `beforeinstallprompt` event, show a dismissible banner with "Install App" button
+- [x] Test: disconnect internet → reload page → app still works fully
 
 ---
 
@@ -844,17 +844,17 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v0.3.0-alpha                               ║
-║  Current Phase     : Phase 4 — First-Run Wizard & PWA Foundation║
+║  Current Version   : v0.4.0-alpha                               ║
+║  Current Phase     : Phase 5 — Member Management                ║
 ║  Phase Status      : NOT STARTED                                ║
-║  Next Phase        : Phase 5 — Member Management                ║
+║  Next Phase        : Phase 6 — Client Management                ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
 ║  [x] Phase 1  — Project Scaffolding & Structure    v0.1.0      ║
 ║  [x] Phase 2  — Layout Shell & Navigation          v0.2.0      ║
 ║  [x] Phase 3  — Authentication & User Session      v0.3.0      ║
-║  [ ] Phase 4  — First-Run Wizard & PWA Foundation  v0.4.0      ║
+║  [x] Phase 4  — First-Run Wizard & PWA Foundation  v0.4.0      ║
 ║  [ ] Phase 5  — Member Management                  v0.5.0      ║
 ║  [ ] Phase 6  — Client Management                  v0.6.0      ║
 ║  [ ] Phase 7  — Project Management Core            v0.7.0      ║
@@ -876,6 +876,8 @@ Tasks:
 ║  v0.3.0  [2026-02-28]  Auth & session: login UI, IndexedDB,   ║
 ║                         SHA-256 hashing, route guards, role-   ║
 ║                         based redirect, remember me, logout     ║
+║  v0.4.0  [2026-02-28]  First-run wizard (3-step), Admin seed, ║
+║                         full SW cache, PWA install banner       ║
 ╚══════════════════════════════════════════════════════════════════╝
 ```
 
@@ -1178,4 +1180,4 @@ When given a `.zip` from a previous phase and asked to continue to the next phas
 ---
 
 *TRACKLY — Track Everything, Deliver Anything*  
-*v0.2.0-alpha | Phase 3 of 17 | Internal IT Consultant PMIS*
+*v0.4.0-alpha | Phase 4 of 17 complete | Internal IT Consultant PMIS*

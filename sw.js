@@ -1,9 +1,10 @@
 /**
  * TRACKLY — Service Worker
- * Phase 1 skeleton — full offline cache strategy implemented in Phase 4
+ * Phase 4: Full offline cache strategy.
+ * Cache-first for all static assets; network-first for external resources.
  */
 
-const CACHE_NAME = 'trackly-v0.1.0';
+const CACHE_NAME = 'trackly-v0.4.0';
 
 const STATIC_ASSETS = [
   './',
@@ -24,7 +25,28 @@ const STATIC_ASSETS = [
   './js/core/auth.js',
   './js/core/store.js',
   './js/core/utils.js',
+  './js/components/sidebar.js',
+  './js/components/topbar.js',
+  './js/components/modal.js',
+  './js/components/toast.js',
+  './js/components/avatar.js',
+  './js/components/badge.js',
+  './js/components/confirm.js',
+  './js/modules/dashboard.js',
+  './js/modules/projects.js',
+  './js/modules/board.js',
+  './js/modules/backlog.js',
+  './js/modules/sprint.js',
+  './js/modules/gantt.js',
+  './js/modules/maintenance.js',
+  './js/modules/assets.js',
+  './js/modules/clients.js',
+  './js/modules/members.js',
+  './js/modules/reports.js',
+  './js/modules/settings.js',
   './assets/logo.svg',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png',
 ];
 
 // Install: cache all static assets
