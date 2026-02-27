@@ -1,0 +1,206 @@
+/**
+ * TRACKLY — layout.css
+ * Sidebar, Topbar, Main Content Grid
+ * Full implementation in Phase 2. Phase 1 contains layout shell only.
+ */
+
+/* ============================================================
+   APP SHELL GRID
+   ============================================================ */
+.app-shell {
+  display: grid;
+  grid-template-areas:
+    "sidebar topbar"
+    "sidebar main";
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-rows: var(--topbar-height) 1fr;
+  min-height: 100vh;
+  transition: grid-template-columns var(--transition-normal);
+}
+
+.app-shell.is-sidebar-collapsed {
+  grid-template-columns: var(--sidebar-width-collapsed) 1fr;
+}
+
+/* ============================================================
+   TOPBAR
+   ============================================================ */
+.topbar {
+  grid-area: topbar;
+  position: sticky;
+  top: 0;
+  z-index: var(--z-topbar);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--topbar-height);
+  padding: 0 var(--space-6);
+  background: var(--color-card);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.topbar__left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.topbar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.topbar__title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sidebar {
+  grid-area: sidebar;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: var(--z-sidebar);
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-width);
+  background: var(--color-card);
+  border-right: 1px solid var(--color-border);
+  overflow: hidden;
+  transition: width var(--transition-normal);
+}
+
+.is-sidebar-collapsed .sidebar {
+  width: var(--sidebar-width-collapsed);
+}
+
+.sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--topbar-height);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.sidebar__logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  overflow: hidden;
+}
+
+.sidebar__logo-text {
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
+  color: var(--color-primary);
+  white-space: nowrap;
+  transition: opacity var(--transition-normal);
+}
+
+.is-sidebar-collapsed .sidebar__logo-text {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar__nav {
+  flex: 1;
+  padding: var(--space-4) var(--space-2);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar__footer {
+  padding: var(--space-4) var(--space-2);
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   MAIN CONTENT
+   ============================================================ */
+.main-content {
+  grid-area: main;
+  overflow-y: auto;
+  background: var(--color-surface);
+}
+
+.page-container {
+  padding: var(--space-6) var(--space-8);
+  max-width: 1440px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+  gap: var(--space-4);
+}
+
+.page-header__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.page-header__title {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text);
+}
+
+.page-header__subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   RESPONSIVE — Tablet / Mobile
+   ============================================================ */
+@media (max-width: 1024px) {
+  .app-shell {
+    grid-template-columns: var(--sidebar-width-collapsed) 1fr;
+  }
+
+  .sidebar {
+    width: var(--sidebar-width-collapsed);
+  }
+
+  .sidebar__logo-text {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-shell {
+    grid-template-areas:
+      "topbar topbar"
+      "main main";
+    grid-template-columns: 1fr;
+    grid-template-rows: var(--topbar-height) 1fr;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .page-container {
+    padding: var(--space-4);
+  }
+}

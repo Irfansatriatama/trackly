@@ -1,0 +1,27 @@
+{
+  "name": "TRACKLY — Track Everything, Deliver Anything",
+  "short_name": "TRACKLY",
+  "description": "Project Management Information System for IT Consultant firms",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "landscape-primary",
+  "background_color": "#F8FAFC",
+  "theme_color": "#2563EB",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "screenshots": []
+}

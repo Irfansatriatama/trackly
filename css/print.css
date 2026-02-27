@@ -1,0 +1,12 @@
+/**
+ * TRACKLY — print.css
+ * Print / PDF export styles. Fully implemented in Phase 13.
+ */
+@media print {
+  .sidebar, .topbar, .btn, .toast-container { display: none !important; }
+  .app-shell { display: block; }
+  .main-content { overflow: visible; }
+  body { background: #fff; color: #000; }
+  .card { box-shadow: none; border: 1px solid #ccc; }
+  @page { margin: 20mm; }
+}
