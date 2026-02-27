@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v0.4.0-alpha` |
-| **Current Phase** | Phase 5 — Member Management |
+| **Current Version** | `v0.5.0-alpha` |
+| **Current Phase** | Phase 6 — Client Management |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -628,13 +628,13 @@ Tasks:
 **Deliverable**: PM can create, view, edit, deactivate members with all profile fields
 
 Tasks:
-- Member list page (table with avatar, name, role badge, status, actions)
-- Add / Edit member modal (all fields from section 5.9)
-- Avatar upload (resize to 150x150, store as base64)
-- Role badge component (color-coded per role)
-- Change password form
-- Deactivate / reactivate member
-- Search and filter members by role, status
+- [x] Member list page (table with avatar, name, role badge, status, actions)
+- [x] Add / Edit member modal (all fields from section 5.9)
+- [x] Avatar upload (resize to 150x150, store as base64)
+- [x] Role badge component (color-coded per role)
+- [x] Change password form
+- [x] Deactivate / reactivate member
+- [x] Search and filter members by role, status
 
 ---
 
@@ -844,10 +844,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v0.4.0-alpha                               ║
-║  Current Phase     : Phase 5 — Member Management                ║
+║  Current Version   : v0.5.0-alpha                               ║
+║  Current Phase     : Phase 6 — Client Management                ║
 ║  Phase Status      : NOT STARTED                                ║
-║  Next Phase        : Phase 6 — Client Management                ║
+║  Next Phase        : Phase 7 — Project Management Core          ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -855,7 +855,7 @@ Tasks:
 ║  [x] Phase 2  — Layout Shell & Navigation          v0.2.0      ║
 ║  [x] Phase 3  — Authentication & User Session      v0.3.0      ║
 ║  [x] Phase 4  — First-Run Wizard & PWA Foundation  v0.4.0      ║
-║  [ ] Phase 5  — Member Management                  v0.5.0      ║
+║  [x] Phase 5  — Member Management                  v0.5.0      ║
 ║  [ ] Phase 6  — Client Management                  v0.6.0      ║
 ║  [ ] Phase 7  — Project Management Core            v0.7.0      ║
 ║  [ ] Phase 8  — Task Management & Backlog          v0.8.0      ║
@@ -878,6 +878,11 @@ Tasks:
 ║                         based redirect, remember me, logout     ║
 ║  v0.4.0  [2026-02-28]  First-run wizard (3-step), Admin seed, ║
 ║                         full SW cache, PWA install banner       ║
+║  v0.5.0  [2026-02-28]  Member Management: list, add/edit,     ║
+║                         avatar upload, role & status badges,    ║
+║                         change password, deactivate/reactivate, ║
+║                         search & filter. modal/toast/confirm/   ║
+║                         badge/avatar components implemented.    ║
 ╚══════════════════════════════════════════════════════════════════╝
 ```
 
@@ -1180,4 +1185,4 @@ When given a `.zip` from a previous phase and asked to continue to the next phas
 ---
 
 *TRACKLY — Track Everything, Deliver Anything*  
-*v0.4.0-alpha | Phase 4 of 17 complete | Internal IT Consultant PMIS*
+*v0.5.0-alpha | Phase 5 of 17 complete | Internal IT Consultant PMIS*

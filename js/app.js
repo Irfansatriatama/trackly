@@ -187,10 +187,12 @@ function registerAllRoutes() {
     setContent(renderPageShell('Assets', 'Company and project asset inventory'));
   });
 
-  // Members
-  registerRoute('/members', () => {
+  // Members — Phase 5 full implementation
+  registerRoute('/members', async () => {
     if (!requireAuth()) return;
-    setContent(renderPageShell('Members', 'Team member accounts and roles'));
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading members…</p></div></div>');
+    const { render: renderMembers } = await import('./modules/members.js');
+    await renderMembers({});
   });
 
   // Settings
