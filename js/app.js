@@ -176,9 +176,12 @@ function registerAllRoutes() {
   });
 
   // Clients
-  registerRoute('/clients', () => {
+  // Clients — Phase 6 full implementation
+  registerRoute('/clients', async () => {
     if (!requireAuth()) return;
-    setContent(renderPageShell('Clients', 'Manage your client accounts'));
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading clients...</p></div></div>');
+    const { render: renderClients } = await import('./modules/clients.js');
+    await renderClients({});
   });
 
   // Assets

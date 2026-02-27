@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v0.5.0-alpha` |
-| **Current Phase** | Phase 6 — Client Management |
+| **Current Version** | `v0.6.0-alpha` |
+| **Current Phase** | Phase 7 — Project Management Core |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -643,12 +643,12 @@ Tasks:
 **Deliverable**: PM can manage client records
 
 Tasks:
-- Client list page (card or table view toggle)
-- Add / Edit client modal (all fields from section 5.10)
-- Client detail page with linked projects list
-- Logo upload (base64)
-- Search and filter by status, industry
-- Client status badge
+- [x] Client list page (card or table view toggle)
+- [x] Add / Edit client modal (all fields from section 5.10)
+- [x] Client detail page with linked projects list
+- [x] Logo upload (base64)
+- [x] Search and filter by status, industry
+- [x] Client status badge
 
 ---
 
@@ -844,10 +844,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v0.5.0-alpha                               ║
-║  Current Phase     : Phase 6 — Client Management                ║
+║  Current Version   : v0.6.0-alpha                               ║
+║  Current Phase     : Phase 7 — Project Management Core          ║
 ║  Phase Status      : NOT STARTED                                ║
-║  Next Phase        : Phase 7 — Project Management Core          ║
+║  Next Phase        : Phase 8 — Task Management & Backlog        ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -856,7 +856,7 @@ Tasks:
 ║  [x] Phase 3  — Authentication & User Session      v0.3.0      ║
 ║  [x] Phase 4  — First-Run Wizard & PWA Foundation  v0.4.0      ║
 ║  [x] Phase 5  — Member Management                  v0.5.0      ║
-║  [ ] Phase 6  — Client Management                  v0.6.0      ║
+║  [x] Phase 6  — Client Management                  v0.6.0      ║
 ║  [ ] Phase 7  — Project Management Core            v0.7.0      ║
 ║  [ ] Phase 8  — Task Management & Backlog          v0.8.0      ║
 ║  [ ] Phase 9  — Kanban Board                       v0.9.0      ║
@@ -883,6 +883,11 @@ Tasks:
 ║                         change password, deactivate/reactivate, ║
 ║                         search & filter. modal/toast/confirm/   ║
 ║                         badge/avatar components implemented.    ║
+║  v0.6.0  [2026-02-28]  Client Management: card+table view,    ║
+║                         add/edit/delete modal, client detail    ║
+║                         with linked projects, logo upload,      ║
+║                         search & filter by status/industry,     ║
+║                         status badge (active/inactive/prospect).║
 ╚══════════════════════════════════════════════════════════════════╝
 ```
 
@@ -1185,4 +1190,4 @@ When given a `.zip` from a previous phase and asked to continue to the next phas
 ---
 
 *TRACKLY — Track Everything, Deliver Anything*  
-*v0.5.0-alpha | Phase 5 of 17 complete | Internal IT Consultant PMIS*
+*v0.6.0-alpha | Phase 6 of 17 complete | Internal IT Consultant PMIS*
