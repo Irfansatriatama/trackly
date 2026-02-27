@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v0.2.0-alpha` |
-| **Current Phase** | Phase 3 — Authentication & User Session |
+| **Current Version** | `v0.3.0-alpha` |
+| **Current Phase** | Phase 4 — First-Run Wizard & PWA Foundation |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -598,13 +598,13 @@ Tasks:
 **Deliverable**: Styled login page with working form that stores a session in localStorage
 
 Tasks:
-- Build login page UI (centered card layout, TRACKLY logo, username + password fields, "Remember me" toggle, submit button)
-- Implement `js/core/db.js` — full IndexedDB wrapper with `openDB()`, `getAll()`, `getById()`, `add()`, `update()`, `delete()` helpers for all object stores defined in section 7
-- Implement `js/core/auth.js` — `login()`, `logout()`, `getSession()`, `isAuthenticated()`, password hashing with Web Crypto API (SHA-256)
-- Route guard in router: redirect to `#/login` if no active session on any protected route
-- Successful login redirects based on role: `admin`/`pm` → `#/dashboard`, `developer` → `#/dashboard` (tasks view), `viewer` → `#/projects`
-- "Remember me" stores extended expiry in localStorage
-- Logout button in topbar dropdown clears session and redirects to login
+- [x] Build login page UI (centered card layout, TRACKLY logo, username + password fields, "Remember me" toggle, submit button)
+- [x] Implement `js/core/db.js` — full IndexedDB wrapper with `openDB()`, `getAll()`, `getById()`, `add()`, `update()`, `delete()` helpers for all object stores defined in section 7
+- [x] Implement `js/core/auth.js` — `login()`, `logout()`, `getSession()`, `isAuthenticated()`, password hashing with Web Crypto API (SHA-256)
+- [x] Route guard in router: redirect to `#/login` if no active session on any protected route
+- [x] Successful login redirects based on role: `admin`/`pm` → `#/dashboard`, `developer` → `#/dashboard` (tasks view), `viewer` → `#/projects`
+- [x] "Remember me" stores extended expiry in localStorage
+- [x] Logout button in topbar dropdown clears session and redirects to login
 
 ---
 
@@ -844,16 +844,16 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v0.2.0-alpha                               ║
-║  Current Phase     : Phase 3 — Authentication & User Session    ║
+║  Current Version   : v0.3.0-alpha                               ║
+║  Current Phase     : Phase 4 — First-Run Wizard & PWA Foundation║
 ║  Phase Status      : NOT STARTED                                ║
-║  Next Phase        : Phase 4 — First-Run Wizard & PWA Foundation║
+║  Next Phase        : Phase 5 — Member Management                ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
 ║  [x] Phase 1  — Project Scaffolding & Structure    v0.1.0      ║
 ║  [x] Phase 2  — Layout Shell & Navigation          v0.2.0      ║
-║  [ ] Phase 3  — Authentication & User Session      v0.3.0      ║
+║  [x] Phase 3  — Authentication & User Session      v0.3.0      ║
 ║  [ ] Phase 4  — First-Run Wizard & PWA Foundation  v0.4.0      ║
 ║  [ ] Phase 5  — Member Management                  v0.5.0      ║
 ║  [ ] Phase 6  — Client Management                  v0.6.0      ║
@@ -873,6 +873,9 @@ Tasks:
 ║                                                                 ║
 ║  v0.1.0  [2026-02-27]  Initial scaffold & design system       ║
 ║  v0.2.0  [2026-02-28]  Layout shell, sidebar, topbar, router  ║
+║  v0.3.0  [2026-02-28]  Auth & session: login UI, IndexedDB,   ║
+║                         SHA-256 hashing, route guards, role-   ║
+║                         based redirect, remember me, logout     ║
 ╚══════════════════════════════════════════════════════════════════╝
 ```
 

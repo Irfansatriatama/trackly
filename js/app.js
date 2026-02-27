@@ -5,8 +5,8 @@
  */
 
 import { initRouter, registerRoute, setNotFound, navigate } from './core/router.js';
-import { isAuthenticated, clearSession } from './core/auth.js';
-import { openDB } from './core/db.js';
+import { isAuthenticated, clearSession, getSession, createSession, verifyPassword } from './core/auth.js';
+import { openDB, getAll, count } from './core/db.js';
 import { appStore } from './core/store.js';
 import { debug } from './core/utils.js';
 import { initSidebar } from './components/sidebar.js';
@@ -208,13 +208,59 @@ function registerAllRoutes() {
 }
 
 // ============================================================
-// LOGIN PAGE (Phase 1 shell — full implementation in Phase 3)
+// LOGIN PAGE — Phase 3: Full authentication implementation
 // ============================================================
 
-function renderLogin() {
+/**
+ * Show or clear a validation error below a field.
+ * @param {string} fieldId
+ * @param {string|null} message  — null clears the error
+ */
+function setFieldError(fieldId, message) {
+  const field = document.getElementById(fieldId);
+  if (!field) return;
+  const group = field.closest('.form-group');
+  if (!group) return;
+  const existing = group.querySelector('.form-error');
+  if (existing) existing.remove();
+  if (message) {
+    field.classList.add('is-invalid');
+    const err = document.createElement('p');
+    err.className = 'form-error';
+    err.textContent = message;
+    group.appendChild(err);
+  } else {
+    field.classList.remove('is-invalid');
+  }
+}
+
+/**
+ * Display a full-width alert inside the login form.
+ * @param {string} message
+ * @param {'error'|'success'} type
+ */
+function setLoginAlert(message, type = 'error') {
+  const form = document.getElementById('loginForm');
+  if (!form) return;
+  let alert = form.querySelector('.login-alert');
+  if (!alert) {
+    alert = document.createElement('div');
+    alert.className = 'login-alert';
+    form.prepend(alert);
+  }
+  alert.className = `login-alert login-alert--${type}`;
+  alert.innerHTML = `<i data-lucide="${type === 'error' ? 'alert-circle' : 'check-circle'}"></i><span>${message}</span>`;
+  initIcons();
+}
+
+/**
+ * Render the login page and wire up the submit handler.
+ */
+async function renderLogin() {
   const app = document.getElementById('app');
   if (!app) return;
 
+  // Ensure app shell is cleared — login is full-page
   app.innerHTML = `
     <div class="login-page">
       <div class="login-card card">
@@ -232,19 +278,24 @@ function renderLogin() {
             </div>
             <div class="form-group">
               <label class="form-label" for="password">Password <span class="required">*</span></label>
-              <input class="form-input" type="password" id="password" name="password"
-                placeholder="Enter your password" autocomplete="current-password" required />
+              <div class="form-input-wrapper">
+                <input class="form-input" type="password" id="password" name="password"
+                  placeholder="Enter your password" autocomplete="current-password" required />
+                <button type="button" class="form-input-reveal" id="togglePassword" aria-label="Toggle password visibility">
+                  <i data-lucide="eye" aria-hidden="true"></i>
+                </button>
+              </div>
             </div>
             <label class="form-checkbox">
               <input type="checkbox" id="rememberMe" name="rememberMe" />
               <span>Remember me for 30 days</span>
             </label>
-            <button type="submit" class="btn btn--primary" style="width: 100%; margin-top: var(--space-4)">
-              <i data-lucide="log-in"></i>
-              Sign In
+            <button type="submit" class="btn btn--primary btn--login" id="loginSubmitBtn">
+              <i data-lucide="log-in" aria-hidden="true"></i>
+              <span>Sign In</span>
             </button>
             <p class="login-hint text-muted">
-              No account yet? The first-run wizard will set up your Admin account.
+              No account yet? The first-run wizard will create your Admin account automatically.
             </p>
           </form>
         </div>
@@ -254,24 +305,118 @@ function renderLogin() {
 
   initIcons();
 
-  // Demo: clicking Sign In shows a toast-like message (full auth in Phase 3)
-  document.getElementById('loginForm').addEventListener('submit', (e) => {
+  // Toggle password visibility
+  const toggleBtn = document.getElementById('togglePassword');
+  const passwordInput = document.getElementById('password');
+  if (toggleBtn && passwordInput) {
+    toggleBtn.addEventListener('click', () => {
+      const isHidden = passwordInput.type === 'password';
+      passwordInput.type = isHidden ? 'text' : 'password';
+      const icon = toggleBtn.querySelector('[data-lucide]');
+      if (icon) {
+        icon.setAttribute('data-lucide', isHidden ? 'eye-off' : 'eye');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+    });
+  }
+
+  // Clear field errors on input
+  ['username', 'password'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => setFieldError(id, null));
+  });
+
+  // Submit handler
+  const form = document.getElementById('loginForm');
+  const submitBtn = document.getElementById('loginSubmitBtn');
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const msg = document.createElement('p');
-    msg.textContent = 'Authentication will be fully implemented in Phase 3.';
-    msg.style.cssText = 'color: var(--color-warning); text-align: center; margin-top: var(--space-3); font-size: var(--text-xs);';
-    const existing = document.querySelector('.login-notice');
-    if (existing) existing.remove();
-    msg.className = 'login-notice';
-    document.getElementById('loginForm').appendChild(msg);
+
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const remember = document.getElementById('rememberMe').checked;
+
+    // Client-side validation
+    let valid = true;
+    if (!username) {
+      setFieldError('username', 'Username is required.');
+      valid = false;
+    }
+    if (!password) {
+      setFieldError('password', 'Password is required.');
+      valid = false;
+    }
+    if (!valid) return;
+
+    // Loading state
+    submitBtn.disabled = true;
+    submitBtn.querySelector('span').textContent = 'Signing in…';
+
+    try {
+      // Fetch all users and find by username (case-insensitive)
+      const users = await getAll('users');
+      const user = users.find(
+        (u) => u.username && u.username.toLowerCase() === username.toLowerCase()
+      );
+
+      if (!user) {
+        setLoginAlert('Invalid username or password. Please try again.');
+        return;
+      }
+
+      if (user.status === 'inactive') {
+        setLoginAlert('Your account has been deactivated. Contact an administrator.');
+        return;
+      }
+
+      // Verify password
+      const passwordOk = await verifyPassword(password, user.password_hash);
+      if (!passwordOk) {
+        setLoginAlert('Invalid username or password. Please try again.');
+        return;
+      }
+
+      // Create session
+      createSession(user, remember);
+
+      // Update last_login in DB
+      user.last_login = new Date().toISOString();
+      try {
+        const { update } = await import('./core/db.js');
+        await update('users', user);
+      } catch (_) { /* non-fatal */ }
+
+      // Redirect based on role
+      const dest = (user.role === 'viewer') ? '/projects' : '/dashboard';
+
+      // Mount app shell then navigate
+      mountAppShell(user);
+      // Register routes and init router (first login — router not yet running)
+      registerAllRoutes();
+      initRouter();
+      navigate(dest);
+
+    } catch (err) {
+      debug('Login error:', err);
+      setLoginAlert('An unexpected error occurred. Please try again.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.querySelector('span').textContent = 'Sign In';
+    }
   });
 }
 
 // ============================================================
-// APP SHELL (Phase 2 — renders layout, mounts sidebar & topbar components)
+// APP SHELL — renders layout, mounts sidebar & topbar
 // ============================================================
 
-function renderAppShell() {
+/**
+ * Render the app shell HTML and mount sidebar/topbar.
+ * Called after a successful authentication check.
+ * @param {Object} [userObj] - optional user object; if null, reads from session
+ */
+function mountAppShell(userObj) {
   const app = document.getElementById('app');
   if (!app) return;
 
@@ -287,6 +432,20 @@ function renderAppShell() {
       </main>
     </div>
   `;
+
+  const handleLogout = () => {
+    clearSession();
+    // Tear down the shell and show login
+    renderLogin();
+  };
+
+  initSidebar(document.getElementById('sidebar'), handleLogout);
+  initTopbar(document.getElementById('topbar'), userObj, handleLogout);
+  initIcons();
+}
+
+function renderAppShell() {
+  mountAppShell(null);
 }
 
 // ============================================================
@@ -303,7 +462,73 @@ function initSidebarToggle() {
 
 function updateActiveNav() {
   // Active state is managed by sidebar.js via hashchange listener.
-  // This function is kept for compatibility with the bootstrap sequence.
+}
+
+// ============================================================
+// DEMO USER SEED — Phase 3 helper
+// Seeds default accounts if no users exist so login can be
+// demonstrated before Phase 4 (First-Run Wizard) is built.
+// ============================================================
+
+async function seedDemoUsersIfEmpty() {
+  const userCount = await count('users');
+  if (userCount > 0) return;
+
+  const { hashPassword: hp } = await import('./core/auth.js');
+
+  const now = new Date().toISOString();
+  const demoUsers = [
+    {
+      id: 'USR-0001',
+      username: 'admin',
+      full_name: 'Admin User',
+      email: 'admin@trackly.app',
+      password_hash: await hp('admin123'),
+      role: 'admin',
+      status: 'active',
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id: 'USR-0002',
+      username: 'pm',
+      full_name: 'Project Manager',
+      email: 'pm@trackly.app',
+      password_hash: await hp('pm123'),
+      role: 'pm',
+      status: 'active',
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id: 'USR-0003',
+      username: 'dev',
+      full_name: 'Developer',
+      email: 'dev@trackly.app',
+      password_hash: await hp('dev123'),
+      role: 'developer',
+      status: 'active',
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id: 'USR-0004',
+      username: 'viewer',
+      full_name: 'Client Viewer',
+      email: 'viewer@trackly.app',
+      password_hash: await hp('viewer123'),
+      role: 'viewer',
+      status: 'active',
+      created_at: now,
+      updated_at: now,
+    },
+  ];
+
+  for (const user of demoUsers) {
+    try { await add('users', user); } catch (_) { /* already exists */ }
+  }
+
+  debug('Demo users seeded (Phase 3 — replaced by First-Run Wizard in Phase 4)');
 }
 
 // ============================================================
@@ -324,37 +549,35 @@ async function bootstrap() {
     debug('IndexedDB error:', err);
   }
 
+  // Seed demo accounts if DB is empty (Phase 3 — replaced by wizard in Phase 4)
+  await seedDemoUsersIfEmpty();
+
   // Determine initial view
   const auth = isAuthenticated();
 
   if (!auth) {
-    renderLogin();
+    await renderLogin();
     debug('No session — showing login');
     return;
   }
 
-  // Render app shell skeleton
-  renderAppShell();
+  // Get the current user object for the topbar
+  const session = getSession();
+  let currentUser = null;
+  if (session) {
+    try {
+      const users = await getAll('users');
+      currentUser = users.find((u) => u.id === session.userId) || null;
+    } catch (_) { /* non-fatal */ }
+  }
 
-  // Mount sidebar and topbar components
-  const handleLogout = () => {
-    clearSession();
-    navigate('/login');
-    // Re-bootstrap to show login page
-    const app = document.getElementById('app');
-    if (app) app.innerHTML = '';
-    renderLogin();
-  };
-
-  initSidebar(document.getElementById('sidebar'), handleLogout);
-  initTopbar(document.getElementById('topbar'), null, handleLogout);
-
-  initIcons();
+  // Render app shell with sidebar + topbar
+  mountAppShell(currentUser);
 
   // Register all routes
   registerAllRoutes();
 
-  // Listen for hash changes to update nav state
+  // Listen for hash changes
   window.addEventListener('hashchange', updateActiveNav);
 
   // Init router (dispatches current hash)
