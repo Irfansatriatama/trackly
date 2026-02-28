@@ -127,16 +127,20 @@ function registerAllRoutes() {
     setContent(renderPageShell('Dashboard', 'Overview of all projects and activity'));
   });
 
-  // Projects list
-  registerRoute('/projects', () => {
+  // Projects list — Phase 7 full implementation
+  registerRoute('/projects', async () => {
     if (!requireAuth()) return;
-    setContent(renderPageShell('Projects', 'All projects in your workspace'));
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading projects...</p></div></div>');
+    const { render: renderProjects } = await import('./modules/projects.js');
+    await renderProjects({});
   });
 
-  // Project detail
-  registerRoute('/projects/:id', (params) => {
+  // Project detail — Phase 7 full implementation
+  registerRoute('/projects/:id', async (params) => {
     if (!requireAuth()) return;
-    setContent(renderPageShell(`Project: ${params.id}`, 'Project overview'));
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading project...</p></div></div>');
+    const { render: renderProjects } = await import('./modules/projects.js');
+    await renderProjects({ id: params.id });
   });
 
   // Board

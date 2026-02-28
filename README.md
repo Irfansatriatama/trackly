@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v0.6.0-alpha` |
-| **Current Phase** | Phase 7 — Project Management Core |
+| **Current Version** | `v0.7.0-alpha` |
+| **Current Phase** | Phase 8 — Task Management & Backlog |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -657,13 +657,13 @@ Tasks:
 **Deliverable**: PM can create projects, assign members, view project list
 
 Tasks:
-- Project list page (card view with cover color, status badge, progress bar, client logo)
-- Create / Edit project modal (all fields from section 5.3)
-- Project detail overview page (summary, members, dates, budget vs actual)
-- Project status and phase management
-- Assign members to project with project-specific role override
-- Project quick-actions (archive, duplicate, delete with confirm)
-- Project search and filter (by status, phase, client, date range)
+- [x] Project list page (card view with cover color, status badge, progress bar, client logo)
+- [x] Create / Edit project modal (all fields from section 5.3)
+- [x] Project detail overview page (summary, members, dates, budget vs actual)
+- [x] Project status and phase management
+- [x] Assign members to project with project-specific role override
+- [x] Project quick-actions (archive, duplicate, delete with confirm)
+- [x] Project search and filter (by status, phase, client, date range)
 
 ---
 
@@ -844,10 +844,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v0.6.0-alpha                               ║
-║  Current Phase     : Phase 7 — Project Management Core          ║
+║  Current Version   : v0.7.0-alpha                               ║
+║  Current Phase     : Phase 8 — Task Management & Backlog        ║
 ║  Phase Status      : NOT STARTED                                ║
-║  Next Phase        : Phase 8 — Task Management & Backlog        ║
+║  Next Phase        : Phase 9 — Kanban Board                     ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -857,7 +857,7 @@ Tasks:
 ║  [x] Phase 4  — First-Run Wizard & PWA Foundation  v0.4.0      ║
 ║  [x] Phase 5  — Member Management                  v0.5.0      ║
 ║  [x] Phase 6  — Client Management                  v0.6.0      ║
-║  [ ] Phase 7  — Project Management Core            v0.7.0      ║
+║  [x] Phase 7  — Project Management Core            v0.7.0      ║
 ║  [ ] Phase 8  — Task Management & Backlog          v0.8.0      ║
 ║  [ ] Phase 9  — Kanban Board                       v0.9.0      ║
 ║  [ ] Phase 10 — Sprint Management                  v0.10.0     ║
@@ -888,6 +888,15 @@ Tasks:
 ║                         with linked projects, logo upload,      ║
 ║                         search & filter by status/industry,     ║
 ║                         status badge (active/inactive/prospect).║
+║  v0.7.0  [2026-02-28]  Project Management Core: card grid     ║
+║                         with cover color, status/priority/      ║
+║                         overdue badges, progress bar, client    ║
+║                         logo; create/edit modal with all        ║
+║                         section 5.3 fields, member picker with  ║
+║                         per-project role, color picker; detail  ║
+║                         page with banner, subnav, stats row,    ║
+║                         budget overview, team panel; filter by  ║
+║                         status, phase, client; delete confirm.  ║
 ╚══════════════════════════════════════════════════════════════════╝
 ```
 
