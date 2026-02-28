@@ -6,7 +6,7 @@
  */
 
 const DB_NAME = 'trackly_db';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 /** @type {IDBDatabase|null} */
 let _db = null;

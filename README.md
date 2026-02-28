@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.3.0` |
-| **Current Phase** | v1.3.0 — Feature Complete (v1.x) |
+| **Current Version** | `v1.3.1` |
+| **Current Phase** | Phase 22 — (TBD) |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -504,6 +504,34 @@ A global **Meetings** module accessible from the sidebar (Admin/PM only). Meetin
 - Attendance list with avatar chips
 - All meeting create/edit/cancel actions are logged to Audit Trail
 
+### 5.18 Maintenance Enhancement (Phase 21)
+
+The Maintenance module receives a major upgrade to support real SLA-based maintenance workflows for IT consultants managing live client projects.
+
+**Enhanced Maintenance Ticket fields (additions to 5.12):**
+
+| Field | Type | Notes |
+|---|---|---|
+| `severity` | Enum | `major`, `minor` — impact classification, separate from priority |
+| `assigned_date` | Date | When the ticket was formally assigned |
+| `due_date` | Date | Target completion date |
+| `ordered_by` | Ref | User ID of the PM who ordered/commissioned the ticket |
+| `pic_dev_ids` | Array | User IDs of assigned developers — dev visibility filter |
+| `pic_client` | String | Name of client PIC — viewer visibility filter |
+| `attachments` | Array | `[{ name, data (base64), size, mime_type }]` — max 5MB per file |
+
+**Visibility rules:**
+- Developer: only sees tickets where `pic_dev_ids` includes `session.userId`
+- Viewer/Client: only sees tickets where `pic_client` matches their name or `viewer_user_ids` includes their ID
+
+**Export enhancements (maintenance-report.js):**
+- Export to **Excel (.xlsx)** via SheetJS — text only, no attachments
+- Export to **CSV** — plain text download
+- Export to **PDF** — existing `window.print()`, now includes new fields
+- All date fields in export use **Indonesian date format** (DD MMMM YYYY)
+
+---
+
 ### 5.17 Project Discussion
 
 A **Discussion** tab inside every project (visible to all project members — Admin, PM, Developer). Functions as an informal thread board for project-level updates, questions, decisions, and blockers.
@@ -583,7 +611,7 @@ A **Discussion** tab inside every project (visible to all project members — Ad
 
 ```
 Database name: trackly_db
-Version: 2
+Version: 4
 
 Object Stores:
 ├── users           (keyPath: id)
@@ -597,6 +625,11 @@ Object Stores:
 ├── activity_log    (keyPath: id)    — indexes: project_id, user_id  ← activated in Phase 18
 ├── meetings        (keyPath: id)    — indexes: date                 ← new in Phase 19
 ├── discussions     (keyPath: id)    — indexes: project_id           ← new in Phase 20
+```
+
+> **Note:** No new stores in Phase 21. DB bumped to version `4` to trigger `onupgradeneeded` for any migration logic needed by future phases.
+
+```
 └── settings        (keyPath: key)   — single store for app-wide settings
 ```
 
@@ -1034,6 +1067,39 @@ Tasks:
 - [x] Update `sw.js` cache to include `discussion.js`
 - [x] Update User Guide (`guide.js`) to add Discussion section
 
+
+---
+
+### Phase 21 — Maintenance Enhancement
+**Scope**: Retrofit Maintenance module with attachment support, multi-dev PIC, client PIC visibility, severity field, date fields, and export to Excel/CSV  
+**Deliverable**: Maintenance tickets support file attachments, multi-assignee dev visibility, client-side visibility filter, and export to Excel/CSV/PDF with Indonesian date format
+
+Tasks:
+- [x] Add new fields to maintenance ticket data model: `severity`, `assigned_date`, `due_date`, `ordered_by`, `pic_dev_ids` (array), `pic_client` (string), `attachments` (array)
+- [x] DB version bump to `4` in `db.js` — no new store needed, only schema expansion
+- [x] Update `maintenance.js` — add `severity` select (major/minor) to create/edit form
+- [x] Add `assigned_date` (date picker) and `due_date` (date picker) to form
+- [x] Add `ordered_by` (dropdown — PM/Admin users) to form
+- [x] Replace single `assigned_to` with `pic_dev_ids` multi-select (developer users only)
+- [x] Add `pic_client` text input to form (name of client PIC visible to that viewer)
+- [x] Add file attachment upload to form (max 5MB per file, base64, same pattern as discussion.js)
+- [x] Display attachments in ticket detail panel with filename, size, mime icon, download link
+- [x] Developer visibility filter: developer only sees tickets where `pic_dev_ids` includes `session.userId`
+- [x] Viewer/Client visibility filter: viewer only sees tickets where `pic_client` is non-empty (or filter by linked viewer user)
+- [x] Show `severity` badge in ticket list and detail panel
+- [x] Show `due_date` and `assigned_date` in ticket detail panel (Indonesian date format)
+- [x] Show `ordered_by` name in ticket detail panel
+- [x] Update ticket list table columns to reflect new fields
+- [x] Update `maintenance-report.js` — add Export Excel (.xlsx) button using SheetJS CDN
+- [x] Add Export CSV button (pure JS, no library needed)
+- [x] Excel/CSV export: include all ticket fields, dates in Indonesian format (DD MMMM YYYY), no attachments
+- [x] Update PDF export layout to include new fields (severity, due_date, assigned_date, ordered_by, pic_client)
+- [x] Update `logActivity()` calls to reflect new fields in change tracking
+- [x] Update User Guide (`guide.js`) — update section for Maintenance with new fields explanation
+- [x] Update `sw.js` — no new files, but bump cache version to `v1.3.1`
+
+---
+
 ---
 
 ## 10. Development Log
@@ -1044,10 +1110,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v1.3.0                                     ║
-║  Current Phase     : v1.3.0 Feature Complete                    ║
-║  Phase Status      : COMPLETED                                  ║
-║  Next Phase        : — (v1.x feature-complete)                  ║
+║  Current Version   : v1.3.1                                     ║
+║  Current Phase     : Phase 22 — (TBD)                          ║
+║  Phase Status      : NOT STARTED                                ║
+║  Next Phase        : Phase 23 — (TBD)                          ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -1071,9 +1137,32 @@ Tasks:
 ║  [x] Phase 18 — Audit Trail                        v1.1.0      ║
 ║  [x] Phase 19 — Meeting Agenda & Notulensi         v1.2.0      ║
 ║  [x] Phase 20 — Project Discussion                 v1.3.0      ║
+║  [x] Phase 21 — Maintenance Enhancement            v1.3.1      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
 ║                                                                 ║
+║  v1.3.1 [2026-02-28]  Phase 21 — Maintenance Enhancement:    ║
+║                         DB version bumped to 4; maintenance.js  ║
+║                         retrofitted with severity (major/minor  ║
+║                         badge), assigned_date, due_date (date   ║
+║                         pickers), ordered_by (PM/Admin dropdown)║
+║                         pic_dev_ids (multi-select checkboxes —  ║
+║                         developer visibility filter), pic_client║
+║                         (text input — viewer visibility filter),║
+║                         attachments (base64, max 5MB, download);║
+║                         ticket list updated with Severity &     ║
+║                         Due Date columns; detail panel shows    ║
+║                         all new fields with Indonesian dates;   ║
+║                         PIC Dev displayed as avatar chips;      ║
+║                         maintenance-report.js updated with      ║
+║                         Export Excel (SheetJS CDN), Export CSV  ║
+║                         (pure JS, BOM-prefixed), formatDateID() ║
+║                         for all date fields; PDF export updated  ║
+║                         with Severity/Due Date/Assigned Date/   ║
+║                         Ordered By/PIC Client columns; guide.js ║
+║                         section 9 updated with full Phase 21    ║
+║                         field explanations; sw.js bumped to     ║
+║                         v1.3.1.                                  ║
 ║  v1.3.0 [2026-02-28]  Phase 20 — Project Discussion:         ║
 ║                         discussions store added to db.js (DB v3); ║
 ║                         DSC- prefix already in ID_PREFIX;          ║

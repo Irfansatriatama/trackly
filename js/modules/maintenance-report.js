@@ -1,8 +1,8 @@
 /**
  * TRACKLY — maintenance-report.js
  * Phase 13: Maintenance Report & Invoice (PDF)
- * PM can generate a maintenance report for a date range,
- * build an invoice with line items per ticket, and export via window.print().
+ * Phase 21: Added Export Excel (.xlsx via SheetJS), Export CSV, formatDateID(),
+ *   new fields in PDF (severity, due_date, assigned_date, ordered_by, pic_client).
  * Access: PM/Admin only.
  */
 
@@ -22,12 +22,12 @@ let _settings      = {};
 let _dateFrom      = '';
 let _dateTo        = '';
 let _filteredTickets = [];
-let _rateMode      = 'hourly';   // 'hourly' | 'flat'
+let _rateMode      = 'hourly';
 let _hourlyRate    = 0;
 let _flatCost      = 0;
 let _taxRate       = 0;
 let _invoiceNote   = '';
-let _currentView   = 'report';   // 'report' | 'invoice'
+let _currentView   = 'report';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -46,6 +46,24 @@ const TICKET_STATUS_OPTIONS = [
   { value: 'closed',      label: 'Closed' },
   { value: 'rejected',    label: 'Rejected' },
 ];
+
+const TICKET_PRIORITY_OPTIONS = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+  { value: 'critical', label: 'Critical' },
+];
+
+// ─── Indonesian Date Format ───────────────────────────────────────────────────
+
+const ID_MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+function formatDateID(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return String(dateStr);
+  return `${d.getDate()} ${ID_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
 
 // ─── Entry Point ──────────────────────────────────────────────────────────────
 
@@ -86,11 +104,9 @@ export async function render(params = {}) {
     _tickets  = allTickets.filter(t => t.project_id === _projectId);
     _members  = members;
 
-    // Build settings map
     _settings = {};
     for (const s of allSettings) _settings[s.key] = s.value;
 
-    // Load client if linked
     _client = null;
     if (_project?.client_id) {
       try { _client = await getById('clients', _project.client_id); } catch (_) {}
@@ -107,7 +123,6 @@ export async function render(params = {}) {
       return;
     }
 
-    // Default date range: last 30 days
     const now = new Date();
     const from = new Date(now);
     from.setDate(from.getDate() - 30);
@@ -165,6 +180,12 @@ function renderReportPage() {
           <p class="page-header__subtitle">${sanitize(_project.name)}</p>
         </div>
         <div class="page-header__actions">
+          <button class="btn btn--outline" id="btnExportCsv">
+            <i data-lucide="file-spreadsheet" aria-hidden="true"></i> Export CSV
+          </button>
+          <button class="btn btn--outline" id="btnExportExcel">
+            <i data-lucide="table" aria-hidden="true"></i> Export Excel
+          </button>
           <button class="btn btn--outline" id="btnSwitchView">
             <i data-lucide="file-text" aria-hidden="true"></i>
             <span id="btnSwitchViewLabel">Generate Invoice</span>
@@ -214,19 +235,16 @@ function _bindEvents() {
   });
 
   document.getElementById('btnExportPdf')?.addEventListener('click', _handleExportPdf);
+  document.getElementById('btnExportExcel')?.addEventListener('click', _handleExportExcel);
+  document.getElementById('btnExportCsv')?.addEventListener('click', _handleExportCsv);
 
-  // Delegate for invoice controls
   document.getElementById('rptMainContent')?.addEventListener('input', _handleInvoiceInput);
   document.getElementById('rptMainContent')?.addEventListener('change', _handleInvoiceInput);
 }
 
 function _handleInvoiceInput(e) {
   const id = e.target.id;
-  if (id === 'invRateMode') {
-    _rateMode = e.target.value;
-    _refreshMain();
-    return;
-  }
+  if (id === 'invRateMode') { _rateMode = e.target.value; _refreshMain(); return; }
   if (id === 'invHourlyRate') { _hourlyRate = parseFloat(e.target.value) || 0; _refreshInvoiceTotals(); }
   if (id === 'invFlatCost')   { _flatCost   = parseFloat(e.target.value) || 0; _refreshInvoiceTotals(); }
   if (id === 'invTaxRate')    { _taxRate    = parseFloat(e.target.value) || 0; _refreshInvoiceTotals(); }
@@ -238,7 +256,6 @@ function _refreshMain() {
   if (!el) return;
   el.innerHTML = _renderReportContent();
   if (typeof lucide !== 'undefined') lucide.createIcons();
-  // Rebind input handlers via delegation (already on rptMainContent)
 }
 
 function _renderReportContent() {
@@ -252,10 +269,8 @@ function _renderReport() {
   const total   = tickets.length;
   const resolved = tickets.filter(t => ['resolved', 'closed'].includes(t.status)).length;
   const resolvePct = total > 0 ? Math.round((resolved / total) * 100) : 0;
-
   const totalHours = tickets.reduce((sum, t) => sum + (t.actual_hours || t.estimated_hours || 0), 0);
 
-  // Average resolution time (days)
   const resolvedWithDates = tickets.filter(t => t.reported_date && t.resolved_date);
   let avgResolution = null;
   if (resolvedWithDates.length > 0) {
@@ -266,14 +281,12 @@ function _renderReport() {
     avgResolution = (totalDays / resolvedWithDates.length).toFixed(1);
   }
 
-  // Group by type
   const byType = {};
   for (const opt of TICKET_TYPE_OPTIONS) {
     const group = tickets.filter(t => t.type === opt.value);
     if (group.length > 0) byType[opt.value] = { label: opt.label, tickets: group };
   }
 
-  // Group by status
   const byStatus = {};
   for (const opt of TICKET_STATUS_OPTIONS) {
     const count = tickets.filter(t => t.status === opt.value).length;
@@ -298,8 +311,8 @@ function _renderReport() {
       <div class="rpt-print-meta">
         <strong>Maintenance Report</strong><br>
         Project: ${sanitize(_project.name)}<br>
-        Period: ${formatDate(_dateFrom)} – ${formatDate(_dateTo)}<br>
-        Generated: ${formatDate(new Date().toISOString())}
+        Period: ${formatDateID(_dateFrom)} – ${formatDateID(_dateTo)}<br>
+        Generated: ${formatDateID(new Date().toISOString())}
       </div>
     </div>
 
@@ -345,26 +358,29 @@ function _renderReport() {
               <tr>
                 <th>ID</th>
                 <th>Title</th>
+                <th>Severity</th>
                 <th>Priority</th>
                 <th>Status</th>
                 <th>Reported By</th>
                 <th>Reported</th>
+                <th>Due Date</th>
                 <th>Resolved</th>
                 <th>Hours</th>
               </tr>
             </thead>
             <tbody>
               ${grp.map(t => {
-                const member = _members.find(m => m.id === t.assigned_to);
                 const hours = t.actual_hours != null ? t.actual_hours : (t.estimated_hours != null ? `~${t.estimated_hours}` : '—');
                 return `<tr>
                   <td class="text-mono text-xs">${sanitize(t.id)}</td>
                   <td>${sanitize(t.title)}</td>
+                  <td>${t.severity ? sanitize(t.severity) : '—'}</td>
                   <td>${sanitize(t.priority || '—')}</td>
                   <td>${sanitize(_getLabelFor(TICKET_STATUS_OPTIONS, t.status))}</td>
                   <td>${sanitize(t.reported_by || '—')}</td>
-                  <td class="text-nowrap">${t.reported_date ? formatDate(t.reported_date) : '—'}</td>
-                  <td class="text-nowrap">${t.resolved_date ? formatDate(t.resolved_date) : '—'}</td>
+                  <td class="text-nowrap">${t.reported_date ? formatDateID(t.reported_date) : '—'}</td>
+                  <td class="text-nowrap">${t.due_date ? formatDateID(t.due_date) : '—'}</td>
+                  <td class="text-nowrap">${t.resolved_date ? formatDateID(t.resolved_date) : '—'}</td>
                   <td>${hours}</td>
                 </tr>`;
               }).join('')}
@@ -384,9 +400,14 @@ function _renderReport() {
               <th>ID</th>
               <th>Title</th>
               <th>Type</th>
+              <th>Severity</th>
               <th>Priority</th>
               <th>Status</th>
-              <th>Assigned To</th>
+              <th>PIC Dev</th>
+              <th>PIC Client</th>
+              <th>Ordered By</th>
+              <th>Assigned Date</th>
+              <th>Due Date</th>
               <th>Est. Hours</th>
               <th>Actual Hours</th>
               <th>Cost Est.</th>
@@ -394,14 +415,20 @@ function _renderReport() {
           </thead>
           <tbody>
             ${tickets.map(t => {
-              const member = _members.find(m => m.id === t.assigned_to);
+              const devNames = (t.pic_dev_ids || []).map(id => _members.find(m => m.id === id)?.full_name || '').filter(Boolean).join(', ');
+              const orderedBy = _members.find(m => m.id === t.ordered_by)?.full_name || '—';
               return `<tr>
                 <td class="text-mono text-xs">${sanitize(t.id)}</td>
                 <td>${sanitize(t.title)}</td>
                 <td>${sanitize(_getLabelFor(TICKET_TYPE_OPTIONS, t.type))}</td>
+                <td>${t.severity ? sanitize(t.severity) : '—'}</td>
                 <td>${sanitize(t.priority || '—')}</td>
                 <td>${sanitize(_getLabelFor(TICKET_STATUS_OPTIONS, t.status))}</td>
-                <td>${sanitize(member?.full_name || '—')}</td>
+                <td>${sanitize(devNames || '—')}</td>
+                <td>${sanitize(t.pic_client || '—')}</td>
+                <td>${sanitize(orderedBy)}</td>
+                <td class="text-nowrap">${t.assigned_date ? formatDateID(t.assigned_date) : '—'}</td>
+                <td class="text-nowrap">${t.due_date ? formatDateID(t.due_date) : '—'}</td>
                 <td>${t.estimated_hours != null ? t.estimated_hours + 'h' : '—'}</td>
                 <td>${t.actual_hours != null ? t.actual_hours + 'h' : '—'}</td>
                 <td>${t.cost_estimate != null ? _fmtCurrency(t.cost_estimate) : '—'}</td>
@@ -417,7 +444,6 @@ function _renderReport() {
 
 function _renderInvoiceBuilder() {
   return `
-    <!-- Invoice Controls (screen-only) -->
     <div class="inv-controls no-print">
       <h3 class="inv-controls__title">Invoice Settings</h3>
       <div class="inv-controls__row">
@@ -453,8 +479,6 @@ function _renderInvoiceBuilder() {
           placeholder="Payment terms, bank details, or any other notes...">${sanitize(_invoiceNote)}</textarea>
       </div>
     </div>
-
-    <!-- Invoice Document (printed) -->
     ${_renderInvoiceDocument()}`;
 }
 
@@ -481,7 +505,6 @@ function _renderInvoiceDocument() {
 
   return `
     <div class="inv-document" id="invDocument">
-      <!-- Header -->
       <div class="inv-header">
         <div class="inv-header__left">
           ${companyLogo ? `<img src="${companyLogo}" class="inv-logo" alt="Company Logo" />` : ''}
@@ -494,14 +517,13 @@ function _renderInvoiceDocument() {
           <div class="inv-title">INVOICE</div>
           <table class="inv-meta-table">
             <tr><td>Invoice No.</td><td><strong>${sanitize(invNum)}</strong></td></tr>
-            <tr><td>Date</td><td>${formatDate(invoiceDate)}</td></tr>
-            <tr><td>Period</td><td>${formatDate(_dateFrom)} – ${formatDate(_dateTo)}</td></tr>
+            <tr><td>Date</td><td>${formatDateID(invoiceDate)}</td></tr>
+            <tr><td>Period</td><td>${formatDateID(_dateFrom)} – ${formatDateID(_dateTo)}</td></tr>
             <tr><td>Project</td><td>${sanitize(_project.name)}</td></tr>
           </table>
         </div>
       </div>
 
-      <!-- Bill To -->
       <div class="inv-bill-section">
         <div class="inv-bill-to">
           <div class="inv-bill-to__label">Bill To</div>
@@ -516,12 +538,12 @@ function _renderInvoiceDocument() {
         </div>
       </div>
 
-      <!-- Line Items -->
       <table class="inv-items-table">
         <thead>
           <tr>
             <th style="width:100px;">Ticket ID</th>
             <th style="width:80px;">Type</th>
+            <th style="width:80px;">Severity</th>
             <th>Description</th>
             <th style="width:70px;text-align:right;">Hours</th>
             <th style="width:120px;text-align:right;">Unit Cost</th>
@@ -530,15 +552,19 @@ function _renderInvoiceDocument() {
         </thead>
         <tbody>
           ${lineItems.length === 0 ? `
-            <tr><td colspan="6" style="text-align:center;padding:24px;color:#888;">
+            <tr><td colspan="7" style="text-align:center;padding:24px;color:#888;">
               No tickets in selected date range
             </td></tr>` :
             lineItems.map(li => `
               <tr class="inv-item-row">
                 <td class="inv-item-id">${sanitize(li.id)}</td>
                 <td>${sanitize(li.type)}</td>
+                <td>${sanitize(li.severity || '—')}</td>
                 <td>
                   <div class="inv-item-title">${sanitize(li.title)}</div>
+                  ${li.picClient ? `<div class="inv-item-note">PIC Client: ${sanitize(li.picClient)}</div>` : ''}
+                  ${li.orderedBy ? `<div class="inv-item-note">Ordered By: ${sanitize(li.orderedBy)}</div>` : ''}
+                  ${li.dueDate ? `<div class="inv-item-note">Due: ${li.dueDate}</div>` : ''}
                   ${li.resolution ? `<div class="inv-item-note">${sanitize(li.resolution.substring(0, 80))}${li.resolution.length > 80 ? '...' : ''}</div>` : ''}
                 </td>
                 <td style="text-align:right;">${li.hours != null ? li.hours + 'h' : '—'}</td>
@@ -548,7 +574,6 @@ function _renderInvoiceDocument() {
         </tbody>
       </table>
 
-      <!-- Totals -->
       <div class="inv-totals">
         <div class="inv-totals__row">
           <span>Subtotal</span>
@@ -564,14 +589,12 @@ function _renderInvoiceDocument() {
         </div>
       </div>
 
-      <!-- Notes -->
       ${_invoiceNote ? `
         <div class="inv-notes">
           <div class="inv-notes__label">Notes</div>
           <div class="inv-notes__body">${sanitize(_invoiceNote)}</div>
         </div>` : ''}
 
-      <!-- Footer -->
       <div class="inv-footer">
         Thank you for your business. Generated by TRACKLY — ${sanitize(companyName)}
       </div>
@@ -583,8 +606,7 @@ function _buildLineItems(tickets) {
     .filter(t => t.status !== 'rejected')
     .map(t => {
       const hours = t.actual_hours ?? t.estimated_hours ?? null;
-      let unitCost = 0;
-      let subtotal = 0;
+      let unitCost = 0, subtotal = 0;
 
       if (_rateMode === 'hourly') {
         unitCost = _hourlyRate;
@@ -593,16 +615,22 @@ function _buildLineItems(tickets) {
         unitCost = _flatCost;
         subtotal = _flatCost;
       } else {
-        // custom — use ticket cost_estimate
         unitCost = t.cost_estimate || 0;
         subtotal = t.cost_estimate || 0;
       }
 
+      const orderedByUser = _members.find(m => m.id === t.ordered_by);
+
       return {
         id:         t.id,
         type:       _getLabelFor(TICKET_TYPE_OPTIONS, t.type),
+        severity:   t.severity || '',
         title:      t.title,
         resolution: t.resolution_notes || '',
+        picClient:  t.pic_client || '',
+        orderedBy:  orderedByUser?.full_name || '',
+        dueDate:    t.due_date ? formatDateID(t.due_date) : '',
+        assignedDate: t.assigned_date ? formatDateID(t.assigned_date) : '',
         hours,
         unitCost,
         subtotal,
@@ -613,7 +641,6 @@ function _buildLineItems(tickets) {
 function _refreshInvoiceTotals() {
   const el = document.getElementById('rptMainContent');
   if (!el) return;
-  // Re-render only the invoice document portion
   const docEl = document.getElementById('invDocument');
   if (docEl) {
     docEl.outerHTML = _renderInvoiceDocument();
@@ -623,19 +650,116 @@ function _refreshInvoiceTotals() {
   }
 }
 
+// ─── Export Functions ─────────────────────────────────────────────────────────
+
+function _buildExportRows() {
+  return _filteredTickets.map((t, idx) => {
+    const devNames = (t.pic_dev_ids || []).map(id => _members.find(m => m.id === id)?.full_name || '').filter(Boolean).join(', ');
+    const orderedByUser = _members.find(m => m.id === t.ordered_by);
+    return {
+      'No':                  idx + 1,
+      'ID Ticket':           t.id || '',
+      'Judul':               t.title || '',
+      'Tipe':                _getLabelFor(TICKET_TYPE_OPTIONS, t.type),
+      'Severity':            t.severity || '',
+      'Priority':            _getLabelFor(TICKET_PRIORITY_OPTIONS, t.priority),
+      'Status':              _getLabelFor(TICKET_STATUS_OPTIONS, t.status),
+      'Dilaporkan Oleh':     t.reported_by || '',
+      'PIC Dev':             devNames,
+      'PIC Client':          t.pic_client || '',
+      'Dipesan Oleh':        orderedByUser?.full_name || '',
+      'Tgl Assign':          t.assigned_date ? formatDateID(t.assigned_date) : '',
+      'Tgl Due':             t.due_date ? formatDateID(t.due_date) : '',
+      'Est. Jam':            t.estimated_hours != null ? t.estimated_hours : '',
+      'Aktual Jam':          t.actual_hours != null ? t.actual_hours : '',
+      'Estimasi Biaya (IDR)': t.cost_estimate != null ? t.cost_estimate : '',
+      'Catatan Resolusi':    t.resolution_notes || '',
+    };
+  });
+}
+
+function _handleExportExcel() {
+  // Load SheetJS dynamically if not already loaded
+  if (typeof XLSX === 'undefined') {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js';
+    script.onload = () => _doExportExcel();
+    script.onerror = () => showToast('Failed to load SheetJS library. Check your internet connection.', 'error');
+    document.head.appendChild(script);
+  } else {
+    _doExportExcel();
+  }
+}
+
+function _doExportExcel() {
+  try {
+    const rows = _buildExportRows();
+    if (rows.length === 0) { showToast('No tickets to export in the selected date range.', 'warning'); return; }
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 5 }, { wch: 12 }, { wch: 40 }, { wch: 14 }, { wch: 10 },
+      { wch: 10 }, { wch: 14 }, { wch: 20 }, { wch: 30 }, { wch: 20 },
+      { wch: 20 }, { wch: 18 }, { wch: 18 }, { wch: 10 }, { wch: 12 },
+      { wch: 20 }, { wch: 40 },
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Maintenance Report');
+
+    const projectName = (_project?.name || 'project').replace(/[^a-z0-9]/gi, '_');
+    const filename = `maintenance_report_${projectName}_${_dateFrom}_${_dateTo}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    showToast('Excel file exported successfully.', 'success');
+  } catch (err) {
+    debug('Excel export error:', err);
+    showToast('Failed to export Excel: ' + err.message, 'error');
+  }
+}
+
+function _handleExportCsv() {
+  try {
+    const rows = _buildExportRows();
+    if (rows.length === 0) { showToast('No tickets to export in the selected date range.', 'warning'); return; }
+
+    const headers = Object.keys(rows[0]);
+    const escape = val => {
+      const str = String(val == null ? '' : val);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    };
+
+    const csvLines = [
+      headers.map(escape).join(','),
+      ...rows.map(row => headers.map(h => escape(row[h])).join(',')),
+    ];
+    const csvContent = csvLines.join('\n');
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const projectName = (_project?.name || 'project').replace(/[^a-z0-9]/gi, '_');
+    a.download = `maintenance_report_${projectName}_${_dateFrom}_${_dateTo}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSV file exported successfully.', 'success');
+  } catch (err) {
+    debug('CSV export error:', err);
+    showToast('Failed to export CSV: ' + err.message, 'error');
+  }
+}
+
 // ─── PDF Export ───────────────────────────────────────────────────────────────
 
 function _handleExportPdf() {
-  // Add print class to body for layout adjustments
   document.body.classList.add('is-printing');
-
-  // Show print dialog
   window.print();
-
-  // Remove print class after dialog
-  setTimeout(() => {
-    document.body.classList.remove('is-printing');
-  }, 1000);
+  setTimeout(() => { document.body.classList.remove('is-printing'); }, 1000);
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

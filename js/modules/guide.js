@@ -324,16 +324,41 @@ function buildGuideHTML() {
       <div class="guide-section card" id="guide-maintenance">
         <div class="card__body">
           <h2 class="guide-section__title">
-            <i data-lucide="tool" aria-hidden="true"></i>
-            9. Maintenance
+            <i data-lucide="wrench" aria-hidden="true"></i>
+            9. Maintenance (Enhanced)
           </h2>
-          <p>The Maintenance module tracks post-delivery support tickets for projects in the <em>Running</em> or <em>Maintenance</em> phase.</p>
-          <h3>Maintenance Tickets</h3>
-          <p>Create tickets with type (Bug, Adjustment, Enhancement, User Request, Incident), priority, assigned developer, estimated/actual hours, and resolution notes.</p>
+          <p>The Maintenance module tracks post-delivery support tickets for projects in the <em>Running</em> or <em>Maintenance</em> phase. Phase 21 adds SLA-focused fields, multi-dev assignment, client visibility, and file attachments.</p>
+
+          <h3>New Fields (Phase 21)</h3>
+          <ul>
+            <li><strong>Severity</strong> — <em>Major</em> or <em>Minor</em>: classifies the impact of the issue, separate from Priority. Major = business-impacting; Minor = cosmetic or low-impact. Displayed as an orange (Major) or grey (Minor) badge in the list and detail panel.</li>
+            <li><strong>Assigned Date</strong> — The date the ticket was formally assigned to a developer. Useful for SLA tracking.</li>
+            <li><strong>Due Date</strong> — Target completion date for the ticket. Shown prominently in the detail panel (highlighted in red).</li>
+            <li><strong>Ordered By</strong> — The PM or Admin who commissioned this ticket. Selected from a dropdown of PM/Admin users.</li>
+            <li><strong>PIC Dev (Multi-select)</strong> — One or more developers assigned to this ticket. If at least one developer is selected, <strong>only those developers can see this ticket</strong>. If left empty, all developers can see it. This enforces per-developer ticket visibility.</li>
+            <li><strong>PIC Client</strong> — The name of the client-side PIC (Person in Charge). Viewers (client role) can only see tickets where PIC Client is filled in. This controls what the client sees.</li>
+            <li><strong>Attachments</strong> — Upload evidence files (screenshots, logs, documents). Each file is stored as base64 (max 5MB per file). Attachments appear in the detail panel with filename, file size, and a download link. No attachments are included in exports.</li>
+          </ul>
+
+          <h3>Visibility Rules</h3>
+          <ul>
+            <li><strong>Admin / PM</strong>: See all tickets regardless of PIC Dev or PIC Client settings.</li>
+            <li><strong>Developer</strong>: If a ticket has no PIC Dev selected, it is visible to all developers. Once any developer is selected in PIC Dev, only those developers can see the ticket.</li>
+            <li><strong>Viewer / Client</strong>: Can only see tickets where the PIC Client field is non-empty. This allows PM to control which tickets are visible to the client contact.</li>
+          </ul>
+
           <h3>Ticket Pipeline</h3>
-          <p>Tickets flow through: <strong>Open → In Progress → Resolved → Closed</strong>. Use the quick-advance button to move a ticket to the next status.</p>
+          <p>Tickets flow through: <strong>Open → In Progress → Resolved → Closed</strong>. Use the quick-advance button in the detail panel to move to the next status, or use the Reject button to reject a ticket.</p>
+
           <h3>Maintenance Report &amp; Invoice</h3>
-          <p>Click <strong>Generate Report</strong> (available to PM and Admin) to open the Maintenance Report page. Set a date range, choose a billing method (hourly rate, flat per ticket, or custom), and generate a printable invoice.</p>
+          <p>Click <strong>Generate Report</strong> from the Maintenance page (available to PM and Admin). Set a date range, then use the export buttons in the header:</p>
+          <ul>
+            <li><strong>Export PDF</strong> — Opens the browser print dialog. Includes all new fields (Severity, Due Date, Assigned Date, Ordered By, PIC Client) in both the report table and invoice line items. All dates use Indonesian format (e.g., 15 Maret 2025).</li>
+            <li><strong>Export Excel (.xlsx)</strong> — Downloads a full Excel spreadsheet of all tickets in the date range. Text-only — no attachments. Columns: No, ID Ticket, Judul, Tipe, Severity, Priority, Status, Dilaporkan Oleh, PIC Dev, PIC Client, Dipesan Oleh, Tgl Assign, Tgl Due, Est. Jam, Aktual Jam, Estimasi Biaya (IDR), Catatan Resolusi. All dates in Indonesian format.</li>
+            <li><strong>Export CSV</strong> — Downloads the same data as a comma-separated values file. UTF-8 with BOM for proper Excel compatibility.</li>
+            <li><strong>Generate Invoice</strong> — Switch to invoice builder view. Choose billing mode (Hourly Rate / Flat / Custom). New fields (Severity, PIC Client, Ordered By, Due Date) are shown on each invoice line item.</li>
+          </ul>
+
           <div class="guide-warning">
             <i data-lucide="alert-triangle" aria-hidden="true"></i>
             <p>The Maintenance tab is hidden unless the project phase is set to <em>Running</em> or <em>Maintenance</em>. Update the project phase from the Overview tab.</p>
