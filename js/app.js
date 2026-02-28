@@ -149,10 +149,12 @@ function registerAllRoutes() {
     setContent(renderPageShell('Kanban Board', `Project ${params.id}`));
   });
 
-  // Backlog
-  registerRoute('/projects/:id/backlog', (params) => {
+  // Backlog — Phase 8 full implementation
+  registerRoute('/projects/:id/backlog', async (params) => {
     if (!requireAuth()) return;
-    setContent(renderPageShell('Backlog', `Project ${params.id}`));
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading backlog...</p></div></div>');
+    const { render: renderBacklog } = await import('./modules/backlog.js');
+    await renderBacklog({ id: params.id });
   });
 
   // Sprint

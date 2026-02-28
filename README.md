@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v0.7.0-alpha` |
-| **Current Phase** | Phase 8 — Task Management & Backlog |
+| **Current Version** | `v0.8.0-alpha` |
+| **Current Phase** | Phase 9 — Kanban Board |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -672,17 +672,17 @@ Tasks:
 **Deliverable**: Tasks can be created, edited, and managed in backlog
 
 Tasks:
-- Task creation form (all fields from section 5.8)
-- Task detail modal / slide-over panel
-- Rich text description area (basic Markdown render)
-- Assignee picker (multi-select with avatars)
-- Priority selector with color-coded icons
-- Tag input (autocomplete from existing tags)
-- Checklist widget (add/remove/check items)
-- Comments section (add, timestamped)
-- Backlog list page (sortable, filterable, bulk actions)
-- Inline quick-edit on backlog rows
-- Story points input
+- [x] Task creation form (all fields from section 5.8)
+- [x] Task detail modal / slide-over panel
+- [x] Rich text description area (basic Markdown render)
+- [x] Assignee picker (multi-select with avatars)
+- [x] Priority selector with color-coded icons
+- [x] Tag input (autocomplete from existing tags)
+- [x] Checklist widget (add/remove/check items)
+- [x] Comments section (add, timestamped)
+- [x] Backlog list page (sortable, filterable, bulk actions)
+- [x] Inline quick-edit on backlog rows
+- [x] Story points input
 
 ---
 
@@ -844,10 +844,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v0.7.0-alpha                               ║
-║  Current Phase     : Phase 8 — Task Management & Backlog        ║
+║  Current Version   : v0.8.0-alpha                               ║
+║  Current Phase     : Phase 9 — Kanban Board                     ║
 ║  Phase Status      : NOT STARTED                                ║
-║  Next Phase        : Phase 9 — Kanban Board                     ║
+║  Next Phase        : Phase 10 — Sprint Management               ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -858,7 +858,7 @@ Tasks:
 ║  [x] Phase 5  — Member Management                  v0.5.0      ║
 ║  [x] Phase 6  — Client Management                  v0.6.0      ║
 ║  [x] Phase 7  — Project Management Core            v0.7.0      ║
-║  [ ] Phase 8  — Task Management & Backlog          v0.8.0      ║
+║  [x] Phase 8  — Task Management & Backlog          v0.8.0      ║
 ║  [ ] Phase 9  — Kanban Board                       v0.9.0      ║
 ║  [ ] Phase 10 — Sprint Management                  v0.10.0     ║
 ║  [ ] Phase 11 — Gantt Chart                        v0.11.0     ║
@@ -897,6 +897,17 @@ Tasks:
 ║                         page with banner, subnav, stats row,    ║
 ║                         budget overview, team panel; filter by  ║
 ║                         status, phase, client; delete confirm.  ║
+║  v0.8.0  [2026-02-28]  Task Management & Backlog: full task    ║
+║                         CRUD with all section 5.8 fields;       ║
+║                         backlog list with sort, filter (status, ║
+║                         priority, type, assignee), search;      ║
+║                         inline status quick-edit; bulk select,  ║
+║                         bulk status/priority/sprint/delete;     ║
+║                         task detail slide-over with markdown    ║
+║                         render, live checklist, comment thread; ║
+║                         assignee chip picker, tag input, story  ║
+║                         points, checklist widget; project       ║
+║                         subnav context on all backlog views.    ║
 ╚══════════════════════════════════════════════════════════════════╝
 ```
 
@@ -1199,4 +1210,4 @@ When given a `.zip` from a previous phase and asked to continue to the next phas
 ---
 
 *TRACKLY — Track Everything, Deliver Anything*  
-*v0.6.0-alpha | Phase 6 of 17 complete | Internal IT Consultant PMIS*
+*v0.8.0-alpha | Phase 8 of 17 complete | Internal IT Consultant PMIS*
