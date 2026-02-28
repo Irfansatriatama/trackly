@@ -101,7 +101,7 @@ function _renderPage() {
     <a class="project-subnav__link" href="#/projects/${id}/reports"><i data-lucide="bar-chart-2" aria-hidden="true"></i> Reports</a>
   </div>
 
-  <div class="page-header">
+  <div class="page-header" style="margin-top:var(--space-4);">
     <div class="page-header__info">
       <h1 class="page-header__title"><i data-lucide="gantt-chart" aria-hidden="true"></i> Gantt Chart</h1>
       <p class="page-header__subtitle">${sanitize(_project.name)}</p>

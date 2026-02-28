@@ -51,6 +51,40 @@ const CURRENCIES = [
 ];
 
 const CHANGELOG = [
+  { version:'v1.3.1', date:'2026-02-28', items:[
+    'Phase 21 — Maintenance Enhancement: severity (major/minor), assigned_date, due_date, ordered_by, pic_dev_ids (multi-select, developer visibility filter), pic_client (viewer visibility filter), file attachments (base64, max 5MB)',
+    'Ticket list updated with Severity & Due Date columns; detail panel shows all new fields with Indonesian dates',
+    'PIC Dev displayed as avatar chips in ticket detail panel',
+    'maintenance-report.js: Export Excel (SheetJS CDN), Export CSV (pure JS, BOM-prefixed), formatDateID() for all date fields',
+    'PDF export updated with Severity, Due Date, Assigned Date, Ordered By, PIC Client columns',
+    'guide.js section 9 updated with full Phase 21 field explanations',
+    'DB version bumped to 4; sw.js cache bumped to v1.3.1',
+  ]},
+  { version:'v1.3.0', date:'2026-02-28', items:[
+    'Phase 20 — Project Discussion: discussions store added to db.js (DB v3)',
+    'Discussion tab in project subnav (Admin/PM/Developer) between Gantt and Log',
+    'Feed layout: newest posts first, paginated 20 per page, pinned posts section',
+    'Post type badges: blocker=red, decision=purple, question=blue, update=green, general=neutral',
+    'Inline collapsible reply threads (show last 3, expand all), Markdown render for posts and replies',
+    'File attachments (base64, max 5MB, download link), edit/delete own post, Admin/PM pin/unpin',
+    'logActivity() called for all discussion actions; sw.js bumped to v1.3.0',
+  ]},
+  { version:'v1.2.0', date:'2026-02-28', items:[
+    'Phase 19 — Meeting Agenda & Notulensi: meetings store added to db.js (DB v2)',
+    'Calendar view with month/week toggle; meeting list card with type badge, attendees, status',
+    'Meeting CRUD modal (tabs: Details, Agenda, Attendees & Projects)',
+    'Meeting detail page with agenda checklist and quick status advance (Scheduled → Ongoing → Done)',
+    'Notulensi panel: Mode 1 (Markdown editor + live preview), Mode 2 (file upload base64 max 5MB)',
+    'Action Items with Create Task button to convert to project backlog task',
+    'Meetings in sidebar (Admin/PM only); sw.js bumped to v1.2.0',
+  ]},
+  { version:'v1.1.0', date:'2026-02-28', items:[
+    'Phase 18 — Audit Trail: logActivity() helper in utils.js; ACT- prefix in ID_PREFIX',
+    'Log tab in project subnav (Admin/PM only): timeline view, filter bar, pagination (50/page), diff display',
+    'All modules retrofitted: projects, tasks, board, sprint, maintenance, members, clients, assets',
+    'Dashboard Activity Feed shows last 20 real entries across all projects',
+    'sw.js cache bumped to v1.1.0',
+  ]},
   { version:'v1.0.0', date:'2026-02-28', items:[
     'Phase 17 — Testing, Documentation & Handoff: stable v1.0.0 release',
     'In-app User Guide page with all 15 sections rendered natively',
@@ -322,7 +356,7 @@ function renderSettingsPage() {
               <h2 class="about-title">TRACKLY</h2>
               <p class="about-tagline text-muted">Track Everything, Deliver Anything</p>
               <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-2);">
-                <span class="badge badge--info">v0.16.0-alpha</span>
+                <span class="badge badge--info">v1.3.1</span>
                 <span class="badge badge--success">Phase 16 of 17</span>
                 <span class="badge badge--primary">PWA Ready</span>
               </div>
@@ -417,7 +451,7 @@ async function handleExportData() {
   btn.disabled = true;
   try {
     const stores = ['users','projects','tasks','sprints','clients','assets','maintenance','invoices','activity_log','settings'];
-    const exportData = { _meta: { version:'v0.16.0', exportedAt: nowISO(), app:'TRACKLY' } };
+    const exportData = { _meta: { version:'v1.3.1', exportedAt: nowISO(), app:'TRACKLY' } };
     for (const store of stores) {
       try { exportData[store] = await getAll(store); }
       catch (_) { exportData[store] = []; }

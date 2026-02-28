@@ -165,7 +165,7 @@ function renderMaintenancePage() {
     <div class="page-container page-enter">
       ${_buildSubnav()}
 
-      <div class="page-header" style="margin-top:var(--space-6);">
+      <div class="page-header" style="margin-top:var(--space-4);">
         <div class="page-header__info">
           <h1 class="page-header__title">Maintenance</h1>
           <p class="page-header__subtitle">${sanitize(_project.name)} — Live system ticket tracking</p>

@@ -169,10 +169,10 @@ function _buildPageHTML() {
   return `
     <div class="page-container page-enter">
       ${_renderProjectHeader()}
-      <div class="page-header" style="padding:var(--space-6) var(--space-6) 0;">
-        <div class="page-header__content">
-          <h1 class="page-title">Discussion</h1>
-          <p class="page-subtitle text-muted">Project updates, questions, decisions, and blockers</p>
+      <div class="page-header" style="margin-top:var(--space-4);">
+        <div class="page-header__info">
+          <h1 class="page-header__title">Discussion</h1>
+          <p class="page-header__subtitle">${sanitize(_project.name)} &mdash; Project updates, questions, decisions, and blockers</p>
         </div>
         <div class="page-header__actions">
           <button class="btn btn--primary" id="btnNewPost">
@@ -694,7 +694,7 @@ function _openPostModal(existingPost = null) {
       <button class="btn btn--primary" id="savePostModal">${isEdit ? 'Save Changes' : 'Post'}</button>
     </div>`;
 
-  openModal({ content: modalContent, size: 'lg' });
+  openModal({ body: modalContent, size: 'lg' });
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
   document.getElementById('closePostModal')?.addEventListener('click', () => closeModal());

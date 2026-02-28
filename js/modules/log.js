@@ -77,7 +77,7 @@ export async function render(params) {
     content.innerHTML = `
       <div class="page-container page-enter">
         ${subnavHtml}
-        <div class="page-header">
+        <div class="page-header" style="margin-top:var(--space-4);">
           <div class="page-header__info">
             <h1 class="page-header__title">
               <i data-lucide="clock" aria-hidden="true"></i>

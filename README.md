@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.3.1` |
-| **Current Phase** | Phase 22 — (TBD) |
+| **Current Version** | `v1.3.2` |
+| **Current Phase** | Phase 23 — (TBD) |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -1110,10 +1110,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v1.3.1                                     ║
-║  Current Phase     : Phase 22 — (TBD)                          ║
+║  Current Version   : v1.3.2                                     ║
+║  Current Phase     : Phase 23 — (TBD)                          ║
 ║  Phase Status      : NOT STARTED                                ║
-║  Next Phase        : Phase 23 — (TBD)                          ║
+║  Next Phase        : Phase 24 — (TBD)                          ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -1138,9 +1138,30 @@ Tasks:
 ║  [x] Phase 19 — Meeting Agenda & Notulensi         v1.2.0      ║
 ║  [x] Phase 20 — Project Discussion                 v1.3.0      ║
 ║  [x] Phase 21 — Maintenance Enhancement            v1.3.1      ║
+║  [x] Phase 22 — Bugfix Phase 22                    v1.3.2      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
 ║                                                                 ║
+║  v1.3.2 [2026-02-28]  Phase 22 — Bugfix:                      ║
+║                         #1 app.js: added try-catch to all      ║
+║                         project subnav route handlers (board,  ║
+║                         backlog, sprint, gantt, maintenance,    ║
+║                         discussion, log) — errors now show      ║
+║                         informative message instead of stuck    ║
+║                         loading spinner; #2 discussion.js:     ║
+║                         fixed openModal() param from content:  ║
+║                         to body: — New Post modal now renders  ║
+║                         form correctly; #3 gantt.css: changed  ║
+║                         .gantt-bars from position:relative to  ║
+║                         position:absolute top:0 left:0 — bars  ║
+║                         now overlay canvas without overlapping ║
+║                         header row; #4 gantt.js+maintenance.js:║
+║                         added margin-top:var(--space-4) to     ║
+║                         page-header to prevent subnav overlap; ║
+║                         log.js: same fix applied; #5 discus-   ║
+║                         sion.js: page-header refactored to use ║
+║                         standard page-header__info pattern,    ║
+║                         consistent with Board/Backlog/Sprint.  ║
 ║  v1.3.1 [2026-02-28]  Phase 21 — Maintenance Enhancement:    ║
 ║                         DB version bumped to 4; maintenance.js  ║
 ║                         retrofitted with severity (major/minor  ║
