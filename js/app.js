@@ -159,10 +159,12 @@ function registerAllRoutes() {
     await renderBacklog({ id: params.id });
   });
 
-  // Sprint
-  registerRoute('/projects/:id/sprint', (params) => {
+  // Sprint — Phase 10 full implementation
+  registerRoute('/projects/:id/sprint', async (params) => {
     if (!requireAuth()) return;
-    setContent(renderPageShell('Sprint Management', `Project ${params.id}`));
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading sprints...</p></div></div>');
+    const { render: renderSprint } = await import('./modules/sprint.js');
+    await renderSprint({ id: params.id });
   });
 
   // Gantt

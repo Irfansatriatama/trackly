@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v0.9.0-alpha` |
-| **Current Phase** | Phase 10 — Sprint Management |
+| **Current Version** | `v0.10.0-alpha` |
+| **Current Phase** | Phase 11 — Gantt Chart |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -708,13 +708,13 @@ Tasks:
 **Deliverable**: PM can run sprints with full planning workflow
 
 Tasks:
-- Sprint list per project (create sprint with name, dates, goal)
-- Sprint planning view: two-pane (backlog left, sprint right) with drag-to-assign
-- Active sprint indicator in sidebar
-- Sprint board (board filtered to active sprint tasks)
-- Sprint completion flow: auto-move unfinished tasks to backlog or next sprint
-- Sprint velocity chart (bar chart, story points completed per sprint)
-- Sprint retrospective notes
+- [x] Sprint list per project (create sprint with name, dates, goal)
+- [x] Sprint planning view: two-pane (backlog left, sprint right) with drag-to-assign
+- [x] Active sprint indicator in sidebar
+- [x] Sprint board (board filtered to active sprint tasks)
+- [x] Sprint completion flow: auto-move unfinished tasks to backlog or next sprint
+- [x] Sprint velocity chart (bar chart, story points completed per sprint)
+- [x] Sprint retrospective notes
 
 ---
 
@@ -844,10 +844,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v0.9.0-alpha                               ║
-║  Current Phase     : Phase 10 — Sprint Management               ║
+║  Current Version   : v0.10.0-alpha                              ║
+║  Current Phase     : Phase 11 — Gantt Chart                     ║
 ║  Phase Status      : NOT STARTED                                ║
-║  Next Phase        : Phase 11 — Gantt Chart                     ║
+║  Next Phase        : Phase 12 — Maintenance Module              ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -860,7 +860,7 @@ Tasks:
 ║  [x] Phase 7  — Project Management Core            v0.7.0      ║
 ║  [x] Phase 8  — Task Management & Backlog          v0.8.0      ║
 ║  [x] Phase 9  — Kanban Board                       v0.9.0      ║
-║  [ ] Phase 10 — Sprint Management                  v0.10.0     ║
+║  [x] Phase 10 — Sprint Management                  v0.10.0     ║
 ║  [ ] Phase 11 — Gantt Chart                        v0.11.0     ║
 ║  [ ] Phase 12 — Maintenance Module                 v0.12.0     ║
 ║  [ ] Phase 13 — Maintenance Report & Invoice       v0.13.0     ║
@@ -908,6 +908,15 @@ Tasks:
 ║                         assignee chip picker, tag input, story  ║
 ║                         points, checklist widget; project       ║
 ║                         subnav context on all backlog views.    ║
+║  v0.10.0 [2026-02-28]  Sprint Management: sprint CRUD with     ║
+║                         name/dates/goal; two-pane planning view  ║
+║                         with native drag-and-drop (backlog ↔      ║
+║                         sprint); active sprint banner; sprint     ║
+║                         board (filtered Kanban); complete sprint  ║
+║                         flow with unfinished task options (move   ║
+║                         to backlog or next sprint); velocity bar  ║
+║                         chart on canvas; retrospective notes;     ║
+║                         reopen/delete sprints.                   ║
 ║  v0.9.0  [2026-02-28]  Kanban Board: configurable columns per  ║
 ║                         project (stored localStorage); native   ║
 ║                         HTML5 Drag API with drop-zone highlight ║

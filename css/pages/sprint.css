@@ -1,0 +1,558 @@
+/**
+ * TRACKLY — sprint.css
+ * Phase 10: Sprint Management Styles
+ */
+
+/* ── Sprint page layout ─────────────────────────────────────────────────────── */
+
+.sprint-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ── Sprint list ────────────────────────────────────────────────────────────── */
+
+.sprint-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.sprint-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 100ms ease;
+}
+
+.sprint-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.sprint-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.sprint-card__name {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sprint-card__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.sprint-card__meta-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.sprint-card__meta-item svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.sprint-card__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.sprint-card__body {
+  padding: var(--space-4) var(--space-5);
+}
+
+.sprint-card__goal {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-3);
+  font-style: italic;
+}
+
+.sprint-card__stats {
+  display: flex;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.sprint-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sprint-stat__label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sprint-stat__value {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.sprint-stat__value--success { color: var(--color-success); }
+.sprint-stat__value--warning { color: var(--color-warning); }
+.sprint-stat__value--danger  { color: var(--color-danger); }
+
+/* ── Progress bar (sprint) ──────────────────────────────────────────────────── */
+
+.sprint-progress-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.sprint-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--color-border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.sprint-progress-bar__fill {
+  height: 100%;
+  background: var(--color-success);
+  border-radius: 99px;
+  transition: width 300ms ease;
+}
+
+.sprint-progress-pct {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  min-width: 36px;
+  text-align: right;
+}
+
+/* ── Active sprint banner ───────────────────────────────────────────────────── */
+
+.active-sprint-banner {
+  background: linear-gradient(135deg, #EFF6FF 0%, #F0F9FF 100%);
+  border: 1px solid #BFDBFE;
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.active-sprint-banner__icon {
+  width: 40px;
+  height: 40px;
+  background: var(--color-primary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: white;
+}
+
+.active-sprint-banner__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.active-sprint-banner__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.active-sprint-banner__title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.active-sprint-banner__name {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.active-sprint-banner__meta {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.active-sprint-banner__actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* ── Sprint planning two-pane layout ────────────────────────────────────────── */
+
+.sprint-planning {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .sprint-planning {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sprint-planning__pane {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+  max-height: 70vh;
+  overflow: hidden;
+}
+
+.sprint-planning__pane-header {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.sprint-planning__pane-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  flex: 1;
+}
+
+.sprint-planning__pane-count {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  background: var(--color-border);
+  border-radius: 99px;
+  padding: 2px 8px;
+}
+
+.sprint-planning__pane-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sprint-planning__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+  padding: var(--space-6);
+  color: var(--color-text-muted);
+  gap: var(--space-2);
+}
+
+.sprint-planning__empty svg {
+  width: 36px;
+  height: 36px;
+  opacity: 0.4;
+}
+
+.sprint-planning__empty-text {
+  font-size: var(--text-sm);
+}
+
+/* ── Draggable planning task card ───────────────────────────────────────────── */
+
+.plan-task-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  cursor: grab;
+  user-select: none;
+  transition: box-shadow 100ms ease, transform 100ms ease, border-left-color 100ms ease;
+}
+
+.plan-task-card:hover {
+  box-shadow: var(--shadow-card);
+  transform: translateY(-1px);
+}
+
+.plan-task-card.is-dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
+.plan-task-card[data-priority="critical"] { border-left-color: var(--color-danger); }
+.plan-task-card[data-priority="high"]     { border-left-color: var(--color-warning); }
+.plan-task-card[data-priority="medium"]   { border-left-color: var(--color-info); }
+.plan-task-card[data-priority="low"]      { border-left-color: #94A3B8; }
+
+.plan-task-card__title {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: var(--space-2);
+  line-height: 1.4;
+}
+
+.plan-task-card__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.plan-task-card__id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.plan-task-card__sp {
+  font-size: var(--text-xs);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 99px;
+  padding: 1px 7px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+/* Drop zone highlight */
+.sprint-planning__pane-body.is-drag-over {
+  background: #EFF6FF;
+  border: 2px dashed var(--color-primary);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Sprint board (filtered Kanban) ─────────────────────────────────────────── */
+
+.sprint-board-wrapper {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Sprint velocity chart ──────────────────────────────────────────────────── */
+
+.velocity-chart-wrapper {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  margin-top: var(--space-4);
+}
+
+.velocity-chart-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-4);
+}
+
+.velocity-chart-canvas-wrap {
+  overflow-x: auto;
+}
+
+/* ── Retrospective notes ────────────────────────────────────────────────────── */
+
+.retro-section {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  margin-top: var(--space-4);
+}
+
+.retro-section__title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.retro-section__title svg {
+  width: 18px;
+  height: 18px;
+  color: var(--color-secondary);
+}
+
+/* ── Complete sprint modal ──────────────────────────────────────────────────── */
+
+.complete-sprint-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 240px;
+  overflow-y: auto;
+  margin: var(--space-3) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  background: var(--color-surface);
+}
+
+.complete-sprint-task-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+}
+
+.complete-sprint-task-item__id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.complete-sprint-task-item__title {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text);
+}
+
+/* ── Tabs inside sprint detail ──────────────────────────────────────────────── */
+
+.sprint-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--color-border);
+  margin: var(--space-4) 0 0 0;
+  flex-shrink: 0;
+}
+
+.sprint-tab {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.sprint-tab svg {
+  width: 16px;
+  height: 16px;
+}
+
+.sprint-tab:hover {
+  color: var(--color-text);
+}
+
+.sprint-tab.is-active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
+}
+
+.sprint-tab-content {
+  display: none;
+  flex: 1;
+  min-height: 0;
+}
+
+.sprint-tab-content.is-active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Planning search bar ────────────────────────────────────────────────────── */
+
+.planning-search {
+  position: relative;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  flex-shrink: 0;
+}
+
+.planning-search__icon {
+  position: absolute;
+  left: calc(var(--space-3) + var(--space-2));
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.planning-search__input {
+  padding-left: 30px !important;
+  height: 30px;
+  font-size: var(--text-xs) !important;
+}
+
+/* ── Empty state for sprint list ────────────────────────────────────────────── */
+
+.sprint-list-empty {
+  padding: var(--space-16) 0;
+}
+
+/* ── Sprint view tabs layout ────────────────────────────────────────────────── */
+
+.sprint-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.sprint-board-tab-content {
+  flex: 1;
+  overflow: hidden;
+}
