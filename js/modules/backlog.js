@@ -4,7 +4,7 @@
  */
 
 import { getAll, getById, add, update, remove } from '../core/db.js';
-import { generateSequentialId, nowISO, formatDate, sanitize, debug, logActivity } from '../core/utils.js';
+import { generateSequentialId, nowISO, formatDate, sanitize, debug, logActivity, buildProjectBanner } from '../core/utils.js';
 import { showToast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { showConfirm } from '../components/confirm.js';
@@ -94,23 +94,15 @@ function _computeAllTags() {
 function renderBacklogPage() {
   const content = document.getElementById('main-content');
   if (!content) return;
-  const id = sanitize(_projectId);
-  const showMaintenance = ['running','maintenance'].includes(_project.phase) || _project.status === 'maintenance';
+  const session = getSession();
+  const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
+  const banner = buildProjectBanner(_project, 'backlog', { renderBadge, isAdminOrPM });
 
   content.innerHTML = `
     <div class="page-container page-enter backlog-page">
-      <div class="project-subnav">
-        <a class="project-subnav__link" href="#/projects/${id}"><i data-lucide="layout-dashboard" aria-hidden="true"></i> Overview</a>
-        <a class="project-subnav__link" href="#/projects/${id}/board"><i data-lucide="kanban" aria-hidden="true"></i> Board</a>
-        <a class="project-subnav__link is-active" href="#/projects/${id}/backlog"><i data-lucide="list" aria-hidden="true"></i> Backlog</a>
-        <a class="project-subnav__link" href="#/projects/${id}/sprint"><i data-lucide="zap" aria-hidden="true"></i> Sprint</a>
-        <a class="project-subnav__link" href="#/projects/${id}/gantt"><i data-lucide="gantt-chart" aria-hidden="true"></i> Gantt</a>
-        <a class="project-subnav__link" href="#/projects/${id}/discussion"><i data-lucide="message-circle" aria-hidden="true"></i> Discussion</a>
-        ${showMaintenance ? `<a class="project-subnav__link" href="#/projects/${id}/maintenance"><i data-lucide="wrench" aria-hidden="true"></i> Maintenance</a>` : ''}
-        <a class="project-subnav__link" href="#/projects/${id}/reports"><i data-lucide="bar-chart-2" aria-hidden="true"></i> Reports</a>
-      </div>
+      ${banner}
 
-      <div class="page-header" style="margin-top:var(--space-4);">
+      <div class="page-header" style="margin-top:var(--space-6);">
         <div class="page-header__info">
           <h1 class="page-header__title">Backlog</h1>
           <p class="page-header__subtitle">${sanitize(_project.name)} &mdash; ${_tasks.length} task${_tasks.length !== 1 ? 's' : ''} total</p>

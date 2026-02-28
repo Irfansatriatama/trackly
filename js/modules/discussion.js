@@ -7,12 +7,13 @@
 import { getAll, getByIndex, add, update, remove, getById } from '../core/db.js';
 import {
   generateSequentialId, nowISO, formatDate, formatRelativeDate,
-  getInitials, sanitize, logActivity, ID_PREFIX
+  getInitials, sanitize, logActivity, ID_PREFIX, buildProjectBanner
 } from '../core/utils.js';
 import { getSession } from '../core/auth.js';
 import { showToast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { showConfirm } from '../components/confirm.js';
+import { renderBadge } from '../components/badge.js';
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
@@ -166,13 +167,16 @@ export async function render(params = {}) {
 // ─── Page HTML ────────────────────────────────────────────────────────────────
 
 function _buildPageHTML() {
+  const session = getSession();
+  const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
+  const banner = buildProjectBanner(_project, 'discussion', { renderBadge, isAdminOrPM });
   return `
     <div class="page-container page-enter">
-      ${_renderProjectHeader()}
-      <div class="page-header" style="margin-top:var(--space-4);">
+      ${banner}
+      <div class="page-header" style="margin-top:var(--space-6);">
         <div class="page-header__info">
           <h1 class="page-header__title">Discussion</h1>
-          <p class="page-header__subtitle">${sanitize(_project.name)} &mdash; Project updates, questions, decisions, and blockers</p>
+          <p class="page-header__subtitle">${sanitize(_project.name)} — Project updates, questions, decisions, and blockers</p>
         </div>
         <div class="page-header__actions">
           <button class="btn btn--primary" id="btnNewPost">
@@ -694,7 +698,7 @@ function _openPostModal(existingPost = null) {
       <button class="btn btn--primary" id="savePostModal">${isEdit ? 'Save Changes' : 'Post'}</button>
     </div>`;
 
-  openModal({ body: modalContent, size: 'lg' });
+  openModal({ content: modalContent, size: 'lg' });
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
   document.getElementById('closePostModal')?.addEventListener('click', () => closeModal());

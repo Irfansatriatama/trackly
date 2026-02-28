@@ -4,7 +4,7 @@
  */
 
 import { getAll, getById, add, update, remove } from '../core/db.js';
-import { generateSequentialId, nowISO, formatDate, sanitize, debug, getInitials, logActivity } from '../core/utils.js';
+import { generateSequentialId, nowISO, formatDate, sanitize, debug, getInitials, logActivity, buildProjectBanner } from '../core/utils.js';
 import { showToast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { showConfirm } from '../components/confirm.js';
@@ -134,23 +134,15 @@ function _renderBoardPage() {
   const content = document.getElementById('main-content');
   if (!content) return;
 
-  const id = sanitize(_projectId);
-  const showMaintenance = ['running', 'maintenance'].includes(_project.phase) || _project.status === 'maintenance';
+  const session = getSession();
+  const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
+  const banner = buildProjectBanner(_project, 'board', { renderBadge, isAdminOrPM });
 
   content.innerHTML = `
     <div class="page-container page-enter board-page">
-      <div class="project-subnav">
-        <a class="project-subnav__link" href="#/projects/${id}"><i data-lucide="layout-dashboard" aria-hidden="true"></i> Overview</a>
-        <a class="project-subnav__link is-active" href="#/projects/${id}/board"><i data-lucide="kanban" aria-hidden="true"></i> Board</a>
-        <a class="project-subnav__link" href="#/projects/${id}/backlog"><i data-lucide="list" aria-hidden="true"></i> Backlog</a>
-        <a class="project-subnav__link" href="#/projects/${id}/sprint"><i data-lucide="zap" aria-hidden="true"></i> Sprint</a>
-        <a class="project-subnav__link" href="#/projects/${id}/gantt"><i data-lucide="gantt-chart" aria-hidden="true"></i> Gantt</a>
-        <a class="project-subnav__link" href="#/projects/${id}/discussion"><i data-lucide="message-circle" aria-hidden="true"></i> Discussion</a>
-        ${showMaintenance ? `<a class="project-subnav__link" href="#/projects/${id}/maintenance"><i data-lucide="wrench" aria-hidden="true"></i> Maintenance</a>` : ''}
-        <a class="project-subnav__link" href="#/projects/${id}/reports"><i data-lucide="bar-chart-2" aria-hidden="true"></i> Reports</a>
-      </div>
+      ${banner}
 
-      <div class="page-header" style="margin-top:var(--space-4);">
+      <div class="page-header" style="margin-top:var(--space-6);">
         <div class="page-header__info">
           <h1 class="page-header__title">Board</h1>
           <p class="page-header__subtitle">${sanitize(_project.name)}</p>
@@ -860,6 +852,18 @@ function _renderMarkdown(text) {
     .replace(/\n/g, '<br>');
 }
 
+function _renderAssigneeChips(assignees) {
+  if (!assignees.length) return '<span class="text-muted">Unassigned</span>';
+  return assignees.map(m => {
+    const ini = getInitials(m.full_name);
+    const avatarHtml = m.avatar
+      ? '<img src="' + m.avatar + '" alt="" class="avatar__img" />'
+      : '<span class="avatar__initials">' + sanitize(ini) + '</span>';
+    const bg = m.avatar ? '' : 'background:var(--color-primary);';
+    return '<span class="assignee-display"><div class="avatar avatar--xs" style="' + bg + '">' + avatarHtml + '</div> ' + sanitize(m.full_name) + '</span>';
+  }).join('');
+}
+
 function _renderTaskDetail(task, panel) {
   const typeOpt     = TASK_TYPE_OPTIONS.find(t => t.value === task.type);
   const statusOpt   = TASK_STATUS_OPTIONS.find(s => s.value === task.status);
@@ -893,7 +897,7 @@ function _renderTaskDetail(task, panel) {
         </div>
         ${task.description ? `<div class="task-detail__section"><h4 class="task-detail__section-label">Description</h4><div class="task-detail__description">${_renderMarkdown(task.description)}</div></div>` : ''}
         <div class="task-detail__meta-grid">
-          <div class="task-detail__meta-item"><span class="task-detail__meta-label text-muted">Assignees</span><div class="task-detail__meta-value">${assignees.length > 0 ? assignees.map(m => { const ini = getInitials(m.full_name); return `<span class="assignee-display"><div class="avatar avatar--xs" style="${m.avatar ? '' : 'background:var(--color-primary);'}">${m.avatar ? `<img src="${m.avatar}" alt="" class="avatar__img" />` : `<span class="avatar__initials">${sanitize(ini)}</span>`}</div> ${sanitize(m.full_name)}</span>`; }).join('') : '<span class="text-muted">Unassigned</span>'}</div></div>
+          <div class="task-detail__meta-item"><span class="task-detail__meta-label text-muted">Assignees</span><div class="task-detail__meta-value">${_renderAssigneeChips(assignees)}</div></div>
           <div class="task-detail__meta-item"><span class="task-detail__meta-label text-muted">Start Date</span><span class="task-detail__meta-value">${task.start_date ? formatDate(task.start_date) : '—'}</span></div>
           <div class="task-detail__meta-item"><span class="task-detail__meta-label text-muted">Due Date</span><span class="task-detail__meta-value${isOverdue ? ' text-danger' : ''}">${task.due_date ? formatDate(task.due_date) : '—'}</span></div>
           <div class="task-detail__meta-item"><span class="task-detail__meta-label text-muted">Story Points</span><span class="task-detail__meta-value">${task.story_points ?? '—'}</span></div>

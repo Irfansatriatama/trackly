@@ -5,9 +5,9 @@
  */
 
 import { getAll, getByIndex } from '../core/db.js';
-import { sanitize, formatDate, formatRelativeDate, toTitleCase } from '../core/utils.js';
+import { sanitize, formatDate, formatRelativeDate, toTitleCase, getInitials, buildProjectBanner } from '../core/utils.js';
 import { getSession } from '../core/auth.js';
-import { getInitials } from '../core/utils.js';
+import { renderBadge } from '../components/badge.js';
 
 const PAGE_SIZE = 50;
 
@@ -58,13 +58,12 @@ export async function render(params) {
     _logs = allLogs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     _users = allUsers;
 
-    // Build project subnav if inside a project
-    let subnavHtml = '';
+    // Build project banner if inside a project
+    let bannerHtml = '';
     if (_projectId && project) {
-      const coverColor = project.cover_color || '#2563EB';
-      const { render: renderProjectsModule } = await import('./projects.js');
-      // We'll render inline subnav ourselves
-      subnavHtml = _renderProjectHeader(project, coverColor);
+      const session = getSession();
+      const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
+      bannerHtml = buildProjectBanner(project, 'log', { renderBadge, isAdminOrPM });
     }
 
     _currentPage = 1;
@@ -76,8 +75,8 @@ export async function render(params) {
 
     content.innerHTML = `
       <div class="page-container page-enter">
-        ${subnavHtml}
-        <div class="page-header" style="margin-top:var(--space-4);">
+        ${bannerHtml}
+        <div class="page-header" style="margin-top:${_projectId && project ? 'var(--space-6)' : '0'};">
           <div class="page-header__info">
             <h1 class="page-header__title">
               <i data-lucide="clock" aria-hidden="true"></i>

@@ -5,8 +5,10 @@
  */
 
 import { getAll, getById, update } from '../core/db.js';
-import { formatDate, nowISO, sanitize, debug } from '../core/utils.js';
+import { formatDate, nowISO, sanitize, debug, buildProjectBanner } from '../core/utils.js';
 import { showToast } from '../components/toast.js';
+import { renderBadge } from '../components/badge.js';
+import { getSession } from '../core/auth.js';
 
 // ─── Module State ─────────────────────────────────────────────────────────────
 let _projectId  = null;
@@ -81,8 +83,9 @@ export async function render(params = {}) {
 // ─── Page Shell ───────────────────────────────────────────────────────────────
 
 function _renderPage() {
-  const id = _projectId;
-  const showMaint = ['running','maintenance'].includes(_project?.phase);
+  const session = getSession();
+  const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
+  const banner = buildProjectBanner(_project, 'gantt', { renderBadge, isAdminOrPM });
 
   const sprintOptions = _sprints.map(s =>
     `<option value="${sanitize(s.id)}">${sanitize(s.name)}</option>`
@@ -90,18 +93,9 @@ function _renderPage() {
 
   const html = `
 <div class="page-container page-enter" id="gantt-root">
-  <div class="project-subnav">
-    <a class="project-subnav__link" href="#/projects/${id}"><i data-lucide="layout-dashboard" aria-hidden="true"></i> Overview</a>
-    <a class="project-subnav__link" href="#/projects/${id}/board"><i data-lucide="kanban" aria-hidden="true"></i> Board</a>
-    <a class="project-subnav__link" href="#/projects/${id}/backlog"><i data-lucide="list" aria-hidden="true"></i> Backlog</a>
-    <a class="project-subnav__link" href="#/projects/${id}/sprint"><i data-lucide="zap" aria-hidden="true"></i> Sprint</a>
-    <a class="project-subnav__link is-active" href="#/projects/${id}/gantt"><i data-lucide="gantt-chart" aria-hidden="true"></i> Gantt</a>
-    <a class="project-subnav__link" href="#/projects/${id}/discussion"><i data-lucide="message-circle" aria-hidden="true"></i> Discussion</a>
-    ${showMaint ? `<a class="project-subnav__link" href="#/projects/${id}/maintenance"><i data-lucide="wrench" aria-hidden="true"></i> Maintenance</a>` : ''}
-    <a class="project-subnav__link" href="#/projects/${id}/reports"><i data-lucide="bar-chart-2" aria-hidden="true"></i> Reports</a>
-  </div>
+  ${banner}
 
-  <div class="page-header" style="margin-top:var(--space-4);">
+  <div class="page-header" style="margin-top:var(--space-6);">
     <div class="page-header__info">
       <h1 class="page-header__title"><i data-lucide="gantt-chart" aria-hidden="true"></i> Gantt Chart</h1>
       <p class="page-header__subtitle">${sanitize(_project.name)}</p>

@@ -153,9 +153,8 @@ function registerAllRoutes() {
       const { render: renderBoard } = await import('./modules/board.js');
       await renderBoard({ id: params.id });
     } catch (err) {
-      debug('Board route error:', err);
-      setContent(`<div class="page-container page-enter"><div class="empty-state"><i data-lucide="alert-circle" class="empty-state__icon"></i><p class="empty-state__title">Failed to load Board</p><p class="empty-state__text">${err.message || 'An unexpected error occurred.'}</p><a href="#/projects/${params.id}" class="btn btn--primary">Back to Project</a></div></div>`);
-      initIcons();
+      setContent('<div class="page-container page-enter"><div class="empty-state"><i data-lucide="alert-circle" class="empty-state__icon"></i><p class="empty-state__title">Failed to load Board</p><p class="empty-state__text">' + String(err.message) + '</p><a href="#/projects" class="btn btn--primary">Back to Projects</a></div></div>');
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     }
   });
 
@@ -167,9 +166,8 @@ function registerAllRoutes() {
       const { render: renderBacklog } = await import('./modules/backlog.js');
       await renderBacklog({ id: params.id });
     } catch (err) {
-      debug('Backlog route error:', err);
-      setContent(`<div class="page-container page-enter"><div class="empty-state"><i data-lucide="alert-circle" class="empty-state__icon"></i><p class="empty-state__title">Failed to load Backlog</p><p class="empty-state__text">${err.message || 'An unexpected error occurred.'}</p><a href="#/projects/${params.id}" class="btn btn--primary">Back to Project</a></div></div>`);
-      initIcons();
+      setContent('<div class="page-container page-enter"><div class="empty-state"><i data-lucide="alert-circle" class="empty-state__icon"></i><p class="empty-state__title">Failed to load Backlog</p><p class="empty-state__text">' + String(err.message) + '</p><a href="#/projects" class="btn btn--primary">Back to Projects</a></div></div>');
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     }
   });
 
@@ -181,9 +179,8 @@ function registerAllRoutes() {
       const { render: renderSprint } = await import('./modules/sprint.js');
       await renderSprint({ id: params.id });
     } catch (err) {
-      debug('Sprint route error:', err);
-      setContent(`<div class="page-container page-enter"><div class="empty-state"><i data-lucide="alert-circle" class="empty-state__icon"></i><p class="empty-state__title">Failed to load Sprint</p><p class="empty-state__text">${err.message || 'An unexpected error occurred.'}</p><a href="#/projects/${params.id}" class="btn btn--primary">Back to Project</a></div></div>`);
-      initIcons();
+      setContent('<div class="page-container page-enter"><div class="empty-state"><i data-lucide="alert-circle" class="empty-state__icon"></i><p class="empty-state__title">Failed to load Sprint</p><p class="empty-state__text">' + String(err.message) + '</p><a href="#/projects" class="btn btn--primary">Back to Projects</a></div></div>');
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     }
   });
 
@@ -191,28 +188,16 @@ function registerAllRoutes() {
   registerRoute('/projects/:id/gantt', async (params) => {
     if (!requireAuth()) return;
     setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading Gantt…</p></div></div>');
-    try {
-      const { render: renderGantt } = await import('./modules/gantt.js');
-      await renderGantt({ id: params.id });
-    } catch (err) {
-      debug('Gantt route error:', err);
-      setContent(`<div class="page-container page-enter"><div class="empty-state"><i data-lucide="alert-circle" class="empty-state__icon"></i><p class="empty-state__title">Failed to load Gantt</p><p class="empty-state__text">${err.message || 'An unexpected error occurred.'}</p><a href="#/projects/${params.id}" class="btn btn--primary">Back to Project</a></div></div>`);
-      initIcons();
-    }
+    const { render: renderGantt } = await import('./modules/gantt.js');
+    await renderGantt({ id: params.id });
   });
 
   // Maintenance — Phase 12 full implementation
   registerRoute('/projects/:id/maintenance', async (params) => {
     if (!requireAuth()) return;
     setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading maintenance...</p></div></div>');
-    try {
-      const { render: renderMaintenance } = await import('./modules/maintenance.js');
-      await renderMaintenance({ id: params.id });
-    } catch (err) {
-      debug('Maintenance route error:', err);
-      setContent(`<div class="page-container page-enter"><div class="empty-state"><i data-lucide="alert-circle" class="empty-state__icon"></i><p class="empty-state__title">Failed to load Maintenance</p><p class="empty-state__text">${err.message || 'An unexpected error occurred.'}</p><a href="#/projects/${params.id}" class="btn btn--primary">Back to Project</a></div></div>`);
-      initIcons();
-    }
+    const { render: renderMaintenance } = await import('./modules/maintenance.js');
+    await renderMaintenance({ id: params.id });
   });
 
   // Reports — Phase 15: Full Reports Module (Progress, Workload, Burndown, Maintenance, Assets)
@@ -227,28 +212,16 @@ function registerAllRoutes() {
   registerRoute('/projects/:id/discussion', async (params) => {
     if (!requireAuth()) return;
     setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading discussion...</p></div></div>');
-    try {
-      const { render: renderDiscussion } = await import('./modules/discussion.js');
-      await renderDiscussion({ id: params.id });
-    } catch (err) {
-      debug('Discussion route error:', err);
-      setContent(`<div class="page-container page-enter"><div class="empty-state"><i data-lucide="alert-circle" class="empty-state__icon"></i><p class="empty-state__title">Failed to load Discussion</p><p class="empty-state__text">${err.message || 'An unexpected error occurred.'}</p><a href="#/projects/${params.id}" class="btn btn--primary">Back to Project</a></div></div>`);
-      initIcons();
-    }
+    const { render: renderDiscussion } = await import('./modules/discussion.js');
+    await renderDiscussion({ id: params.id });
   });
 
   // Activity Log — Phase 18
   registerRoute('/projects/:id/log', async (params) => {
     if (!requireAuth()) return;
     setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading activity log...</p></div></div>');
-    try {
-      const { render: renderLog } = await import('./modules/log.js');
-      await renderLog({ id: params.id });
-    } catch (err) {
-      debug('Log route error:', err);
-      setContent(`<div class="page-container page-enter"><div class="empty-state"><i data-lucide="alert-circle" class="empty-state__icon"></i><p class="empty-state__title">Failed to load Activity Log</p><p class="empty-state__text">${err.message || 'An unexpected error occurred.'}</p><a href="#/projects/${params.id}" class="btn btn--primary">Back to Project</a></div></div>`);
-      initIcons();
-    }
+    const { render: renderLog } = await import('./modules/log.js');
+    await renderLog({ id: params.id });
   });
 
   // Meetings — Phase 19

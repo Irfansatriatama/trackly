@@ -4,10 +4,12 @@
  */
 
 import { getAll, getById, add, update, remove } from '../core/db.js';
-import { generateSequentialId, nowISO, formatDate, sanitize, debug, logActivity } from '../core/utils.js';
+import { generateSequentialId, nowISO, formatDate, sanitize, debug, logActivity, buildProjectBanner } from '../core/utils.js';
 import { showToast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { showConfirm } from '../components/confirm.js';
+import { renderBadge } from '../components/badge.js';
+import { getSession } from '../core/auth.js';
 import { TASK_STATUS_OPTIONS, TASK_PRIORITY_OPTIONS, TASK_TYPE_OPTIONS } from './backlog.js';
 
 let _projectId = null;
@@ -60,23 +62,15 @@ export async function render(params = {}) {
 function _renderPage() {
   const content = document.getElementById('main-content');
   if (!content) return;
-  const id = sanitize(_projectId);
-  const showMaintenance = ['running','maintenance'].includes(_project.phase) || _project.status === 'maintenance';
+  const session = getSession();
+  const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
+  const banner = buildProjectBanner(_project, 'sprint', { renderBadge, isAdminOrPM });
   const activeSprint = _sprints.find(s => s.status === 'active');
 
   content.innerHTML = `
     <div class="page-container page-enter sprint-page">
-      <div class="project-subnav">
-        <a class="project-subnav__link" href="#/projects/${id}"><i data-lucide="layout-dashboard" aria-hidden="true"></i> Overview</a>
-        <a class="project-subnav__link" href="#/projects/${id}/board"><i data-lucide="kanban" aria-hidden="true"></i> Board</a>
-        <a class="project-subnav__link" href="#/projects/${id}/backlog"><i data-lucide="list" aria-hidden="true"></i> Backlog</a>
-        <a class="project-subnav__link is-active" href="#/projects/${id}/sprint"><i data-lucide="zap" aria-hidden="true"></i> Sprint</a>
-        <a class="project-subnav__link" href="#/projects/${id}/gantt"><i data-lucide="gantt-chart" aria-hidden="true"></i> Gantt</a>
-        <a class="project-subnav__link" href="#/projects/${id}/discussion"><i data-lucide="message-circle" aria-hidden="true"></i> Discussion</a>
-        ${showMaintenance ? `<a class="project-subnav__link" href="#/projects/${id}/maintenance"><i data-lucide="wrench" aria-hidden="true"></i> Maintenance</a>` : ''}
-        <a class="project-subnav__link" href="#/projects/${id}/reports"><i data-lucide="bar-chart-2" aria-hidden="true"></i> Reports</a>
-      </div>
-      <div class="page-header" style="margin-top:var(--space-4);">
+      ${banner}
+      <div class="page-header" style="margin-top:var(--space-6);">
         <div class="page-header__info">
           <h1 class="page-header__title">Sprint Management</h1>
           <p class="page-header__subtitle">${sanitize(_project.name)} &mdash; ${_sprints.length} sprint${_sprints.length !== 1 ? 's' : ''}</p>

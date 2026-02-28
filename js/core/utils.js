@@ -382,6 +382,74 @@ export function createElement(tag, attrs = {}, text = '') {
   return el;
 }
 
+// ─── Project Banner Builder ───────────────────────────────────────────────────
+// Shared helper so all project sub-pages render the same banner as Overview.
+// activeTab: 'board'|'backlog'|'sprint'|'gantt'|'discussion'|'maintenance'|'log'|'reports'
+export function buildProjectBanner(project, activeTab, options = {}) {
+  const { renderBadge: badge, isAdminOrPM } = options;
+  if (!project || !badge) return '';
+
+  const STATUS_LABEL  = { planning:'Planning', active:'Active', maintenance:'Maintenance', on_hold:'On Hold', completed:'Completed', cancelled:'Cancelled' };
+  const PHASE_LABEL   = { development:'Development', uat:'UAT', deployment:'Deployment', running:'Running', maintenance:'Maintenance' };
+  const PRIORITY_LABEL = { low:'Low', medium:'Medium', high:'High', critical:'Critical' };
+  const STATUS_VARIANT = { planning:'info', active:'success', maintenance:'warning', on_hold:'neutral', completed:'success', cancelled:'danger' };
+  const PRIORITY_VARIANT = { low:'neutral', medium:'info', high:'warning', critical:'danger' };
+
+  const coverColor   = sanitize(project.cover_color || '#2563EB');
+  const isOverdue    = project.end_date && isPast(project.end_date) && !['completed','cancelled'].includes(project.status);
+  const showMaint    = ['running','maintenance'].includes(project.phase) || ['maintenance'].includes(project.status);
+  const id           = sanitize(project.id);
+  const adminOrPm    = isAdminOrPM;
+
+  const statusBadge   = badge(STATUS_LABEL[project.status]   || project.status,   STATUS_VARIANT[project.status]   || 'neutral');
+  const phaseBadge    = project.phase  ? badge(PHASE_LABEL[project.phase]     || project.phase,    'info')                                    : '';
+  const priorityBadge = project.priority ? badge(PRIORITY_LABEL[project.priority] || project.priority, PRIORITY_VARIANT[project.priority] || 'neutral') : '';
+  const overdueBadge  = isOverdue ? badge('Overdue', 'danger') : '';
+
+  const tabLink = (tab, icon, label, tabId) =>
+    '<a class="project-subnav__link' + (activeTab === tabId ? ' is-active' : '') + '" href="#/projects/' + id + (tabId === 'overview' ? '' : '/' + tabId) + '">' +
+    '<i data-lucide="' + icon + '" aria-hidden="true"></i> ' + label + '</a>';
+
+  return `
+    <div class="project-detail-banner" style="background:${coverColor};">
+      <div class="project-detail-banner__content">
+        <div class="project-detail-banner__breadcrumb">
+          <a href="#/projects" class="project-breadcrumb-link">
+            <i data-lucide="folder" aria-hidden="true"></i> Projects
+          </a>
+          <i data-lucide="chevron-right" aria-hidden="true"></i>
+          <span>${sanitize(project.name)}</span>
+        </div>
+        <div class="project-detail-banner__info">
+          <div class="project-detail-banner__text">
+            <div class="project-detail-banner__badges">
+              ${statusBadge}${phaseBadge}${priorityBadge}${overdueBadge}
+            </div>
+            <h1 class="project-detail-banner__title">${sanitize(project.name)}</h1>
+            <p class="project-detail-banner__code text-mono">${sanitize(project.code || project.id)}</p>
+            ${project.description ? '<p class="project-detail-banner__desc">' + sanitize(project.description) + '</p>' : ''}
+          </div>
+          <div class="project-detail-banner__actions">
+            <a href="#/projects/${id}" class="btn btn--outline-white">
+              <i data-lucide="pencil" aria-hidden="true"></i> Edit Project
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="project-subnav">
+      ${tabLink('overview',     'layout-dashboard', 'Overview',    'overview')}
+      ${tabLink('board',        'kanban',            'Board',       'board')}
+      ${tabLink('backlog',      'list',              'Backlog',     'backlog')}
+      ${tabLink('sprint',       'zap',               'Sprint',      'sprint')}
+      ${tabLink('gantt',        'gantt-chart',       'Gantt',       'gantt')}
+      ${tabLink('discussion',   'message-circle',    'Discussion',  'discussion')}
+      ${showMaint ? tabLink('maintenance', 'wrench', 'Maintenance', 'maintenance') : ''}
+      ${tabLink('reports',      'bar-chart-2',       'Reports',     'reports')}
+      ${adminOrPm ? tabLink('log', 'clock', 'Log', 'log') : ''}
+    </div>`;
+}
+
 export default {
   debug,
   ID_PREFIX,
@@ -400,4 +468,5 @@ export default {
   sanitize,
   toTitleCase,
   createElement,
+  buildProjectBanner,
 };

@@ -6,7 +6,7 @@
  */
 
 import { getAll, getById, add, update, remove } from '../core/db.js';
-import { generateSequentialId, nowISO, formatDate, formatRelativeDate, sanitize, debug, logActivity, getInitials } from '../core/utils.js';
+import { generateSequentialId, nowISO, formatDate, formatRelativeDate, sanitize, debug, logActivity, getInitials, buildProjectBanner } from '../core/utils.js';
 import { showToast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { showConfirm } from '../components/confirm.js';
@@ -157,15 +157,17 @@ export async function render(params = {}) {
 function renderMaintenancePage() {
   const session = getSession();
   const canCreate = session && ['admin', 'pm', 'developer'].includes(session.role);
+  const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
   const content = document.getElementById('main-content');
   if (!content) return;
   const stats = _computeStats();
+  const banner = buildProjectBanner(_project, 'maintenance', { renderBadge, isAdminOrPM });
 
   content.innerHTML = `
     <div class="page-container page-enter">
-      ${_buildSubnav()}
+      ${banner}
 
-      <div class="page-header" style="margin-top:var(--space-4);">
+      <div class="page-header" style="margin-top:var(--space-6);">
         <div class="page-header__info">
           <h1 class="page-header__title">Maintenance</h1>
           <p class="page-header__subtitle">${sanitize(_project.name)} — Live system ticket tracking</p>
