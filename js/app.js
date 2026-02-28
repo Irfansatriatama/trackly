@@ -144,9 +144,11 @@ function registerAllRoutes() {
   });
 
   // Board
-  registerRoute('/projects/:id/board', (params) => {
+  registerRoute('/projects/:id/board', async (params) => {
     if (!requireAuth()) return;
-    setContent(renderPageShell('Kanban Board', `Project ${params.id}`));
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading board...</p></div></div>');
+    const { render: renderBoard } = await import('./modules/board.js');
+    await renderBoard({ id: params.id });
   });
 
   // Backlog — Phase 8 full implementation

@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v0.8.0-alpha` |
-| **Current Phase** | Phase 9 — Kanban Board |
+| **Current Version** | `v0.9.0-alpha` |
+| **Current Phase** | Phase 10 — Sprint Management |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -691,15 +691,15 @@ Tasks:
 **Deliverable**: Fully functional Kanban board per project
 
 Tasks:
-- Board layout with configurable columns
-- Task cards with all metadata (priority icon, assignee avatar, due date, tag chips, checklist progress)
-- Drag-and-drop using native HTML5 Drag API (no library)
-- Add column, rename column, delete column
-- Task status auto-updates on drop
-- Swimlane toggle (group by assignee)
-- Board filter bar (assignee, priority, label, sprint)
-- Quick-add task in column header
-- Card color coding by priority
+- [x] Board layout with configurable columns
+- [x] Task cards with all metadata (priority icon, assignee avatar, due date, tag chips, checklist progress)
+- [x] Drag-and-drop using native HTML5 Drag API (no library)
+- [x] Add column, rename column, delete column
+- [x] Task status auto-updates on drop
+- [x] Swimlane toggle (group by assignee)
+- [x] Board filter bar (assignee, priority, label, sprint)
+- [x] Quick-add task in column header
+- [x] Card color coding by priority
 
 ---
 
@@ -844,10 +844,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v0.8.0-alpha                               ║
-║  Current Phase     : Phase 9 — Kanban Board                     ║
+║  Current Version   : v0.9.0-alpha                               ║
+║  Current Phase     : Phase 10 — Sprint Management               ║
 ║  Phase Status      : NOT STARTED                                ║
-║  Next Phase        : Phase 10 — Sprint Management               ║
+║  Next Phase        : Phase 11 — Gantt Chart                     ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -859,7 +859,7 @@ Tasks:
 ║  [x] Phase 6  — Client Management                  v0.6.0      ║
 ║  [x] Phase 7  — Project Management Core            v0.7.0      ║
 ║  [x] Phase 8  — Task Management & Backlog          v0.8.0      ║
-║  [ ] Phase 9  — Kanban Board                       v0.9.0      ║
+║  [x] Phase 9  — Kanban Board                       v0.9.0      ║
 ║  [ ] Phase 10 — Sprint Management                  v0.10.0     ║
 ║  [ ] Phase 11 — Gantt Chart                        v0.11.0     ║
 ║  [ ] Phase 12 — Maintenance Module                 v0.12.0     ║
@@ -908,6 +908,20 @@ Tasks:
 ║                         assignee chip picker, tag input, story  ║
 ║                         points, checklist widget; project       ║
 ║                         subnav context on all backlog views.    ║
+║  v0.9.0  [2026-02-28]  Kanban Board: configurable columns per  ║
+║                         project (stored localStorage); native   ║
+║                         HTML5 Drag API with drop-zone highlight ║
+║                         and auto status update; 5 default cols  ║
+║                         (Backlog/To Do/In Progress/In Review/   ║
+║                         Done); add/rename/delete column; task   ║
+║                         cards with priority border, type badge, ║
+║                         tags, sprint, checklist progress, due   ║
+║                         date, assignee avatars; quick-add task  ║
+║                         from column header; full task modal;    ║
+║                         swimlane toggle (group by assignee);    ║
+║                         filter bar (assignee, priority, label,  ║
+║                         sprint); task detail slide-over; card   ║
+║                         color coding by priority.               ║
 ╚══════════════════════════════════════════════════════════════════╝
 ```
 
@@ -1210,4 +1224,4 @@ When given a `.zip` from a previous phase and asked to continue to the next phas
 ---
 
 *TRACKLY — Track Everything, Deliver Anything*  
-*v0.8.0-alpha | Phase 8 of 17 complete | Internal IT Consultant PMIS*
+*v0.9.0-alpha | Phase 9 of 17 complete | Internal IT Consultant PMIS*
