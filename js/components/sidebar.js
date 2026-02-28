@@ -12,22 +12,23 @@ const NAV_ITEMS = [
   {
     section: null,
     items: [
-      { route: '/dashboard', icon: 'layout-dashboard', label: 'Dashboard' },
-      { route: '/projects',  icon: 'folder-kanban',    label: 'Projects' },
+      { route: '/dashboard', icon: 'layout-dashboard', label: 'Dashboard',  tooltip: 'View project overview, stats, and your assigned tasks' },
+      { route: '/projects',  icon: 'folder-kanban',    label: 'Projects',   tooltip: 'Manage all projects — boards, sprints, Gantt, and more' },
     ],
   },
   {
     section: 'Management',
     items: [
-      { route: '/clients', icon: 'building-2', label: 'Clients' },
-      { route: '/members', icon: 'users',       label: 'Members' },
-      { route: '/assets',  icon: 'package',     label: 'Assets' },
+      { route: '/clients', icon: 'building-2', label: 'Clients',  tooltip: 'Manage client companies and contacts' },
+      { route: '/members', icon: 'users',       label: 'Members',  tooltip: 'Manage team members, roles, and accounts' },
+      { route: '/assets',  icon: 'package',     label: 'Assets',   tooltip: 'Track hardware, software licenses, and other assets' },
     ],
   },
   {
     section: 'System',
     items: [
-      { route: '/settings', icon: 'settings', label: 'Settings' },
+      { route: '/guide',    icon: 'book-open', label: 'User Guide', tooltip: 'In-app user guide and feature documentation' },
+      { route: '/settings', icon: 'settings',  label: 'Settings',   tooltip: 'Configure system preferences and manage data' },
     ],
   },
 ];
@@ -38,12 +39,13 @@ const NAV_ITEMS = [
  */
 function buildSidebarHTML() {
   const sectionsHTML = NAV_ITEMS.map(({ section, items }) => {
-    const itemsHTML = items.map(({ route, icon, label }) => `
+    const itemsHTML = items.map(({ route, icon, label, tooltip }) => `
       <a href="#${route}"
          class="sidebar-nav-item"
          data-route="${route}"
          title="${label}"
-         aria-label="${label}">
+         aria-label="${label}"
+         ${tooltip ? `data-tooltip="${tooltip}" data-tooltip-pos="bottom"` : ''}>
         <i data-lucide="${icon}" class="sidebar-nav-item__icon" aria-hidden="true"></i>
         <span class="sidebar-nav-item__label">${label}</span>
       </a>

@@ -51,6 +51,18 @@ const CURRENCIES = [
 ];
 
 const CHANGELOG = [
+  { version:'v1.0.0', date:'2026-02-28', items:[
+    'Phase 17 — Testing, Documentation & Handoff: stable v1.0.0 release',
+    'In-app User Guide page with all 15 sections rendered natively',
+    'Tooltip system added to all key interactive elements throughout the UI',
+    'Bug fix: formatDate now correctly handles custom format strings (DD MMM YYYY, MM/DD/YYYY, etc.)',
+    'User Guide link added to sidebar navigation and topbar dropdown',
+    'Settings and User Guide added to mobile bottom navigation',
+    'README updated to v1.0.0 with complete changelog and final handoff notes',
+    'Full QA pass across all roles: Admin, Developer, and Viewer',
+    'Edge case hardening: empty states, missing fields, and null-safe guards verified',
+    'Service Worker cache version bumped to v1.0.0',
+  ]},
   { version:'v0.16.0', date:'2026-02-28', items:[
     'Phase 16 — Polish, Accessibility & PWA Completion',
     'Full Settings page: General, Data Management, PWA, About/Changelog',

@@ -81,6 +81,7 @@ function buildTopbarHTML(user) {
         aria-haspopup="true"
         aria-expanded="false"
         aria-label="User menu"
+        data-tooltip="Account &amp; settings"
         title="${userName}">
         <div class="avatar avatar--md" aria-hidden="true">
           <span>${initials}</span>
@@ -97,6 +98,15 @@ function buildTopbarHTML(user) {
             <div class="topbar__dropdown-role text-muted">${userRole}</div>
           </div>
         </div>
+        <div class="topbar__dropdown-divider"></div>
+        <a href="#/guide" class="topbar__dropdown-item" role="menuitem">
+          <i data-lucide="book-open" aria-hidden="true"></i>
+          User Guide
+        </a>
+        <a href="#/settings" class="topbar__dropdown-item" role="menuitem">
+          <i data-lucide="settings" aria-hidden="true"></i>
+          Settings
+        </a>
         <div class="topbar__dropdown-divider"></div>
         <button class="topbar__dropdown-item" id="topbarLogoutBtn" role="menuitem">
           <i data-lucide="log-out" aria-hidden="true"></i>

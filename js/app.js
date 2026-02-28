@@ -227,6 +227,14 @@ function registerAllRoutes() {
     await renderSettings({});
   });
 
+  // User Guide — Phase 17
+  registerRoute('/guide', async () => {
+    if (!requireAuth()) return;
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading guide...</p></div></div>');
+    const { render: renderGuide } = await import('./modules/guide.js');
+    await renderGuide({});
+  });
+
   // 404 fallback
   setNotFound(({ path }) => {
     setContent(`

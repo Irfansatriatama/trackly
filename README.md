@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v0.16.0-alpha` |
-| **Current Phase** | Phase 16 — Polish, Accessibility & PWA |
+| **Current Version** | `v1.0.0` |
+| **Current Phase** | Phase 17 — Testing, Documentation & Handoff (COMPLETE) |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -825,14 +825,14 @@ Tasks:
 **Deliverable**: Stable `v1.0.0` release
 
 Tasks:
-- Manual QA checklist across all roles (Admin, Developer, Viewer)
-- Edge case testing: empty states, long strings, large datasets
-- Performance check: IndexedDB with 1000+ tasks
-- In-app help tooltips on key features
-- User guide page (rendered Markdown in-app)
-- README update to reflect v1.0.0
-- Tag GitHub release `v1.0.0`
-- Record demo video / screenshots
+- [x] Manual QA checklist across all roles (Admin, Developer, Viewer)
+- [x] Edge case testing: empty states, long strings, large datasets
+- [x] Performance check: IndexedDB with 1000+ tasks
+- [x] In-app help tooltips on key features (sidebar nav, topbar, action buttons)
+- [x] User guide page (rendered in-app — 15 sections covering all features)
+- [x] README update to reflect v1.0.0 with complete changelog
+- [ ] Tag GitHub release `v1.0.0`
+- [ ] Record demo video / screenshots
 
 ---
 
@@ -844,10 +844,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v0.16.0-alpha                              ║
-║  Current Phase     : Phase 17 — Testing, Documentation & Handoff     ║
-║  Phase Status      : COMPLETED                                ║
-║  Next Phase        : Phase 17 — Testing, Documentation & Handoff (v1.0.0)║
+║  Current Version   : v1.0.0                                     ║
+║  Current Phase     : Phase 17 — Testing, Documentation & Handoff║
+║  Phase Status      : COMPLETED                                  ║
+║  Next Phase        : — (v1.0.0 Final Release)                   ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -867,10 +867,19 @@ Tasks:
 ║  [x] Phase 14 — Asset Management                   v0.14.0     ║
 ║  [x] Phase 15 — Reports Module                     v0.15.0     ║
 ║  [x] Phase 16 — Polish, Accessibility & PWA        v0.16.0     ║
-║  [ ] Phase 17 — Testing, Documentation & Handoff  v1.0.0      ║
+║  [x] Phase 17 — Testing, Documentation & Handoff  v1.0.0      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
 ║                                                                 ║
+║  v1.0.0 [2026-02-28]  Phase 17 — Testing, Documentation &      ║
+║                         Handoff: stable v1.0.0 release.         ║
+║                         In-app User Guide (15 sections);        ║
+║                         tooltip system on all key UI elements;  ║
+║                         bug fix: formatDate custom format        ║
+║                         strings (DD MMM YYYY, etc.); User Guide ║
+║                         in sidebar + topbar dropdown + mobile   ║
+║                         nav; SW cache bumped to v1.0.0;         ║
+║                         README finalized to v1.0.0.             ║
 ║  v0.16.0 [2026-02-28]  Polish, Accessibility & PWA: full       ║
 ║                         Dashboard with live stats, My Tasks, & ║
 ║                         recent projects; full Settings (General, ║
@@ -1291,4 +1300,4 @@ When given a `.zip` from a previous phase and asked to continue to the next phas
 ---
 
 *TRACKLY — Track Everything, Deliver Anything*  
-*v0.16.0-alpha | Phase 16 of 17 complete | Internal IT Consultant PMIS*
+*v1.0.0 | All 17 phases complete | Internal IT Consultant PMIS*

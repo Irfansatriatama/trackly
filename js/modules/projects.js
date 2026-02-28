@@ -86,7 +86,8 @@ function renderProjectsPage() {
           <p class="page-header__subtitle">Manage all projects and track their progress</p>
         </div>
         <div class="page-header__actions">
-          <button class="btn btn--primary" id="btnNewProject">
+          <button class="btn btn--primary" id="btnNewProject"
+            data-tooltip="Create a new project" data-tooltip-pos="bottom">
             <i data-lucide="folder-plus" aria-hidden="true"></i>
             New Project
           </button>

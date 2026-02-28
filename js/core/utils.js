@@ -77,7 +77,7 @@ export function generateSequentialId(prefix, existingRecords = []) {
 /**
  * Format a date as a human-readable string.
  * @param {string|Date} date  ISO string or Date object
- * @param {string} format  'short' | 'long' | 'time' | 'datetime'
+ * @param {string} format  'short' | 'long' | 'time' | 'datetime' | custom pattern (e.g. 'DD MMM YYYY')
  * @returns {string}
  */
 export function formatDate(date, format = 'short') {
@@ -86,14 +86,49 @@ export function formatDate(date, format = 'short') {
   const d = date instanceof Date ? date : new Date(date);
   if (isNaN(d.getTime())) return '—';
 
-  const options = {
+  // Support custom format patterns
+  const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const MONTHS_LONG  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  const customPatterns = {
+    'DD MMM YYYY': () => {
+      const dd   = String(d.getDate()).padStart(2, '0');
+      const mmm  = MONTHS_SHORT[d.getMonth()];
+      const yyyy = d.getFullYear();
+      return `${dd} ${mmm} ${yyyy}`;
+    },
+    'MM/DD/YYYY': () => {
+      const mm   = String(d.getMonth() + 1).padStart(2, '0');
+      const dd   = String(d.getDate()).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      return `${mm}/${dd}/${yyyy}`;
+    },
+    'YYYY-MM-DD': () => {
+      const mm   = String(d.getMonth() + 1).padStart(2, '0');
+      const dd   = String(d.getDate()).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      return `${yyyy}-${mm}-${dd}`;
+    },
+    'DD/MM/YYYY': () => {
+      const mm   = String(d.getMonth() + 1).padStart(2, '0');
+      const dd   = String(d.getDate()).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    },
+  };
+
+  if (customPatterns[format]) {
+    return customPatterns[format]();
+  }
+
+  const presets = {
     short:    { year: 'numeric', month: 'short', day: 'numeric' },
     long:     { year: 'numeric', month: 'long', day: 'numeric' },
     time:     { hour: '2-digit', minute: '2-digit' },
     datetime: { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' },
   };
 
-  return d.toLocaleDateString('en-US', options[format] || options.short);
+  return d.toLocaleDateString('en-US', presets[format] || presets.short);
 }
 
 /**
