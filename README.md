@@ -15,7 +15,7 @@
 6. [Role & Permission Matrix](#6-role--permission-matrix)
 7. [Data Models](#7-data-models)
 8. [Page & Module Map](#8-page--module-map)
-9. [Development Phases (1–17)](#9-development-phases-117)
+9. [Development Phases (1–20)](#9-development-phases-120)
 10. [Development Log](#10-development-log)
 11. [UI/UX Guidelines](#11-uiux-guidelines)
 12. [File Structure](#12-file-structure)
@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.0.0` |
-| **Current Phase** | Phase 17 — Testing, Documentation & Handoff (COMPLETE) |
+| **Current Version** | `v1.1.0` |
+| **Current Phase** | Phase 19 — Meeting Agenda & Notulensi (next up) |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -192,10 +192,15 @@ Hash-based routing (`window.location.hash`) — no server required.
 #/projects/:id/gantt
 #/projects/:id/maintenance
 #/projects/:id/reports
+#/projects/:id/discussion
+#/projects/:id/log
+#/meetings
+#/meetings/:id
 #/clients
 #/assets
 #/members
 #/settings
+#/guide
 #/login
 ```
 
@@ -432,6 +437,104 @@ This module activates when a project is in `running` or `maintenance` phase.
 - **PWA**: Install prompt, check for update
 - **About**: Version, phase, changelog
 
+### 5.15 Audit Trail (Activity Log per Project)
+
+Every project has a dedicated **Log** tab visible to Admin and PM. The log captures all significant changes made within the project context — who did what, where, and when.
+
+**Log Entry fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String | Auto-generated (`ACT-XXXX`) |
+| `project_id` | Ref | Project context (nullable for global actions) |
+| `entity_type` | Enum | `project`, `task`, `sprint`, `member`, `maintenance`, `asset`, `meeting`, `discussion` |
+| `entity_id` | String | ID of the affected record |
+| `entity_name` | String | Snapshot of entity name at time of action (survives deletion) |
+| `action` | Enum | `created`, `updated`, `deleted`, `status_changed`, `assigned`, `unassigned`, `commented`, `uploaded`, `sprint_started`, `sprint_completed`, `member_added`, `member_removed`, `meeting_scheduled`, `meeting_completed` |
+| `actor_id` | Ref | User ID who performed the action |
+| `actor_name` | String | Snapshot of user's full name at time of action |
+| `changes` | Array | `[{ field, old_value, new_value }]` — for `updated` and `status_changed` actions |
+| `metadata` | Object | Free-form context (e.g. sprint name, comment excerpt) |
+| `created_at` | Timestamp | |
+
+**UI features:**
+- Tab **Log** on every project detail page (Admin/PM only)
+- Timeline list — newest first, paginated (50 per page)
+- Filter by: entity type, actor, action, date range
+- Each entry shows: actor avatar + name, action description, entity link, timestamp (relative + absolute on hover)
+- Diff display for `updated` entries: shows old value → new value per field
+- `logActivity()` helper function in `utils.js` — all modules call this after every write operation
+- Global Activity Feed on Dashboard shows the 20 most recent log entries across all projects
+
+### 5.16 Meeting Agenda & Notulensi
+
+A global **Meetings** module accessible from the sidebar (Admin/PM only). Meetings can optionally be linked to one or more projects.
+
+**Meeting fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String | Auto-generated (`MTG-XXXX`) |
+| `title` | String | Required |
+| `description` | Text | Optional context / objective |
+| `type` | Enum | `internal`, `client_meeting`, `sprint_review`, `retrospective`, `other` |
+| `date` | Date | Meeting date |
+| `start_time` | String | e.g. `09:00` |
+| `end_time` | String | e.g. `10:30` |
+| `location` | String | Physical room name or video call URL |
+| `project_ids` | Array | Linked project IDs (optional, supports multi-project meetings) |
+| `attendee_ids` | Array | User IDs of attendees |
+| `agenda_items` | Array | `[{ id, text, order, done }]` — checklist-style agenda |
+| `status` | Enum | `scheduled`, `ongoing`, `done`, `cancelled` |
+| `notulensi` | Object | `{ content: String (Markdown), attachments: Array, created_by, updated_at }` |
+| `action_items` | Array | `[{ text, assignee_id, due_date, task_id (optional ref) }]` — can be converted to tasks |
+| `created_by` | Ref | User ID |
+| `created_at` | Timestamp | |
+| `updated_at` | Timestamp | |
+
+**UI features:**
+- Sidebar entry: **Meetings** (Admin/PM only) between Members and Settings
+- **Calendar view** — mini calendar on left panel, meeting list for selected date on right panel. Toggle between Month and Week view.
+- Meeting detail page (`#/meetings/:id`) — full agenda, attendee list, status controls
+- **Notulensi panel** — two modes:
+  - *Direct notes*: Markdown editor with live preview
+  - *File attachment*: Upload documents (PDF, DOCX, images) stored as base64, max 5MB per file, with filename + download link display
+- **Action Items** tab inside meeting detail — list of follow-up tasks with assignee and due date. "Create Task" button converts an action item into a real task in the linked project's backlog
+- Quick status advance: Scheduled → Ongoing → Done
+- Attendance list with avatar chips
+- All meeting create/edit/cancel actions are logged to Audit Trail
+
+### 5.17 Project Discussion
+
+A **Discussion** tab inside every project (visible to all project members — Admin, PM, Developer). Functions as an informal thread board for project-level updates, questions, decisions, and blockers.
+
+**Discussion Post fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String | Auto-generated (`DSC-XXXX`) |
+| `project_id` | Ref | Required |
+| `title` | String | Optional — for structured threads |
+| `content` | Text | Markdown-supported. Required. |
+| `type` | Enum | `update`, `question`, `decision`, `blocker`, `general` |
+| `author_id` | Ref | User ID |
+| `pinned` | Boolean | PM/Admin can pin important posts |
+| `attachments` | Array | `[{ name, data (base64), size, mime_type }]` — max 5MB per file |
+| `replies` | Array | `[{ id, author_id, content, created_at }]` — inline reply thread |
+| `created_at` | Timestamp | |
+| `updated_at` | Timestamp | |
+
+**UI features:**
+- **Discussion tab** in project subnav — between Reports and (if applicable) Maintenance
+- Feed layout — newest posts at top, paginated
+- Post type badge with color coding: `blocker` = red, `decision` = purple, `question` = blue, `update` = green, `general` = neutral
+- **Pin** feature — pinned posts appear at top of feed regardless of date
+- Inline reply thread — collapsible, shows reply count badge
+- Markdown render for post content and replies
+- File attachment (same base64 approach as notulensi, max 5MB per file)
+- Edit / delete own posts (PM/Admin can delete any post)
+- All new posts and replies logged to Audit Trail
+
 ---
 
 ## 6. Role & Permission Matrix
@@ -454,6 +557,10 @@ This module activates when a project is in `running` or `maintenance` phase.
 | Maintenance Module | ✓ | ✓ (assigned) | — |
 | Maintenance Report & Invoice | ✓ | — | — |
 | Reports | ✓ | — | — |
+| **Project Discussion** | ✓ (create/edit/delete/pin) | ✓ (create/edit own/reply) | — |
+| **Project Log (Audit Trail)** | ✓ (view) | — | — |
+| **Meetings** | ✓ (full CRUD) | — | — |
+| **Meeting Notulensi** | ✓ (create/edit) | — | — |
 | Client Management | ✓ | — | — |
 | Asset Management | ✓ | — | — |
 | Member Management | ✓ | — | — |
@@ -476,7 +583,7 @@ This module activates when a project is in `running` or `maintenance` phase.
 
 ```
 Database name: trackly_db
-Version: 1
+Version: 2
 
 Object Stores:
 ├── users           (keyPath: id)
@@ -487,9 +594,13 @@ Object Stores:
 ├── assets          (keyPath: id)
 ├── maintenance     (keyPath: id)    — indexes: project_id, status
 ├── invoices        (keyPath: id)    — indexes: project_id
-├── activity_log    (keyPath: id)    — indexes: project_id, user_id
+├── activity_log    (keyPath: id)    — indexes: project_id, user_id  ← activated in Phase 18
+├── meetings        (keyPath: id)    — indexes: date                 ← new in Phase 19
+├── discussions     (keyPath: id)    — indexes: project_id           ← new in Phase 20
 └── settings        (keyPath: key)   — single store for app-wide settings
 ```
+
+> **Note:** DB version must be bumped to `2` in `db.js` when adding `meetings` and `discussions` stores in Phase 19–20. The `onupgradeneeded` handler already creates stores dynamically from the `STORES` map — only the version number and new store definitions need to be added.
 
 ### ID Format
 
@@ -505,6 +616,9 @@ All IDs follow a consistent prefixed pattern:
 | Asset | `AST-` | `AST-0012` |
 | Maintenance | `MNT-` | `MNT-0088` |
 | Invoice | `INV-` | `INV-0005` |
+| Activity Log | `ACT-` | `ACT-0001` |
+| Meeting | `MTG-` | `MTG-0001` |
+| Discussion | `DSC-` | `DSC-0001` |
 
 ---
 
@@ -523,12 +637,17 @@ TRACKLY — Page Map
     │       ├── Backlog
     │       ├── Sprint
     │       ├── Gantt
-    │       ├── Maintenance    [PM/Admin only]
-    │       └── Reports        [PM/Admin only]
-    ├── /clients               [PM/Admin only]
-    ├── /assets                [PM/Admin only]
-    ├── /members               [PM/Admin only]
-    └── /settings              [PM/Admin only]
+    │       ├── Discussion          [Admin/PM/Developer]
+    │       ├── Log (Audit Trail)   [Admin/PM only]
+    │       ├── Maintenance         [Admin/PM only — running/maintenance phase]
+    │       └── Reports             [Admin/PM only]
+    ├── /meetings                   [Admin/PM only]
+    │   └── /meetings/:id           [Admin/PM only]
+    ├── /clients                    [Admin/PM only]
+    ├── /assets                     [Admin/PM only]
+    ├── /members                    [Admin/PM only]
+    ├── /guide
+    └── /settings                   [Admin/PM only]
 ```
 
 ### Layout Structure
@@ -553,7 +672,7 @@ TRACKLY — Page Map
 
 ---
 
-## 9. Development Phases (1–17)
+## 9. Development Phases (1–20)
 
 Each phase must be fully completed and tested before proceeding to the next. Each phase produces a working, demonstrable deliverable.
 
@@ -836,6 +955,87 @@ Tasks:
 
 ---
 
+### Phase 18 — Audit Trail (Activity Log)
+**Scope**: System-wide activity logging with per-project Log tab  
+**Deliverable**: Every significant action in TRACKLY is recorded and viewable by Admin/PM
+
+Tasks:
+- [x] Create `logActivity(params)` helper function in `utils.js` — centralised write to `activity_log` store
+- [x] Retrofit all existing modules to call `logActivity()` after every create, update, delete, and status change: `projects.js`, `tasks.js`/`backlog.js`, `board.js`, `sprint.js`, `maintenance.js`, `members.js`, `clients.js`, `assets.js`
+- [x] Add **Log** tab to project subnav (Admin/PM only) — renders after Reports tab
+- [x] Build `js/modules/log.js` — timeline list view, newest first
+- [x] Each log entry shows: actor avatar + name, human-readable action description, entity name + type, relative timestamp (absolute on hover)
+- [x] Diff display for `updated` entries: show field name, old value → new value
+- [x] Filter bar: by entity type, actor (user), action type, date range
+- [x] Pagination: 50 entries per page with Previous / Next controls
+- [x] Add `css/pages/log.css` for timeline styles
+- [x] Wire `ACT-` prefix into `ID_PREFIX` constants in `utils.js`
+- [x] Update `db.js` — ensure `activity_log` store indexes cover `project_id` and `created_at`
+- [x] Update Dashboard — replace the stub "Recent Activity" with real data from `activity_log` (last 20 entries across all projects)
+- [x] Register route `#/projects/:id/log` in `app.js`
+- [x] Update `sw.js` cache to include `log.js`
+
+---
+
+### Phase 19 — Meeting Agenda & Notulensi
+**Scope**: Global meeting calendar with agenda management and notulensi  
+**Deliverable**: Admin/PM can create, manage, and document meetings; action items can become tasks
+
+Tasks:
+- [ ] Add `meetings` store to `db.js` — bump DB version to `2`, add store with `date` index
+- [ ] Add `MTG-` prefix to `ID_PREFIX` in `utils.js`
+- [ ] Build `js/modules/meetings.js` — list + calendar view
+- [ ] Calendar UI: left panel mini-calendar (month grid, week strip), right panel day's meeting list
+- [ ] Toggle between **Month view** (grid) and **Week view** (time-slot columns)
+- [ ] Meeting list card: title, type badge, time range, project links, attendee avatars, status badge
+- [ ] Create / Edit meeting modal — all fields from section 5.16
+- [ ] Attendee picker — multi-select with avatar chips (from members list)
+- [ ] Project link picker — optional multi-select from projects list
+- [ ] Agenda items widget — ordered checklist, drag to reorder, check off during meeting
+- [ ] Meeting detail page (`#/meetings/:id`) — full view with all sections
+- [ ] Quick status advance button: Scheduled → Ongoing → Done → (back to Scheduled if needed)
+- [ ] **Notulensi panel** — two-mode tabbed interface:
+  - Mode 1: Markdown text editor with live preview toggle
+  - Mode 2: File attachment — upload (PDF/DOCX/image, max 5MB), display filename + size + download link
+- [ ] **Action Items** section inside meeting detail — add items with assignee + due date
+- [ ] "Create Task" button on each action item — opens task creation modal pre-filled, links back to meeting, saves to selected project's backlog
+- [ ] Sidebar entry: **Meetings** (Admin/PM only) — placed between Members and Settings
+- [ ] Add `Meetings` to mobile nav and topbar route title map
+- [ ] Add `css/pages/meetings.css`
+- [ ] Register routes `#/meetings` and `#/meetings/:id` in `app.js`
+- [ ] Call `logActivity()` for all meeting create/update/cancel/complete actions
+- [ ] Update `sw.js` cache to include `meetings.js`
+- [ ] Update User Guide (`guide.js`) to add Meeting section
+
+---
+
+### Phase 20 — Project Discussion
+**Scope**: Per-project discussion feed for team communication  
+**Deliverable**: Team members can post updates, questions, decisions, and blockers within each project
+
+Tasks:
+- [ ] Add `discussions` store to `db.js` — bump DB version to `3`, add store with `project_id` index
+- [ ] Add `DSC-` prefix to `ID_PREFIX` in `utils.js`
+- [ ] Build `js/modules/discussion.js` — feed layout per project
+- [ ] **Discussion tab** in project subnav — between Gantt and Log (visible to Admin, PM, Developer)
+- [ ] Feed view: posts newest first, paginated (20 per page)
+- [ ] Post card: type badge (color-coded), author avatar + name, relative timestamp, content (Markdown rendered), attachment count badge, reply count badge
+- [ ] **Pinned posts** section — appears above the regular feed, only if pins exist
+- [ ] Post type badge colours: `blocker` = danger red, `decision` = secondary purple, `question` = info blue, `update` = success green, `general` = neutral
+- [ ] Create post modal — title (optional), type selector, Markdown content editor, file attachment (max 5MB, base64)
+- [ ] Inline reply thread — collapsible, shows last 3 replies with "Show all N replies" expand
+- [ ] Edit / delete own post (PM/Admin can delete any post)
+- [ ] Pin / unpin post (Admin/PM only)
+- [ ] File attachment display — filename, size, mime icon, download link
+- [ ] Empty state with contextual CTA ("Start the conversation — post a project update")
+- [ ] Add `css/pages/discussion.css`
+- [ ] Register route `#/projects/:id/discussion` in `app.js`
+- [ ] Call `logActivity()` for post created, deleted, pinned
+- [ ] Update `sw.js` cache to include `discussion.js`
+- [ ] Update User Guide (`guide.js`) to add Discussion section
+
+---
+
 ## 10. Development Log
 
 > This section is updated at the start and end of every phase.
@@ -844,10 +1044,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v1.0.0                                     ║
-║  Current Phase     : Phase 17 — Testing, Documentation & Handoff║
-║  Phase Status      : COMPLETED                                  ║
-║  Next Phase        : — (v1.0.0 Final Release)                   ║
+║  Current Version   : v1.1.0                                     ║
+║  Current Phase     : Phase 19 — Meeting Agenda & Notulensi      ║
+║  Phase Status      : NOT STARTED                                ║
+║  Next Phase        : Phase 20 — Project Discussion               ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -868,9 +1068,22 @@ Tasks:
 ║  [x] Phase 15 — Reports Module                     v0.15.0     ║
 ║  [x] Phase 16 — Polish, Accessibility & PWA        v0.16.0     ║
 ║  [x] Phase 17 — Testing, Documentation & Handoff  v1.0.0      ║
+║  [x] Phase 18 — Audit Trail                        v1.1.0      ║
+║  [ ] Phase 19 — Meeting Agenda & Notulensi         v1.2.0      ║
+║  [ ] Phase 20 — Project Discussion                 v1.3.0      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
 ║                                                                 ║
+║  v1.1.0 [2026-02-28]  Phase 18 — Audit Trail: logActivity()    ║
+║                         helper in utils.js; ACT- prefix in        ║
+║                         ID_PREFIX; log.js module with timeline,   ║
+║                         filter bar, pagination, diff display;      ║
+║                         Log tab in project subnav (Admin/PM);     ║
+║                         all modules retrofitted (projects, tasks,  ║
+║                         board, sprint, maintenance, members,       ║
+║                         clients, assets); Dashboard Activity Feed  ║
+║                         shows last 20 real entries; log.css added; ║
+║                         sw.js cache bumped to v1.1.0.              ║
 ║  v1.0.0 [2026-02-28]  Phase 17 — Testing, Documentation &      ║
 ║                         Handoff: stable v1.0.0 release.         ║
 ║                         In-app User Guide (15 sections);        ║
@@ -1068,13 +1281,19 @@ trackly/
 ├── css/
 │   ├── main.css                # Design tokens, reset, base styles
 │   ├── layout.css              # Sidebar, topbar, grid
-│   ├── components.css          # Buttons, inputs, badges, modals, toasts
+│   ├── components.css          # Buttons, inputs, badges, modals, toasts, tooltips
 │   ├── pages/
 │   │   ├── dashboard.css
 │   │   ├── board.css
 │   │   ├── gantt.css
 │   │   ├── maintenance.css
-│   │   └── reports.css
+│   │   ├── maintenance-report.css
+│   │   ├── reports.css
+│   │   ├── assets.css
+│   │   ├── sprint.css
+│   │   ├── log.css             ← Phase 18
+│   │   ├── meetings.css        ← Phase 19
+│   │   └── discussion.css      ← Phase 20
 │   └── print.css               # Print / PDF export styles
 │
 └── js/
@@ -1083,7 +1302,7 @@ trackly/
     │   ├── router.js           # Hash router
     │   ├── auth.js             # Session management
     │   ├── store.js            # Reactive state
-    │   └── utils.js            # Helpers
+    │   └── utils.js            # Helpers + logActivity()
     ├── modules/
     │   ├── dashboard.js
     │   ├── projects.js
@@ -1092,11 +1311,16 @@ trackly/
     │   ├── sprint.js
     │   ├── gantt.js
     │   ├── maintenance.js
+    │   ├── maintenance-report.js
     │   ├── assets.js
     │   ├── clients.js
     │   ├── members.js
     │   ├── reports.js
-    │   └── settings.js
+    │   ├── settings.js
+    │   ├── guide.js
+    │   ├── log.js              ← Phase 18
+    │   ├── meetings.js         ← Phase 19
+    │   └── discussion.js       ← Phase 20
     └── components/
         ├── modal.js
         ├── toast.js
@@ -1300,4 +1524,4 @@ When given a `.zip` from a previous phase and asked to continue to the next phas
 ---
 
 *TRACKLY — Track Everything, Deliver Anything*  
-*v1.0.0 | All 17 phases complete | Internal IT Consultant PMIS*
+*v1.0.0 | 17 of 20 phases complete | Internal IT Consultant PMIS*

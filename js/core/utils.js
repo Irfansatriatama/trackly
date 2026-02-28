@@ -38,6 +38,8 @@ export const ID_PREFIX = {
   MAINTENANCE: 'MNT',
   INVOICE:     'INV',
   ACTIVITY:    'ACT',
+  MEETING:     'MTG',
+  DISCUSSION:  'DSC',
 };
 
 /**
@@ -298,6 +300,65 @@ export function toTitleCase(str) {
 }
 
 // ============================================================
+// ACTIVITY LOG HELPER
+// ============================================================
+
+/**
+ * Log a significant action to the activity_log store.
+ * This is the centralised write point for all audit trail entries.
+ *
+ * @param {Object} params
+ * @param {string|null} params.project_id     - Project context (null for global)
+ * @param {string}      params.entity_type    - e.g. 'task', 'project', 'sprint', ...
+ * @param {string}      params.entity_id      - ID of the affected record
+ * @param {string}      params.entity_name    - Snapshot of entity name at time of action
+ * @param {string}      params.action         - 'created'|'updated'|'deleted'|'status_changed'|...
+ * @param {Array}       [params.changes]      - [{field, old_value, new_value}] for updates
+ * @param {Object}      [params.metadata]     - Extra context
+ * @returns {Promise<void>}
+ */
+export async function logActivity({
+  project_id = null,
+  entity_type,
+  entity_id,
+  entity_name,
+  action,
+  changes = [],
+  metadata = {},
+}) {
+  try {
+    // Dynamic import to avoid circular dep issues
+    const { add, getAll } = await import('./db.js');
+    const { getSession } = await import('./auth.js');
+
+    const session = getSession();
+    const allLogs = await getAll('activity_log');
+    const id = generateSequentialId(ID_PREFIX.ACTIVITY, allLogs);
+
+    const entry = {
+      id,
+      project_id,
+      entity_type,
+      entity_id,
+      entity_name,
+      action,
+      actor_id: session?.userId || null,
+      actor_name: session?.fullName || session?.username || 'Unknown',
+      changes,
+      metadata,
+      created_at: nowISO(),
+    };
+
+    await add('activity_log', entry);
+  } catch (err) {
+    // Never let logging failures break the UI
+    if (localStorage.getItem('trackly_debug') === 'true') {
+      console.warn('[TRACKLY] logActivity failed:', err);
+    }
+  }
+}
+
+// ============================================================
 // DOM HELPERS
 // ============================================================
 
@@ -326,6 +387,7 @@ export default {
   ID_PREFIX,
   generateId,
   generateSequentialId,
+  logActivity,
   formatDate,
   formatRelativeDate,
   nowISO,

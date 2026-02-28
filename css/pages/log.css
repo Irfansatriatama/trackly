@@ -1,0 +1,296 @@
+/**
+ * TRACKLY — log.css
+ * Phase 18: Audit Trail — timeline and diff styles
+ */
+
+/* ─── Filter Bar ────────────────────────────────────────────────────────────── */
+
+.log-filter-bar {
+  margin-bottom: var(--space-4);
+}
+
+.log-filter-bar__inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: flex-end;
+  padding: var(--space-4);
+}
+
+/* ─── Timeline ───────────────────────────────────────────────────────────────── */
+
+.log-timeline {
+  padding: var(--space-4) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.log-entry {
+  display: grid;
+  grid-template-columns: 36px 2px 1fr;
+  gap: 0 var(--space-3);
+  position: relative;
+  padding-bottom: var(--space-5);
+}
+
+.log-entry:last-child {
+  padding-bottom: 0;
+}
+
+.log-entry:last-child .log-entry__line {
+  display: none;
+}
+
+.log-entry__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-card);
+  box-shadow: 0 0 0 2px var(--color-border);
+  z-index: 1;
+}
+
+.log-entry__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.log-entry__avatar-initials {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+.log-entry__line {
+  width: 2px;
+  background: var(--color-border);
+  margin: 4px auto 0;
+  border-radius: 2px;
+}
+
+.log-entry__body {
+  padding-top: 6px;
+  padding-bottom: var(--space-2);
+}
+
+.log-entry__header {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.log-entry__action-icon {
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.log-entry__action-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.log-entry__text {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.log-entry__time {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: default;
+  margin-top: 2px;
+}
+
+.log-entry__meta {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: var(--space-1);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* ─── Diff Toggle & Table ────────────────────────────────────────────────────── */
+
+.log-entry__diff-toggle {
+  font-size: 11px;
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  margin-top: var(--space-1);
+  display: inline-block;
+}
+
+.log-entry__diff-toggle:hover {
+  color: var(--color-primary-dark);
+}
+
+.log-entry__diff {
+  margin-top: var(--space-2);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.log-diff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.log-diff-table th {
+  background: var(--color-surface);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.log-diff-table td {
+  padding: var(--space-2) var(--space-3);
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-border);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.log-diff-table tr:last-child td {
+  border-bottom: none;
+}
+
+.log-diff-table__field {
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--color-text);
+  width: 130px;
+  white-space: nowrap;
+}
+
+.log-diff-table__old {
+  color: var(--color-danger);
+  background: #fef2f2;
+  max-width: 200px;
+  word-break: break-word;
+}
+
+.log-diff-table__new {
+  color: var(--color-success);
+  background: #f0fdf4;
+  max-width: 200px;
+  word-break: break-word;
+}
+
+.log-diff-empty {
+  color: var(--color-text-muted);
+  font-style: italic;
+  font-family: inherit;
+}
+
+/* ─── Pagination ─────────────────────────────────────────────────────────────── */
+
+.log-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+
+.log-pagination__info {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  min-width: 90px;
+  text-align: center;
+}
+
+/* ─── Dashboard Activity Feed ────────────────────────────────────────────────── */
+
+.dashboard-activity-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.dashboard-activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dashboard-activity-item:last-child {
+  border-bottom: none;
+}
+
+.dashboard-activity-item__icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dashboard-activity-item__icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.dashboard-activity-item__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard-activity-item__text {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.dashboard-activity-item__time {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .log-filter-bar__inner {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .log-diff-table__old,
+  .log-diff-table__new {
+    max-width: 120px;
+  }
+}

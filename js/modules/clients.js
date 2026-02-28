@@ -4,7 +4,7 @@
  */
 
 import { getAll, add, update, remove } from '../core/db.js';
-import { generateSequentialId, nowISO, formatDate, sanitize, truncate } from '../core/utils.js';
+import { generateSequentialId, nowISO, formatDate, sanitize, truncate, logActivity } from '../core/utils.js';
 import { showToast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { showConfirm } from '../components/confirm.js';
@@ -439,10 +439,12 @@ async function handleSaveClient(existing, isEdit, getLogo) {
       await update('clients', clientData);
       const idx = _clients.findIndex(c => c.id === clientId);
       if (idx !== -1) _clients[idx] = clientData;
+      logActivity({ project_id: null, entity_type: 'client', entity_id: clientId, entity_name: companyName, action: 'updated' });
       showToast(`${companyName} has been updated.`, 'success');
     } else {
       await add('clients', clientData);
       _clients.push(clientData);
+      logActivity({ project_id: null, entity_type: 'client', entity_id: clientData.id, entity_name: companyName, action: 'created' });
       showToast(`${companyName} has been added as a client.`, 'success');
     }
 
@@ -468,6 +470,7 @@ async function handleDeleteClient(client) {
       try {
         await remove('clients', client.id);
         _clients = _clients.filter(c => c.id !== client.id);
+        logActivity({ project_id: null, entity_type: 'client', entity_id: client.id, entity_name: client.company_name, action: 'deleted' });
         showToast(`${client.company_name} has been deleted.`, 'success');
         refreshContent();
       } catch { showToast('Failed to delete client.', 'error'); }

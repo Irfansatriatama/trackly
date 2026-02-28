@@ -6,7 +6,7 @@
  */
 
 import { getAll, getById, add, update, remove } from '../core/db.js';
-import { generateSequentialId, nowISO, formatDate, formatRelativeDate, sanitize, debug } from '../core/utils.js';
+import { generateSequentialId, nowISO, formatDate, formatRelativeDate, sanitize, debug, logActivity } from '../core/utils.js';
 import { showToast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { showConfirm } from '../components/confirm.js';
@@ -518,6 +518,7 @@ async function _advanceStatus(ticketId, newStatus) {
   };
   await update('maintenance', updated);
   Object.assign(t, updated);
+  logActivity({ project_id: t.project_id, entity_type: 'maintenance', entity_id: ticketId, entity_name: t.title, action: 'status_changed', changes: [{ field: 'status', old_value: t.status, new_value: newStatus }] });
   showToast(`Ticket marked as ${_getLabelFor(TICKET_STATUS_OPTIONS, newStatus)}`, 'success');
   _refreshList();
   _refreshStats();
@@ -685,10 +686,12 @@ async function _handleSaveTicket(existing) {
       await update('maintenance', ticket);
       const idx = _tickets.findIndex(x => x.id === ticket.id);
       if (idx !== -1) _tickets[idx] = ticket;
+      logActivity({ project_id: ticket.project_id, entity_type: 'maintenance', entity_id: ticket.id, entity_name: ticket.title, action: 'updated' });
       showToast('Ticket updated successfully.', 'success');
     } else {
       await add('maintenance', ticket);
       _tickets.push(ticket);
+      logActivity({ project_id: ticket.project_id, entity_type: 'maintenance', entity_id: ticket.id, entity_name: ticket.title, action: 'created' });
       showToast('Ticket created successfully.', 'success');
     }
     closeModal();
@@ -715,6 +718,7 @@ async function _deleteTicket(ticketId) {
   try {
     await remove('maintenance', ticketId);
     _tickets = _tickets.filter(x => x.id !== ticketId);
+    logActivity({ project_id: t.project_id, entity_type: 'maintenance', entity_id: ticketId, entity_name: t.title, action: 'deleted' });
     showToast('Ticket deleted.', 'success');
     _refreshList();
     _refreshStats();

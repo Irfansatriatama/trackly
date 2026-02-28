@@ -4,7 +4,7 @@
  */
 
 import { getAll, getById, add, update, remove } from '../core/db.js';
-import { generateSequentialId, nowISO, formatDate, sanitize, debug, getInitials } from '../core/utils.js';
+import { generateSequentialId, nowISO, formatDate, sanitize, debug, getInitials, logActivity } from '../core/utils.js';
 import { showToast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { showConfirm } from '../components/confirm.js';
@@ -440,6 +440,7 @@ async function _handleDrop(e) {
   try {
     await update('tasks', task);
     const col = _columns.find(c => c.status === newStatus);
+    logActivity({ project_id: _projectId, entity_type: 'task', entity_id: task.id, entity_name: task.title, action: 'status_changed', changes: [{ field: 'status', old_value: oldStatus, new_value: newStatus }] });
     showToast(`Moved to "${col ? col.label : newStatus}"`, 'success');
   } catch (err) {
     debug('Drop update error:', err);
@@ -673,6 +674,7 @@ async function _saveQuickTask({ title, priority, type, status }) {
     await add('tasks', taskData);
     _tasks.push(taskData);
     _renderColumns();
+    logActivity({ project_id: _projectId, entity_type: 'task', entity_id: taskData.id, entity_name: taskData.title, action: 'created' });
     showToast(`Task "${title}" created`, 'success');
   } catch (err) {
     debug('Quick add error:', err);
@@ -815,10 +817,12 @@ async function _handleSaveTaskModal(existingTask) {
       await update('tasks', taskData);
       const i = _tasks.findIndex(t => t.id === taskId);
       if (i !== -1) _tasks[i] = taskData;
+      logActivity({ project_id: _projectId, entity_type: 'task', entity_id: taskId, entity_name: title, action: 'updated' });
       showToast(`Task "${title}" updated`, 'success');
     } else {
       await add('tasks', taskData);
       _tasks.push(taskData);
+      logActivity({ project_id: _projectId, entity_type: 'task', entity_id: taskData.id, entity_name: title, action: 'created' });
       showToast(`Task "${title}" created`, 'success');
     }
     _computeAllTags();

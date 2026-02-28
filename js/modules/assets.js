@@ -4,7 +4,7 @@
  */
 
 import { getAll, add, update, remove } from '../core/db.js';
-import { generateSequentialId, nowISO, formatDate, sanitize, truncate } from '../core/utils.js';
+import { generateSequentialId, nowISO, formatDate, sanitize, truncate, logActivity } from '../core/utils.js';
 import { showToast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { showConfirm } from '../components/confirm.js';
@@ -587,10 +587,12 @@ async function handleSaveAsset(existing, isEdit, getImage) {
       await update('assets', assetData);
       const idx = _assets.findIndex(a => a.id === assetId);
       if (idx !== -1) _assets[idx] = assetData;
+      logActivity({ project_id: assetData.project_id || null, entity_type: 'asset', entity_id: assetId, entity_name: name, action: 'updated' });
       showToast(`${name} has been updated.`, 'success');
     } else {
       await add('assets', assetData);
       _assets.push(assetData);
+      logActivity({ project_id: assetData.project_id || null, entity_type: 'asset', entity_id: assetData.id, entity_name: name, action: 'created' });
       showToast(`${name} has been added to assets.`, 'success');
     }
 
@@ -617,6 +619,7 @@ async function handleDeleteAsset(asset) {
       try {
         await remove('assets', asset.id);
         _assets = _assets.filter(a => a.id !== asset.id);
+        logActivity({ project_id: asset.project_id || null, entity_type: 'asset', entity_id: asset.id, entity_name: asset.name, action: 'deleted' });
         showToast(`${asset.name} has been deleted.`, 'success');
         renderAssetsPage();
       } catch { showToast('Failed to delete asset.', 'error'); }

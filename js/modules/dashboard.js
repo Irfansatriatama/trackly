@@ -43,12 +43,13 @@ export async function render(params = {}) {
 
   try {
     const session = getSession();
-    const [projects, tasks, members, maintenance, sprints] = await Promise.all([
+    const [projects, tasks, members, maintenance, sprints, activityLogs] = await Promise.all([
       getAll('projects').catch(()=>[]),
       getAll('tasks').catch(()=>[]),
       getAll('users').catch(()=>[]),
       getAll('maintenance').catch(()=>[]),
       getAll('sprints').catch(()=>[]),
+      getAll('activity_log').catch(()=>[]),
     ]);
 
     const userId = session?.userId;
@@ -208,6 +209,56 @@ export async function render(params = {}) {
             </div>
           </div>
         </div>` : ''}
+
+        <!-- Recent Activity Feed (Phase 18 — real data) -->
+        ${(() => {
+          const recentLogs = [...activityLogs]
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .slice(0, 20);
+          if (recentLogs.length === 0) return '';
+          const actionIcons = {
+            created: 'plus-circle', updated: 'edit-2', deleted: 'trash-2',
+            status_changed: 'refresh-cw', sprint_started: 'play-circle',
+            sprint_completed: 'check-circle', assigned: 'user-check',
+          };
+          return `
+          <div class="card" style="margin-top:var(--space-6);">
+            <div class="card__header">
+              <h2 class="card__title">
+                <i data-lucide="activity" aria-hidden="true"></i> Recent Activity
+              </h2>
+            </div>
+            <div class="card__body" style="padding:0 var(--space-6);">
+              <div class="dashboard-activity-feed">
+                ${recentLogs.map(log => {
+                  const icon = actionIcons[log.action] || 'activity';
+                  const proj = log.project_id ? projects.find(p => p.id === log.project_id) : null;
+                  const actor = sanitize(log.actor_name || 'Someone');
+                  const entity = sanitize(log.entity_name || log.entity_id || '');
+                  const type = (log.entity_type || '').replace(/_/g,' ');
+                  const amap = {
+                    created: `created ${type} <strong>${entity}</strong>`,
+                    updated: `updated ${type} <strong>${entity}</strong>`,
+                    deleted: `deleted ${type} <strong>${entity}</strong>`,
+                    status_changed: `changed status of <strong>${entity}</strong>`,
+                    sprint_started: `started sprint <strong>${entity}</strong>`,
+                    sprint_completed: `completed sprint <strong>${entity}</strong>`,
+                  };
+                  const label = `<strong>${actor}</strong> ${amap[log.action] || sanitize(log.action) + ' ' + entity}`;
+                  return `<div class="dashboard-activity-item">
+                    <div class="dashboard-activity-item__icon">
+                      <i data-lucide="${icon}" aria-hidden="true"></i>
+                    </div>
+                    <div class="dashboard-activity-item__content">
+                      <p class="dashboard-activity-item__text">${label}${proj ? ` · <a href="#/projects/${sanitize(proj.id)}" class="text-link">${sanitize(proj.name)}</a>` : ''}</p>
+                      <p class="dashboard-activity-item__time" title="${sanitize(formatDate(log.created_at, 'datetime'))}">${sanitize(formatRelativeDate(log.created_at))}</p>
+                    </div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+          </div>`;
+        })()}
 
       </div>
     `;

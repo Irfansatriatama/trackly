@@ -5,7 +5,7 @@
 
 import { getAll, add, update } from '../core/db.js';
 import { hashPassword } from '../core/auth.js';
-import { generateSequentialId, nowISO, formatRelativeDate, getInitials, sanitize } from '../core/utils.js';
+import { generateSequentialId, nowISO, formatRelativeDate, getInitials, sanitize, logActivity } from '../core/utils.js';
 import { showToast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { showConfirm } from '../components/confirm.js';
@@ -445,10 +445,12 @@ async function handleSaveMember(existing, isEdit, getAvatar) {
       await update('users', memberData);
       const idx = _members.findIndex(m=>m.id===memberId);
       if (idx!==-1) _members[idx]=memberData;
+      logActivity({ project_id: null, entity_type: 'member', entity_id: memberId, entity_name: fullName, action: 'updated' });
       showToast(`${fullName}'s profile has been updated.`, 'success');
     } else {
       await add('users', memberData);
       _members.push(memberData);
+      logActivity({ project_id: null, entity_type: 'member', entity_id: memberData.id, entity_name: fullName, action: 'created' });
       showToast(`${fullName} has been added as a member.`, 'success');
     }
 
@@ -541,6 +543,7 @@ async function handleDeactivate(member) {
         await update('users',updated);
         const idx=_members.findIndex(m=>m.id===member.id);
         if (idx!==-1) _members[idx]=updated;
+        logActivity({ project_id: null, entity_type: 'member', entity_id: member.id, entity_name: member.full_name, action: 'status_changed', changes: [{ field: 'status', old_value: 'active', new_value: 'inactive' }] });
         showToast(`${member.full_name} has been deactivated.`,'success');
         refreshTable();
       } catch { showToast('Failed to deactivate member.','error'); }
@@ -554,6 +557,7 @@ async function handleActivate(member) {
     await update('users',updated);
     const idx=_members.findIndex(m=>m.id===member.id);
     if (idx!==-1) _members[idx]=updated;
+    logActivity({ project_id: null, entity_type: 'member', entity_id: member.id, entity_name: member.full_name, action: 'status_changed', changes: [{ field: 'status', old_value: 'inactive', new_value: 'active' }] });
     showToast(`${member.full_name} has been reactivated.`,'success');
     refreshTable();
   } catch { showToast('Failed to activate member.','error'); }

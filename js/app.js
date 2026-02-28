@@ -193,6 +193,14 @@ function registerAllRoutes() {
     await renderReports({ id: params.id });
   });
 
+  // Activity Log — Phase 18
+  registerRoute('/projects/:id/log', async (params) => {
+    if (!requireAuth()) return;
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading activity log...</p></div></div>');
+    const { render: renderLog } = await import('./modules/log.js');
+    await renderLog({ id: params.id });
+  });
+
   // Clients
   // Clients — Phase 6 full implementation
   registerRoute('/clients', async () => {

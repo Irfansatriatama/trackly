@@ -4,7 +4,7 @@
  */
 
 import { getAll, getById, add, update, remove } from '../core/db.js';
-import { generateSequentialId, nowISO, formatDate, sanitize, debug } from '../core/utils.js';
+import { generateSequentialId, nowISO, formatDate, sanitize, debug, logActivity } from '../core/utils.js';
 import { showToast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { showConfirm } from '../components/confirm.js';
@@ -399,7 +399,7 @@ async function handleBulkDelete() {
 
 async function handleDeleteTask(task) {
   showConfirm({ title:'Delete Task', message:`Delete <strong>${sanitize(task.title)}</strong>?`, confirmLabel:'Delete', confirmVariant:'danger', onConfirm: async () => {
-    try { await remove('tasks', task.id); _tasks = _tasks.filter(t => t.id !== task.id); _computeAllTags(); showToast(`"${task.title}" deleted.`,'success'); if (_detailTaskId === task.id) closeSlideover(); refreshContent(); } catch { showToast('Delete failed.','error'); }
+    try { await remove('tasks', task.id); _tasks = _tasks.filter(t => t.id !== task.id); _computeAllTags(); logActivity({project_id:_projectId,entity_type:'task',entity_id:task.id,entity_name:task.title,action:'deleted'}); showToast(`"${task.title}" deleted.`,'success'); if (_detailTaskId === task.id) closeSlideover(); refreshContent(); } catch { showToast('Delete failed.','error'); }
   }});
 }
 
@@ -586,8 +586,19 @@ async function handleSaveTask(existing, isEdit, tags, checklist, comments) {
     const taskId = isEdit ? existing.id : generateSequentialId('TSK', allTasks);
     const session = getSession();
     const taskData = { id:taskId, project_id:_projectId, title, description, type, status, priority, assignees, reporter:reporter||session?.userId||null, sprint_id:sprint_id||null, epic_id:existing?.epic_id||null, story_points, start_date, due_date, completed_at:status==='done'?(existing?.completed_at||now):null, tags, attachments:existing?.attachments||[], checklist, comments, time_logged, dependencies:existing?.dependencies||[], created_at:existing?.created_at||now, updated_at:now };
-    if (isEdit) { await update('tasks',taskData); const i=_tasks.findIndex(t=>t.id===taskId); if(i!==-1) _tasks[i]=taskData; showToast(`Task "${title}" updated.`,'success'); }
-    else { await add('tasks',taskData); _tasks.push(taskData); showToast(`Task "${title}" created.`,'success'); }
+    if (isEdit) {
+      await update('tasks',taskData);
+      const i=_tasks.findIndex(t=>t.id===taskId); if(i!==-1) _tasks[i]=taskData;
+      const changes=[];
+      if(existing){for(const f of ['title','status','priority','type','due_date','assignees','sprint_id']){const ov=JSON.stringify(existing[f]||''),nv=JSON.stringify(taskData[f]||'');if(ov!==nv)changes.push({field:f,old_value:existing[f],new_value:taskData[f]});}}
+      logActivity({project_id:_projectId,entity_type:'task',entity_id:taskId,entity_name:title,action:'updated',changes});
+      showToast(`Task "${title}" updated.`,'success');
+    } else {
+      await add('tasks',taskData);
+      _tasks.push(taskData);
+      logActivity({project_id:_projectId,entity_type:'task',entity_id:taskId,entity_name:title,action:'created'});
+      showToast(`Task "${title}" created.`,'success');
+    }
     _computeAllTags(); closeModal(); refreshContent();
     if (_detailTaskId === taskId) { const u=_tasks.find(t=>t.id===taskId); if(u) renderTaskDetail(u); }
   } catch(err) { debug('Save task error:', err); showToast('Failed to save task.','error'); }

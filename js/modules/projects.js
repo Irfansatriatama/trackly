@@ -4,7 +4,7 @@
  */
 
 import { getAll, getById, add, update, remove } from '../core/db.js';
-import { generateSequentialId, nowISO, formatDate, formatCurrency, sanitize, truncate, isPast } from '../core/utils.js';
+import { generateSequentialId, nowISO, formatDate, formatCurrency, sanitize, truncate, isPast, logActivity } from '../core/utils.js';
 import { showToast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { showConfirm } from '../components/confirm.js';
@@ -483,10 +483,21 @@ async function handleSaveProject(existing, isEdit, getColor, getMembers) {
       await update('projects', projectData);
       const idx = _projects.findIndex(p => p.id === projectId);
       if (idx !== -1) _projects[idx] = projectData;
+      // Build changes diff
+      const changes = [];
+      if (existing) {
+        for (const field of ['name','status','phase','priority','start_date','end_date','budget','description']) {
+          if (String(existing[field] || '') !== String(projectData[field] || '')) {
+            changes.push({ field, old_value: existing[field], new_value: projectData[field] });
+          }
+        }
+      }
+      logActivity({ project_id: projectId, entity_type: 'project', entity_id: projectId, entity_name: name, action: 'updated', changes });
       showToast(`"${name}" has been updated.`, 'success');
     } else {
       await add('projects', projectData);
       _projects.push(projectData);
+      logActivity({ project_id: projectId, entity_type: 'project', entity_id: projectId, entity_name: name, action: 'created' });
       showToast(`Project "${name}" created successfully.`, 'success');
     }
 
@@ -509,6 +520,7 @@ async function handleDeleteProject(project) {
       try {
         await remove('projects', project.id);
         _projects = _projects.filter(p => p.id !== project.id);
+        logActivity({ project_id: project.id, entity_type: 'project', entity_id: project.id, entity_name: project.name, action: 'deleted' });
         showToast(`"${project.name}" has been deleted.`, 'success');
         refreshContent();
       } catch {
@@ -577,6 +589,8 @@ async function renderProjectDetail(projectId) {
     const isOverBudget = project.budget > 0 && (project.actual_cost || 0) > project.budget;
     const isOverdue = project.end_date && isPast(project.end_date) && !['completed','cancelled'].includes(project.status);
     const showMaintenance = ['running','maintenance'].includes(project.phase) || ['maintenance'].includes(project.status);
+    const sessionUser = getSession();
+    const isAdminOrPM = sessionUser && ['admin', 'pm'].includes(sessionUser.role);
 
     content.innerHTML = `
       <div class="page-container page-enter project-detail-page">
@@ -634,6 +648,9 @@ async function renderProjectDetail(projectId) {
           <a class="project-subnav__link" href="#/projects/${sanitize(project.id)}/reports">
             <i data-lucide="bar-chart-2" aria-hidden="true"></i> Reports
           </a>
+          ${isAdminOrPM ? `<a class="project-subnav__link" href="#/projects/${sanitize(project.id)}/log">
+            <i data-lucide="clock" aria-hidden="true"></i> Log
+          </a>` : ''}
         </div>
 
         <!-- Stats row -->

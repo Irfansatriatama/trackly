@@ -4,7 +4,7 @@
  * Cache-first for all static assets; network-first for external resources.
  */
 
-const CACHE_NAME = 'trackly-v1.0.0';
+const CACHE_NAME = 'trackly-v1.1.0';
 
 const STATIC_ASSETS = [
   './',
@@ -49,6 +49,8 @@ const STATIC_ASSETS = [
   './js/modules/reports.js',
   './js/modules/settings.js',
   './js/modules/guide.js',
+  './js/modules/log.js',
+  './css/pages/log.css',
   './assets/logo.svg',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',

@@ -4,7 +4,7 @@
  */
 
 import { getAll, getById, add, update, remove } from '../core/db.js';
-import { generateSequentialId, nowISO, formatDate, sanitize, debug } from '../core/utils.js';
+import { generateSequentialId, nowISO, formatDate, sanitize, debug, logActivity } from '../core/utils.js';
 import { showToast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { showConfirm } from '../components/confirm.js';
@@ -458,11 +458,13 @@ async function _handleSaveSprint(existing) {
     if (isEdit) {
       await update('sprints', sprintData);
       const i = _sprints.findIndex(s => s.id === sprintData.id); if (i !== -1) _sprints[i] = sprintData;
+      logActivity({ project_id: _projectId, entity_type: 'sprint', entity_id: sprintData.id, entity_name: name, action: 'updated' });
       showToast(`Sprint "${name}" updated.`, 'success');
     } else {
       await add('sprints', sprintData);
       _sprints.push(sprintData);
       if (!_planningSprintId) _planningSprintId = sprintData.id;
+      logActivity({ project_id: _projectId, entity_type: 'sprint', entity_id: sprintData.id, entity_name: name, action: 'created' });
       showToast(`Sprint "${name}" created.`, 'success');
     }
     closeModal(); _renderPage();
@@ -483,6 +485,7 @@ async function _handleActivateSprint(sprintId) {
         const updated = { ...sprint, status: 'active', updated_at: nowISO() };
         await update('sprints', updated);
         const i = _sprints.findIndex(s => s.id === sprintId); if (i !== -1) _sprints[i] = updated;
+        logActivity({ project_id: _projectId, entity_type: 'sprint', entity_id: sprintId, entity_name: sprint.name, action: 'sprint_started' });
         showToast(`Sprint "${sprint.name}" is now active.`, 'success'); _renderPage();
       } catch { showToast('Failed to start sprint.', 'error'); }
     },
@@ -537,6 +540,7 @@ async function _handleCompleteSprint(sprintId) {
       const updatedSprint = { ...sprint, status: 'completed', retro_notes: retroNotes, updated_at: now };
       await update('sprints', updatedSprint);
       const si = _sprints.findIndex(s => s.id === sprintId); if (si !== -1) _sprints[si] = updatedSprint;
+      logActivity({ project_id: _projectId, entity_type: 'sprint', entity_id: sprintId, entity_name: sprint.name, action: 'sprint_completed' });
       showToast(`Sprint "${sprint.name}" completed.`, 'success');
       closeModal(); _activeTab = 'list'; _renderPage();
     } catch (err) { debug('Complete sprint error:', err); showToast('Failed to complete sprint.', 'error'); }
@@ -562,6 +566,7 @@ async function _handleDeleteSprint(sprintId) {
         await remove('sprints', sprintId);
         _sprints = _sprints.filter(s => s.id !== sprintId);
         if (_planningSprintId === sprintId) _planningSprintId = _sprints[0]?.id || null;
+        logActivity({ project_id: _projectId, entity_type: 'sprint', entity_id: sprintId, entity_name: sprint.name, action: 'deleted' });
         showToast(`Sprint "${sprint.name}" deleted.`, 'success'); _renderPage();
       } catch { showToast('Failed to delete sprint.', 'error'); }
     },
