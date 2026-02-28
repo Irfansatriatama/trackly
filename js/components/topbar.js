@@ -35,8 +35,10 @@ function getTitleFromPath(path) {
         backlog:     'Backlog',
         sprint:      'Sprint',
         gantt:       'Gantt Chart',
+        discussion:  'Discussion',
         maintenance: 'Maintenance',
         reports:     'Reports',
+        log:         'Activity Log',
       };
       return subTitles[sub] || 'Project';
     }

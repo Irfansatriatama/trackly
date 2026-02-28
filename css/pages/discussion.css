@@ -1,0 +1,380 @@
+/**
+ * TRACKLY — discussion.css
+ * Phase 20: Project Discussion — feed, post cards, replies, attachments
+ */
+
+/* ─── Section Labels ────────────────────────────────────────────────────────── */
+
+.dsc-section-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-3);
+}
+
+/* ─── Pinned Section ────────────────────────────────────────────────────────── */
+
+.dsc-pinned-section {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.dsc-pinned-section .dsc-section-label {
+  color: #92400e;
+}
+
+.dsc-pin-indicator {
+  display: inline-flex;
+  align-items: center;
+  color: #d97706;
+  font-size: 13px;
+}
+
+/* ─── Post Card ─────────────────────────────────────────────────────────────── */
+
+.dsc-post-card {
+  padding: var(--space-5);
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--color-border);
+  transition: box-shadow 100ms ease;
+}
+
+.dsc-post-card:hover {
+  box-shadow: var(--shadow-card);
+}
+
+.dsc-post-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.dsc-post-card__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.dsc-post-card__author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dsc-post-card__author-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.dsc-post-card__time {
+  font-size: 12px;
+}
+
+.dsc-post-card__actions-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.dsc-post-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 100ms ease;
+}
+
+.dsc-post-card:hover .dsc-post-actions {
+  opacity: 1;
+}
+
+/* ─── Type Badge ────────────────────────────────────────────────────────────── */
+
+.dsc-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dsc-type-badge i {
+  width: 13px;
+  height: 13px;
+}
+
+/* ─── Post Content ──────────────────────────────────────────────────────────── */
+
+.dsc-post-card__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.dsc-post-card__content {
+  font-size: 14px;
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.dsc-post-card__content .markdown-body {
+  all: unset;
+  display: block;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.dsc-post-card__content .markdown-body p { margin: 0 0 var(--space-2) 0; }
+.dsc-post-card__content .markdown-body h1,
+.dsc-post-card__content .markdown-body h2,
+.dsc-post-card__content .markdown-body h3 {
+  font-weight: 600;
+  margin: var(--space-3) 0 var(--space-1) 0;
+}
+.dsc-post-card__content .markdown-body ul { padding-left: var(--space-5); margin: var(--space-2) 0; }
+.dsc-post-card__content .markdown-body code {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+}
+.dsc-post-card__content .markdown-body strong { font-weight: 600; }
+.dsc-post-card__content .markdown-body em { font-style: italic; }
+
+/* ─── Post Footer ───────────────────────────────────────────────────────────── */
+
+.dsc-post-card__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ─── Attachments ───────────────────────────────────────────────────────────── */
+
+.dsc-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.dsc-attachment {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font-size: 13px;
+}
+
+.dsc-attachment--pending {
+  gap: var(--space-2);
+}
+
+.dsc-attachment__icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.dsc-attachment__info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.dsc-attachment__name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-primary);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.dsc-attachment__name:hover {
+  text-decoration: underline;
+}
+
+.dsc-attachment__size {
+  font-size: 11px;
+}
+
+/* ─── Attachment Upload ─────────────────────────────────────────────────────── */
+
+.dsc-attachment-upload {
+  margin-bottom: var(--space-3);
+}
+
+.dsc-attachment-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* ─── Replies ───────────────────────────────────────────────────────────────── */
+
+.dsc-replies {
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-4);
+  margin-top: var(--space-3);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.dsc-replies-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dsc-reply {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.dsc-reply__body {
+  flex: 1;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.dsc-reply__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.dsc-reply__author {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.dsc-reply__time {
+  font-size: 11px;
+}
+
+.dsc-reply__content {
+  font-size: 13px;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.dsc-reply__content .markdown-body {
+  all: unset;
+  display: block;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dsc-reply__content .markdown-body p { margin: 0; }
+.dsc-reply__content .markdown-body strong { font-weight: 600; }
+.dsc-reply__content .markdown-body em { font-style: italic; }
+.dsc-reply__content .markdown-body code {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 1px 4px;
+  font-size: 12px;
+  font-family: var(--font-mono, monospace);
+}
+
+/* ─── Reply Input ───────────────────────────────────────────────────────────── */
+
+.dsc-reply-input-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  margin-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+
+.dsc-reply-input-wrap {
+  flex: 1;
+}
+
+.dsc-reply-textarea {
+  width: 100%;
+  resize: vertical;
+  font-size: 13px;
+}
+
+/* ─── Avatar ────────────────────────────────────────────────────────────────── */
+
+.dsc-avatar {
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.dsc-avatar--initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* ─── Pagination ────────────────────────────────────────────────────────────── */
+
+.dsc-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-5) 0;
+}
+
+.dsc-pagination__info {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* ─── Responsive ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .dsc-post-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .dsc-post-card__actions-row {
+    flex-wrap: wrap;
+  }
+  .dsc-post-actions {
+    opacity: 1;
+  }
+}

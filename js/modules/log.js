@@ -139,6 +139,9 @@ function _renderProjectHeader(project, coverColor) {
       <a class="project-subnav__link" href="#/projects/${sanitize(project.id)}/gantt">
         <i data-lucide="gantt-chart" aria-hidden="true"></i> Gantt
       </a>
+      <a class="project-subnav__link" href="#/projects/${sanitize(project.id)}/discussion">
+        <i data-lucide="message-circle" aria-hidden="true"></i> Discussion
+      </a>
       ${showMaintenance ? `<a class="project-subnav__link" href="#/projects/${sanitize(project.id)}/maintenance">
         <i data-lucide="wrench" aria-hidden="true"></i> Maintenance
       </a>` : ''}

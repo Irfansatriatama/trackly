@@ -505,6 +505,35 @@ function buildGuideHTML() {
         </div>
       </div>
 
+      <!-- Section 17: Project Discussion -->
+      <div class="guide-section card" id="guide-discussion">
+        <div class="card__body">
+          <h2 class="guide-section__title">
+            <i data-lucide="message-circle" aria-hidden="true"></i>
+            17. Project Discussion
+          </h2>
+          <p>Every project has a Discussion tab (visible to Admin, PM, and Developer) for posting team updates, questions, decisions, and blockers in one place.</p>
+          <h3>Creating a Post</h3>
+          <p>Click "New Post" to open the post form. Choose a type (Update, Question, Decision, Blocker, or General), optionally add a title, write your content using Markdown, and attach files up to 5MB each. Click "Post" to publish.</p>
+          <h3>Post Types</h3>
+          <p>Each post is color-coded by type: Blockers are shown in red, Decisions in purple, Questions in blue, Updates in green, and General posts in neutral grey. This makes it easy to scan the feed for critical items at a glance.</p>
+          <h3>Pinned Posts</h3>
+          <p>Admin and PM can pin important posts to keep them at the top of the feed. Click the pin icon on any post card to pin or unpin it. Pinned posts appear in a highlighted section above the regular feed, regardless of their original post date.</p>
+          <h3>Replies</h3>
+          <p>Click the reply button on any post to expand the inline reply thread. Write your reply in the text area and click "Reply" to submit. Posts with more than 3 replies show only the latest three by default — click "Show all N replies" to see the full thread.</p>
+          <h3>Editing and Deleting</h3>
+          <p>Authors can edit or delete their own posts at any time. Admin and PM can delete any post. Hover over a post card to reveal the edit and delete buttons in the top-right corner.</p>
+          <h3>File Attachments</h3>
+          <p>You can attach images, PDFs, and documents to any post. Files are stored in the browser and accessible via download link directly from the post card. Each file is limited to 5MB.</p>
+          <h3>Feed Pagination</h3>
+          <p>The discussion feed shows the 20 most recent (non-pinned) posts per page. Use the Previous and Next buttons at the bottom of the feed to navigate older posts.</p>
+          <div class="guide-tip">
+            <i data-lucide="lightbulb" aria-hidden="true"></i>
+            <p>All post creation, deletion, and pinning actions are recorded in the project Audit Trail (Log tab), visible to Admin and PM.</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Footer -->
       <div class="card" style="margin-bottom: var(--space-8);">
         <div class="card__body" style="text-align:center; color:var(--color-text-muted); font-size:var(--text-sm);">

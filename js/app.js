@@ -193,6 +193,14 @@ function registerAllRoutes() {
     await renderReports({ id: params.id });
   });
 
+  // Discussion — Phase 20
+  registerRoute('/projects/:id/discussion', async (params) => {
+    if (!requireAuth()) return;
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading discussion...</p></div></div>');
+    const { render: renderDiscussion } = await import('./modules/discussion.js');
+    await renderDiscussion({ id: params.id });
+  });
+
   // Activity Log — Phase 18
   registerRoute('/projects/:id/log', async (params) => {
     if (!requireAuth()) return;

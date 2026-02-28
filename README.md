@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.2.0` |
-| **Current Phase** | Phase 20 — Project Discussion (next up) |
+| **Current Version** | `v1.3.0` |
+| **Current Phase** | v1.3.0 — Feature Complete (v1.x) |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -1014,25 +1014,25 @@ Tasks:
 **Deliverable**: Team members can post updates, questions, decisions, and blockers within each project
 
 Tasks:
-- [ ] Add `discussions` store to `db.js` — bump DB version to `3`, add store with `project_id` index
-- [ ] Add `DSC-` prefix to `ID_PREFIX` in `utils.js`
-- [ ] Build `js/modules/discussion.js` — feed layout per project
-- [ ] **Discussion tab** in project subnav — between Gantt and Log (visible to Admin, PM, Developer)
-- [ ] Feed view: posts newest first, paginated (20 per page)
-- [ ] Post card: type badge (color-coded), author avatar + name, relative timestamp, content (Markdown rendered), attachment count badge, reply count badge
-- [ ] **Pinned posts** section — appears above the regular feed, only if pins exist
-- [ ] Post type badge colours: `blocker` = danger red, `decision` = secondary purple, `question` = info blue, `update` = success green, `general` = neutral
-- [ ] Create post modal — title (optional), type selector, Markdown content editor, file attachment (max 5MB, base64)
-- [ ] Inline reply thread — collapsible, shows last 3 replies with "Show all N replies" expand
-- [ ] Edit / delete own post (PM/Admin can delete any post)
-- [ ] Pin / unpin post (Admin/PM only)
-- [ ] File attachment display — filename, size, mime icon, download link
-- [ ] Empty state with contextual CTA ("Start the conversation — post a project update")
-- [ ] Add `css/pages/discussion.css`
-- [ ] Register route `#/projects/:id/discussion` in `app.js`
-- [ ] Call `logActivity()` for post created, deleted, pinned
-- [ ] Update `sw.js` cache to include `discussion.js`
-- [ ] Update User Guide (`guide.js`) to add Discussion section
+- [x] Add `discussions` store to `db.js` — bump DB version to `3`, add store with `project_id` index
+- [x] Add `DSC-` prefix to `ID_PREFIX` in `utils.js`
+- [x] Build `js/modules/discussion.js` — feed layout per project
+- [x] **Discussion tab** in project subnav — between Gantt and Log (visible to Admin, PM, Developer)
+- [x] Feed view: posts newest first, paginated (20 per page)
+- [x] Post card: type badge (color-coded), author avatar + name, relative timestamp, content (Markdown rendered), attachment count badge, reply count badge
+- [x] **Pinned posts** section — appears above the regular feed, only if pins exist
+- [x] Post type badge colours: `blocker` = danger red, `decision` = secondary purple, `question` = info blue, `update` = success green, `general` = neutral
+- [x] Create post modal — title (optional), type selector, Markdown content editor, file attachment (max 5MB, base64)
+- [x] Inline reply thread — collapsible, shows last 3 replies with "Show all N replies" expand
+- [x] Edit / delete own post (PM/Admin can delete any post)
+- [x] Pin / unpin post (Admin/PM only)
+- [x] File attachment display — filename, size, mime icon, download link
+- [x] Empty state with contextual CTA ("Start the conversation — post a project update")
+- [x] Add `css/pages/discussion.css`
+- [x] Register route `#/projects/:id/discussion` in `app.js`
+- [x] Call `logActivity()` for post created, deleted, pinned
+- [x] Update `sw.js` cache to include `discussion.js`
+- [x] Update User Guide (`guide.js`) to add Discussion section
 
 ---
 
@@ -1044,10 +1044,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v1.2.0                                     ║
-║  Current Phase     : Phase 20 — Project Discussion              ║
-║  Phase Status      : NOT STARTED                                ║
-║  Next Phase        : Phase 20 — Project Discussion               ║
+║  Current Version   : v1.3.0                                     ║
+║  Current Phase     : v1.3.0 Feature Complete                    ║
+║  Phase Status      : COMPLETED                                  ║
+║  Next Phase        : — (v1.x feature-complete)                  ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -1070,10 +1070,28 @@ Tasks:
 ║  [x] Phase 17 — Testing, Documentation & Handoff  v1.0.0      ║
 ║  [x] Phase 18 — Audit Trail                        v1.1.0      ║
 ║  [x] Phase 19 — Meeting Agenda & Notulensi         v1.2.0      ║
-║  [ ] Phase 20 — Project Discussion                 v1.3.0      ║
+║  [x] Phase 20 — Project Discussion                 v1.3.0      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
 ║                                                                 ║
+║  v1.3.0 [2026-02-28]  Phase 20 — Project Discussion:         ║
+║                         discussions store added to db.js (DB v3); ║
+║                         DSC- prefix already in ID_PREFIX;          ║
+║                         discussion.js module with feed (20/page),  ║
+║                         pinned posts section (Admin/PM only),       ║
+║                         post type badges (blocker=red, decision=    ║
+║                         purple, question=blue, update=green,        ║
+║                         general=neutral), inline collapsible reply  ║
+║                         threads (show last 3, expand all),          ║
+║                         Markdown render for posts+replies, file     ║
+║                         attachments (base64, max 5MB, download),    ║
+║                         edit/delete own post, Admin/PM can delete   ║
+║                         any post + pin/unpin, logActivity() on all  ║
+║                         actions; discussion tab added to subnav in  ║
+║                         all project modules (between Gantt+Log);   ║
+║                         discussion.css; route registered in app.js; ║
+║                         sw.js bumped to v1.3.0; guide.js section   ║
+║                         17 added. v1.3.0 = v1.x feature-complete.  ║
 ║  v1.2.0 [2026-02-28]  Phase 19 — Meeting Agenda & Notulensi:   ║
 ║                         meetings store added to db.js (DB v2);   ║
 ║                         MTG- prefix in ID_PREFIX; meetings.js    ║
