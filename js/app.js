@@ -201,9 +201,12 @@ function registerAllRoutes() {
   });
 
   // Assets
-  registerRoute('/assets', () => {
+  // Assets — Phase 14 full implementation
+  registerRoute('/assets', async () => {
     if (!requireAuth()) return;
-    setContent(renderPageShell('Assets', 'Company and project asset inventory'));
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading assets...</p></div></div>');
+    const { render: renderAssets } = await import('./modules/assets.js');
+    await renderAssets({});
   });
 
   // Members — Phase 5 full implementation

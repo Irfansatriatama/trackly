@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v0.13.0-alpha` |
-| **Current Phase** | Phase 14 — Asset Management |
+| **Current Version** | `v0.14.0-alpha` |
+| **Current Phase** | Phase 15 — Reports Module |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -774,13 +774,13 @@ Tasks:
 **Deliverable**: PM can manage company/project assets
 
 Tasks:
-- Asset list page (table with category icon, status badge, assigned-to)
-- Create / Edit asset modal (all fields from section 5.11)
-- Asset detail panel
-- Image upload (base64)
-- Filter by category, status, assigned user, project
-- Asset assignment to project or user
-- Warranty expiry warning (highlight if expiring within 30 days)
+- [x] Asset list page (table with category icon, status badge, assigned-to)
+- [x] Create / Edit asset modal (all fields from section 5.11)
+- [x] Asset detail panel
+- [x] Image upload (base64)
+- [x] Filter by category, status, assigned user, project
+- [x] Asset assignment to project or user
+- [x] Warranty expiry warning (highlight if expiring within 30 days)
 
 ---
 
@@ -844,10 +844,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v0.13.0-alpha                              ║
-║  Current Phase     : Phase 14 — Asset Management                            ║
+║  Current Version   : v0.14.0-alpha                              ║
+║  Current Phase     : Phase 15 — Reports Module                              ║
 ║  Phase Status      : NOT STARTED                                ║
-║  Next Phase        : Phase 15 — Reports Module      ║
+║  Next Phase        : Phase 16 — Polish, Accessibility & PWA     ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -864,13 +864,23 @@ Tasks:
 ║  [x] Phase 11 — Gantt Chart                        v0.11.0     ║
 ║  [x] Phase 12 — Maintenance Module                 v0.12.0     ║
 ║  [x] Phase 13 — Maintenance Report & Invoice       v0.13.0     ║
-║  [ ] Phase 14 — Asset Management                   v0.14.0     ║
+║  [x] Phase 14 — Asset Management                   v0.14.0     ║
 ║  [ ] Phase 15 — Reports Module                     v0.15.0     ║
 ║  [ ] Phase 16 — Polish, Accessibility & PWA        v0.16.0     ║
 ║  [ ] Phase 17 — Testing, Documentation & Handoff  v1.0.0      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
 ║                                                                 ║
+║  v0.14.0 [2026-02-28]  Asset Management: asset list table with  ║
+║                         category icons, status badges, assignee   ║
+║                         & project cells; add/edit/delete modal    ║
+║                         with all section 5.11 fields; detail      ║
+║                         panel; image upload (base64); filters by  ║
+║                         category, status, assignee, project;      ║
+║                         asset assignment to user/project; warranty║
+║                         expiry warning banner + row highlight for ║
+║                         assets expiring within 30 days; stats row ║
+║                         (total, in-use, available, expiring).     ║
 ║  v0.1.0  [2026-02-27]  Initial scaffold & design system       ║
 ║  v0.2.0  [2026-02-28]  Layout shell, sidebar, topbar, router  ║
 ║  v0.3.0  [2026-02-28]  Auth & session: login UI, IndexedDB,   ║
