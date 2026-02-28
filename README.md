@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v0.12.0-alpha` |
-| **Current Phase** | Phase 13 — Maintenance Report & Invoice |
+| **Current Version** | `v0.13.0-alpha` |
+| **Current Phase** | Phase 14 — Asset Management |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -758,14 +758,14 @@ Tasks:
 **Deliverable**: PM can generate and export maintenance reports and invoices as PDF
 
 Tasks:
-- Maintenance Report view: filter by date range, grouped by type
-- Summary stats: total tickets, resolved %, avg resolution time, total hours
-- Cost calculator: PM inputs hourly rate or per-ticket rates
-- Invoice builder: pull company name/logo from settings, client info from project
-- Invoice line items: ticket ID, type, description, hours, unit cost, subtotal
-- Tax rate input, total calculation
-- Print-optimized CSS layout for invoice (`@media print`)
-- Export to PDF via `window.print()` (opens print dialog)
+- [x] Maintenance Report view: filter by date range, grouped by type
+- [x] Summary stats: total tickets, resolved %, avg resolution time, total hours
+- [x] Cost calculator: PM inputs hourly rate or per-ticket rates
+- [x] Invoice builder: pull company name/logo from settings, client info from project
+- [x] Invoice line items: ticket ID, type, description, hours, unit cost, subtotal
+- [x] Tax rate input, total calculation
+- [x] Print-optimized CSS layout for invoice (`@media print`)
+- [x] Export to PDF via `window.print()` (opens print dialog)
 
 ---
 
@@ -844,10 +844,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v0.12.0-alpha                              ║
-║  Current Phase     : Phase 13 — Maintenance Report & Invoice              ║
+║  Current Version   : v0.13.0-alpha                              ║
+║  Current Phase     : Phase 14 — Asset Management                            ║
 ║  Phase Status      : NOT STARTED                                ║
-║  Next Phase        : Phase 14 — Asset Management    ║
+║  Next Phase        : Phase 15 — Reports Module      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -863,7 +863,7 @@ Tasks:
 ║  [x] Phase 10 — Sprint Management                  v0.10.0     ║
 ║  [x] Phase 11 — Gantt Chart                        v0.11.0     ║
 ║  [x] Phase 12 — Maintenance Module                 v0.12.0     ║
-║  [ ] Phase 13 — Maintenance Report & Invoice       v0.13.0     ║
+║  [x] Phase 13 — Maintenance Report & Invoice       v0.13.0     ║
 ║  [ ] Phase 14 — Asset Management                   v0.14.0     ║
 ║  [ ] Phase 15 — Reports Module                     v0.15.0     ║
 ║  [ ] Phase 16 — Polish, Accessibility & PWA        v0.16.0     ║
@@ -908,6 +908,15 @@ Tasks:
 ║                         assignee chip picker, tag input, story  ║
 ║                         points, checklist widget; project       ║
 ║                         subnav context on all backlog views.    ║
+║  v0.13.0 [2026-02-28]  Maintenance Report & Invoice: report view ║
+║                         with date-range filter, stats (total,   ║
+║                         resolve %, avg resolution time, hours); ║
+║                         tickets grouped by type + full list;    ║
+║                         invoice builder (hourly/flat/custom     ║
+║                         billing), tax rate, company/client info ║
+║                         from settings & project; PDF export via ║
+║                         window.print() with full @media print   ║
+║                         CSS; "Generate Report" button on maint. ║
 ║  v0.12.0 [2026-02-28]  Maintenance Module: ticket CRUD;    ║
 ║                         list view with filters (status/type/  ║
 ║                         priority); status pipeline (Open→In   ║
@@ -1248,4 +1257,4 @@ When given a `.zip` from a previous phase and asked to continue to the next phas
 ---
 
 *TRACKLY — Track Everything, Deliver Anything*  
-*v0.11.0-alpha | Phase 11 of 17 complete | Internal IT Consultant PMIS*
+*v0.13.0-alpha | Phase 13 of 17 complete | Internal IT Consultant PMIS*

@@ -1,0 +1,436 @@
+/**
+ * TRACKLY — maintenance-report.css
+ * Phase 13: Maintenance Report & Invoice styles
+ */
+
+/* ─── Filter Bar ──────────────────────────────────────────────────────────── */
+.rpt-filter-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: var(--shadow-card);
+}
+
+.rpt-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.rpt-filter-group .form-input {
+  min-width: 150px;
+}
+
+/* ─── Report Stats ────────────────────────────────────────────────────────── */
+.rpt-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+@media (max-width: 768px) {
+  .rpt-stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.rpt-stat-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5) var(--space-4);
+  text-align: center;
+  box-shadow: var(--shadow-card);
+}
+
+.rpt-stat-card__num {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.1;
+}
+
+.rpt-stat-card__label {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 6px;
+}
+
+/* ─── Report Sections ─────────────────────────────────────────────────────── */
+.rpt-section {
+  margin-bottom: var(--space-8);
+}
+
+.rpt-section__title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rpt-section__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 2px 8px;
+  line-height: 1.6;
+}
+
+/* Breakdown grid */
+.rpt-breakdown-grid {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.rpt-breakdown-item {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-5);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 140px;
+}
+
+.rpt-breakdown-item__label {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.rpt-breakdown-item__count {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-left: auto;
+}
+
+/* ─── Report Table ────────────────────────────────────────────────────────── */
+.rpt-table-wrap {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  overflow-x: auto;
+}
+
+.rpt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.rpt-table thead {
+  background: var(--color-surface);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.rpt-table th {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.rpt-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.rpt-table tbody tr:last-child td { border-bottom: none; }
+.rpt-table tbody tr:hover { background: var(--color-surface); }
+
+/* ─── Invoice Controls (screen-only) ─────────────────────────────────────── */
+.inv-controls {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  margin-bottom: var(--space-6);
+  box-shadow: var(--shadow-card);
+}
+
+.inv-controls__title {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-4);
+}
+
+.inv-controls__row {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.inv-controls__row .form-group {
+  flex: 1;
+  min-width: 180px;
+}
+
+/* ─── Invoice Document ────────────────────────────────────────────────────── */
+.inv-document {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 48px;
+  box-shadow: var(--shadow-card);
+  font-size: 14px;
+  color: #1a1a1a;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Header */
+.inv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+  gap: 24px;
+}
+
+.inv-header__left { display: flex; flex-direction: column; gap: 6px; }
+
+.inv-logo {
+  max-height: 56px;
+  max-width: 180px;
+  object-fit: contain;
+  margin-bottom: 6px;
+}
+
+.inv-company-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.inv-company-detail {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.inv-header__right { text-align: right; }
+
+.inv-title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #2563eb;
+  margin-bottom: 12px;
+}
+
+.inv-meta-table {
+  font-size: 13px;
+  border-collapse: collapse;
+  margin-left: auto;
+}
+
+.inv-meta-table td {
+  padding: 3px 8px 3px 0;
+  color: #475569;
+}
+
+.inv-meta-table td:last-child {
+  color: #0f172a;
+  padding-left: 12px;
+}
+
+/* Bill To */
+.inv-bill-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 36px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid #e2e8f0;
+  gap: 24px;
+}
+
+.inv-bill-to__label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.inv-bill-to__name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.inv-bill-to__detail {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.inv-bill-summary {
+  text-align: right;
+  background: #f1f5f9;
+  border-radius: 10px;
+  padding: 16px 24px;
+  min-width: 180px;
+}
+
+.inv-bill-summary__label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.inv-bill-summary__amount {
+  font-size: 24px;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+/* Line Items Table */
+.inv-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+}
+
+.inv-items-table thead {
+  background: #f8fafc;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.inv-items-table th {
+  padding: 10px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #64748b;
+  text-align: left;
+}
+
+.inv-item-row td {
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: top;
+}
+
+.inv-item-row:last-child td { border-bottom: none; }
+.inv-item-row:hover { background: #f8fafc; }
+
+.inv-item-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.inv-item-title {
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 3px;
+}
+
+.inv-item-note {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* Totals */
+.inv-totals {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  margin-bottom: 28px;
+}
+
+.inv-totals__row {
+  display: flex;
+  justify-content: space-between;
+  min-width: 280px;
+  font-size: 14px;
+  color: #475569;
+  padding: 4px 0;
+}
+
+.inv-totals__row--total {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  padding: 12px 0;
+  border-top: 2px solid #0f172a;
+  margin-top: 4px;
+}
+
+/* Notes */
+.inv-notes {
+  background: #f8fafc;
+  border-left: 4px solid #2563eb;
+  border-radius: 0 8px 8px 0;
+  padding: 14px 16px;
+  margin-bottom: 28px;
+}
+
+.inv-notes__label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.inv-notes__body {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+/* Footer */
+.inv-footer {
+  text-align: center;
+  font-size: 12px;
+  color: #94a3b8;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 20px;
+}
+
+/* ─── Print-only header ───────────────────────────────────────────────────── */
+.rpt-print-header {
+  display: none; /* visible only in @media print */
+}

@@ -1,12 +1,175 @@
 /**
  * TRACKLY — print.css
  * Print / PDF export styles. Fully implemented in Phase 13.
+ * Used by window.print() for Maintenance Report & Invoice export.
  */
+
 @media print {
-  .sidebar, .topbar, .btn, .toast-container { display: none !important; }
-  .app-shell { display: block; }
-  .main-content { overflow: visible; }
-  body { background: #fff; color: #000; }
-  .card { box-shadow: none; border: 1px solid #ccc; }
-  @page { margin: 20mm; }
+  /* ─── Hide app chrome ───────────────────────────────────────────────────── */
+  .sidebar,
+  .topbar,
+  .btn,
+  .toast-container,
+  .project-subnav,
+  .rpt-filter-bar,
+  .inv-controls,
+  .no-print,
+  .page-header__actions {
+    display: none !important;
+  }
+
+  /* ─── Reset layout ──────────────────────────────────────────────────────── */
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+    margin: 0;
+    padding: 0;
+    font-size: 12pt;
+  }
+
+  .app-shell {
+    display: block !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 1fr !important;
+  }
+
+  .main-content {
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    grid-column: 1 !important;
+  }
+
+  .page-container {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* ─── Page settings ─────────────────────────────────────────────────────── */
+  @page {
+    margin: 15mm 18mm;
+    size: A4 portrait;
+  }
+
+  /* Avoid page breaks inside rows and sections */
+  tr, .rpt-section, .inv-item-row, .rpt-stat-card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* ─── Report print header (visible only on print) ───────────────────────── */
+  .rpt-print-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24pt;
+    padding-bottom: 12pt;
+    border-bottom: 2pt solid #0f172a;
+  }
+
+  .rpt-company-logo {
+    max-height: 48pt;
+    max-width: 140pt;
+    object-fit: contain;
+    margin-bottom: 4pt;
+  }
+
+  .rpt-company-name {
+    font-size: 16pt;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .rpt-print-meta {
+    text-align: right;
+    font-size: 10pt;
+    color: #475569;
+    line-height: 1.5;
+  }
+
+  /* ─── Report stat grid ──────────────────────────────────────────────────── */
+  .rpt-stat-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  .rpt-stat-card {
+    border: 1pt solid #ccc !important;
+    box-shadow: none !important;
+    padding: 8pt 6pt !important;
+  }
+
+  .rpt-stat-card__num { font-size: 18pt !important; }
+
+  /* ─── Report table ──────────────────────────────────────────────────────── */
+  .rpt-table-wrap {
+    border: 1pt solid #ccc !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  .rpt-table th {
+    background: #f1f5f9 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ─── Invoice document ──────────────────────────────────────────────────── */
+  .inv-document {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    page-break-before: auto;
+  }
+
+  .inv-title {
+    color: #2563eb !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .inv-bill-summary {
+    background: #f1f5f9 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .inv-bill-summary__amount {
+    color: #2563eb !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .inv-items-table thead {
+    background: #f8fafc !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .inv-notes {
+    border-left: 4pt solid #2563eb !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ─── Page title on print ───────────────────────────────────────────────── */
+  .page-header__title,
+  .page-header__subtitle {
+    display: block !important;
+  }
+
+  .page-header {
+    margin-bottom: 16pt !important;
+  }
+
+  /* ─── Section headings ──────────────────────────────────────────────────── */
+  .rpt-section__title {
+    font-size: 13pt;
+    border-bottom: 1pt solid #e2e8f0;
+    padding-bottom: 4pt;
+    margin-bottom: 8pt;
+  }
+
+  /* ─── Card/box reset ────────────────────────────────────────────────────── */
+  .card { box-shadow: none !important; border: 1pt solid #ccc !important; }
 }

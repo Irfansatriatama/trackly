@@ -158,6 +158,9 @@ function renderMaintenancePage() {
           ${canCreate ? `<button class="btn btn--primary" id="btnNewTicket">
             <i data-lucide="plus" aria-hidden="true"></i> New Ticket
           </button>` : ''}
+          <a href="#/projects/${sanitize(_projectId)}/reports" class="btn btn--outline">
+            <i data-lucide="file-text" aria-hidden="true"></i> Generate Report
+          </a>
         </div>
       </div>
 
