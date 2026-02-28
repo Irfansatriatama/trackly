@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v0.14.0-alpha` |
-| **Current Phase** | Phase 15 — Reports Module |
+| **Current Version** | `v0.15.0-alpha` |
+| **Current Phase** | Phase 16 — Polish, Accessibility & PWA |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -789,14 +789,14 @@ Tasks:
 **Deliverable**: PM can view and export all report types
 
 Tasks:
-- Project Progress Report page
-- Team Workload Report (bar chart — tasks per member)
-- Sprint Burndown Chart (line chart — story points vs time)
-- Maintenance Summary Report
-- Asset Inventory Report
-- All charts drawn on `<canvas>` (no external library, or use Chart.js CDN)
-- Print-to-PDF for all report pages
-- Date range and filter controls per report
+- [x] Project Progress Report page
+- [x] Team Workload Report (bar chart — tasks per member)
+- [x] Sprint Burndown Chart (line chart — story points vs time)
+- [x] Maintenance Summary Report
+- [x] Asset Inventory Report
+- [x] All charts drawn on `<canvas>` (no external library, or use Chart.js CDN)
+- [x] Print-to-PDF for all report pages
+- [x] Date range and filter controls per report
 
 ---
 
@@ -844,10 +844,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v0.14.0-alpha                              ║
-║  Current Phase     : Phase 15 — Reports Module                              ║
+║  Current Version   : v0.15.0-alpha                              ║
+║  Current Phase     : Phase 16 — Polish, Accessibility & PWA     ║
 ║  Phase Status      : NOT STARTED                                ║
-║  Next Phase        : Phase 16 — Polish, Accessibility & PWA     ║
+║  Next Phase        : Phase 17 — Testing, Documentation & Handoff║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -865,12 +865,26 @@ Tasks:
 ║  [x] Phase 12 — Maintenance Module                 v0.12.0     ║
 ║  [x] Phase 13 — Maintenance Report & Invoice       v0.13.0     ║
 ║  [x] Phase 14 — Asset Management                   v0.14.0     ║
-║  [ ] Phase 15 — Reports Module                     v0.15.0     ║
+║  [x] Phase 15 — Reports Module                     v0.15.0     ║
 ║  [ ] Phase 16 — Polish, Accessibility & PWA        v0.16.0     ║
 ║  [ ] Phase 17 — Testing, Documentation & Handoff  v1.0.0      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
 ║                                                                 ║
+║  v0.15.0 [2026-02-28]  Reports Module: 5 report types — Project  ║
+║                         Progress (status/priority/type doughnuts ║
+║                         & bar charts, sprint table, task list);   ║
+║                         Team Workload (stacked bar per member,    ║
+║                         detail table with hours & story points);  ║
+║                         Sprint Burndown (ideal vs actual line     ║
+║                         chart, sprint selector); Maintenance      ║
+║                         Summary (type & status doughnut/bar,      ║
+║                         ticket list); Asset Inventory (pie & bar  ║
+║                         charts, asset table). All charts via      ║
+║                         Chart.js CDN. Date range filter. PDF      ║
+║                         export via window.print() with clean      ║
+║                         @media print CSS. Route updated to use    ║
+║                         new reports.js module.                    ║
 ║  v0.14.0 [2026-02-28]  Asset Management: asset list table with  ║
 ║                         category icons, status badges, assignee   ║
 ║                         & project cells; add/edit/delete modal    ║

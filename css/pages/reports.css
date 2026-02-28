@@ -1,1 +1,463 @@
-/** TRACKLY — reports.css | Page-specific styles — populated in the corresponding development phase. */
+/**
+ * TRACKLY — reports.css
+ * Phase 15: Reports Module styles
+ */
+
+/* ─── Report Tabs ─────────────────────────────────────────────────────────── */
+.rpt-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+  border-bottom: 2px solid var(--color-border);
+  padding-bottom: var(--space-1);
+}
+
+.rpt-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  border: none;
+  background: transparent;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  white-space: nowrap;
+}
+
+.rpt-tab:hover {
+  color: var(--color-primary);
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.rpt-tab.is-active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  background: rgba(37, 99, 235, 0.06);
+  font-weight: 600;
+}
+
+.rpt-tab i { width: 16px; height: 16px; }
+
+/* ─── Filter Bar ──────────────────────────────────────────────────────────── */
+.rpt-filter-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  box-shadow: var(--shadow-card);
+  flex-wrap: wrap;
+}
+
+.rpt-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rpt-filter-label {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ─── Stat Grid ───────────────────────────────────────────────────────────── */
+.rpt-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.rpt-stat-grid--5 {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+@media (max-width: 900px) {
+  .rpt-stat-grid,
+  .rpt-stat-grid--5 { grid-template-columns: repeat(2, 1fr); }
+}
+
+.rpt-stat-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5) var(--space-4);
+  text-align: center;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.1s;
+}
+
+.rpt-stat-card:hover { transform: translateY(-2px); }
+
+.rpt-stat-card--success  { border-top: 3px solid var(--color-success); }
+.rpt-stat-card--warning  { border-top: 3px solid var(--color-warning); }
+.rpt-stat-card--danger   { border-top: 3px solid var(--color-danger); }
+.rpt-stat-card--info     { border-top: 3px solid var(--color-info); }
+
+.rpt-stat-card__num {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.1;
+}
+
+.rpt-stat-card__label {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 6px;
+}
+
+/* ─── Sections ────────────────────────────────────────────────────────────── */
+.rpt-section {
+  margin-bottom: var(--space-8);
+}
+
+.rpt-section__title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rpt-section__title i { width: 20px; height: 20px; color: var(--color-primary); }
+
+.rpt-section__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 2px 8px;
+  line-height: 1.6;
+}
+
+/* ─── Card variant ────────────────────────────────────────────────────────── */
+.card--report {
+  margin-bottom: 0;
+  overflow: hidden;
+}
+
+/* ─── Charts Row ──────────────────────────────────────────────────────────── */
+.rpt-charts-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.rpt-charts-row--2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 900px) {
+  .rpt-charts-row,
+  .rpt-charts-row--2 { grid-template-columns: 1fr; }
+}
+
+.rpt-chart-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-3);
+}
+
+.rpt-chart-wrap {
+  position: relative;
+  height: 220px;
+}
+
+.rpt-chart-wrap--tall {
+  height: 300px;
+}
+
+.rpt-chart-wrap canvas {
+  max-width: 100%;
+}
+
+.rpt-chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-3);
+}
+
+.rpt-legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* ─── Progress Bar ────────────────────────────────────────────────────────── */
+.rpt-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.rpt-progress-pct {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.rpt-progress-track {
+  height: 12px;
+  background: var(--color-border);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: var(--space-3);
+}
+
+.rpt-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), #60A5FA);
+  border-radius: 99px;
+  transition: width 0.6s ease;
+}
+
+.rpt-progress-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* ─── Tables ──────────────────────────────────────────────────────────────── */
+.rpt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.rpt-table th {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.rpt-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  vertical-align: middle;
+}
+
+.rpt-table tr:last-child td { border-bottom: none; }
+
+.rpt-table tr:hover td { background: rgba(37, 99, 235, 0.03); }
+
+.rpt-id-cell {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--text-xs) !important;
+  color: var(--color-text-muted) !important;
+  white-space: nowrap;
+}
+
+.rpt-title-cell {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Helpers ─────────────────────────────────────────────────────────────── */
+.rpt-empty-text {
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.rpt-num {
+  font-weight: 600;
+}
+
+.rpt-num--success { color: var(--color-success); }
+.rpt-num--warning { color: var(--color-warning); }
+.rpt-num--danger  { color: var(--color-danger); }
+
+.rpt-warn-text   { color: var(--color-warning); font-weight: 600; }
+.rpt-danger-text { color: var(--color-danger); font-weight: 600; }
+
+/* ─── Print Header (screen: hidden) ──────────────────────────────────────── */
+.rpt-print-header { display: none; }
+
+/* ─── Print Styles ────────────────────────────────────────────────────────── */
+@media print {
+  /* Hide non-essential UI */
+  .no-print,
+  .sidebar,
+  .topbar,
+  .page-header,
+  .rpt-tabs,
+  .rpt-filter-bar,
+  .btn,
+  .pwa-install-banner {
+    display: none !important;
+  }
+
+  body, html {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .main-content {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .page-container {
+    padding: 0 !important;
+  }
+
+  /* Show print header */
+  .print-only,
+  .rpt-print-header {
+    display: block !important;
+  }
+
+  .rpt-print-header__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .rpt-print-header__org {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1D4ED8;
+    letter-spacing: -0.5px;
+  }
+
+  .rpt-print-header__title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #64748B;
+    margin-top: 2px;
+  }
+
+  .rpt-print-header__meta {
+    text-align: right;
+    font-size: 11px;
+    color: #64748B;
+    line-height: 1.8;
+  }
+
+  .rpt-print-header__divider {
+    border: none;
+    border-top: 2px solid #2563EB;
+    margin-bottom: 20px;
+  }
+
+  /* Section headings */
+  .rpt-section__title { font-size: 14px; margin-bottom: 8px; }
+  .rpt-section        { margin-bottom: 24px; page-break-inside: avoid; }
+
+  /* Cards */
+  .card, .card--report {
+    box-shadow: none !important;
+    border: 1px solid #E2E8F0 !important;
+    page-break-inside: avoid;
+  }
+
+  /* Stat grid */
+  .rpt-stat-grid,
+  .rpt-stat-grid--5 {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 12px;
+  }
+
+  .rpt-stat-card {
+    padding: 12px !important;
+    box-shadow: none !important;
+    border: 1px solid #E2E8F0 !important;
+  }
+
+  .rpt-stat-card__num { font-size: 1.5rem; }
+
+  /* Charts row */
+  .rpt-charts-row {
+    grid-template-columns: repeat(3, 1fr) !important;
+    page-break-inside: avoid;
+  }
+
+  .rpt-charts-row--2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .rpt-chart-wrap,
+  .rpt-chart-wrap--tall { height: 180px !important; }
+
+  /* Tables */
+  .rpt-table th, .rpt-table td { font-size: 10px; padding: 6px 8px; }
+  .rpt-table { page-break-inside: auto; }
+  .rpt-table tr { page-break-inside: avoid; }
+
+  /* Progress */
+  .rpt-progress-track { height: 8px; }
+
+  /* Badges — ensure they print with color */
+  .badge {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* ─── Breadcrumb (reports page header) ───────────────────────────────────── */
+.page-header__breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.breadcrumb-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.breadcrumb-link:hover { text-decoration: underline; }
+
+.breadcrumb-sep { color: var(--color-border); font-size: var(--text-sm); }

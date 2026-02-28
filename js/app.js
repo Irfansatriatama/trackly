@@ -183,12 +183,12 @@ function registerAllRoutes() {
     await renderMaintenance({ id: params.id });
   });
 
-  // Reports — Phase 13 full implementation (Maintenance Report & Invoice)
+  // Reports — Phase 15: Full Reports Module (Progress, Workload, Burndown, Maintenance, Assets)
   registerRoute('/projects/:id/reports', async (params) => {
     if (!requireAuth()) return;
     setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading report...</p></div></div>');
-    const { render: renderMaintenanceReport } = await import('./modules/maintenance-report.js');
-    await renderMaintenanceReport({ id: params.id });
+    const { render: renderReports } = await import('./modules/reports.js');
+    await renderReports({ id: params.id });
   });
 
   // Clients
