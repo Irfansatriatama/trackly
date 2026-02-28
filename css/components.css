@@ -2832,3 +2832,32 @@ body.modal-open {
   .backlog-toolbar { flex-direction: column; align-items: stretch; }
   .backlog-filters { flex-direction: column; }
 }
+
+/* ── Phase 12: Additional button variants ── */
+.btn--success:hover { background: #15803d; border-color: #15803d; }
+
+.btn--outline {
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+.btn--outline:hover { background: var(--color-surface); }
+
+.btn--outline-danger {
+  background: transparent;
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
+}
+.btn--outline-danger:hover { background: rgba(220,38,38,0.06); }
+
+.btn-link-style {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  color: var(--color-text);
+  text-align: left;
+  line-height: 1.4;
+}

@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v0.11.0-alpha` |
-| **Current Phase** | Phase 12 — Maintenance Module |
+| **Current Version** | `v0.12.0-alpha` |
+| **Current Phase** | Phase 13 — Maintenance Report & Invoice |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -741,15 +741,15 @@ Tasks:
 **Deliverable**: Maintenance ticket CRUD and list view per project
 
 Tasks:
-- Maintenance tab visible only for projects in `running` or `maintenance` phase
-- Maintenance ticket list (sortable, filterable by type, status, priority)
-- Create / Edit maintenance ticket modal (all fields from section 5.12)
-- Status pipeline: `Open → In Progress → Resolved → Closed`
-- Priority and type badges
-- Time tracking (estimated vs actual hours)
-- Resolution notes field
-- Assigned developer can update status and add resolution notes
-- Activity log per ticket
+- [x] Maintenance tab visible only for projects in `running` or `maintenance` phase
+- [x] Maintenance ticket list (sortable, filterable by type, status, priority)
+- [x] Create / Edit maintenance ticket modal (all fields from section 5.12)
+- [x] Status pipeline: `Open → In Progress → Resolved → Closed`
+- [x] Priority and type badges
+- [x] Time tracking (estimated vs actual hours)
+- [x] Resolution notes field
+- [x] Assigned developer can update status and add resolution notes
+- [x] Activity log per ticket
 
 ---
 
@@ -844,10 +844,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v0.11.0-alpha                              ║
-║  Current Phase     : Phase 12 — Maintenance Module              ║
+║  Current Version   : v0.12.0-alpha                              ║
+║  Current Phase     : Phase 13 — Maintenance Report & Invoice              ║
 ║  Phase Status      : NOT STARTED                                ║
-║  Next Phase        : Phase 13 — Maintenance Report & Invoice    ║
+║  Next Phase        : Phase 14 — Asset Management    ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -862,7 +862,7 @@ Tasks:
 ║  [x] Phase 9  — Kanban Board                       v0.9.0      ║
 ║  [x] Phase 10 — Sprint Management                  v0.10.0     ║
 ║  [x] Phase 11 — Gantt Chart                        v0.11.0     ║
-║  [ ] Phase 12 — Maintenance Module                 v0.12.0     ║
+║  [x] Phase 12 — Maintenance Module                 v0.12.0     ║
 ║  [ ] Phase 13 — Maintenance Report & Invoice       v0.13.0     ║
 ║  [ ] Phase 14 — Asset Management                   v0.14.0     ║
 ║  [ ] Phase 15 — Reports Module                     v0.15.0     ║
@@ -908,6 +908,15 @@ Tasks:
 ║                         assignee chip picker, tag input, story  ║
 ║                         points, checklist widget; project       ║
 ║                         subnav context on all backlog views.    ║
+║  v0.12.0 [2026-02-28]  Maintenance Module: ticket CRUD;    ║
+║                         list view with filters (status/type/  ║
+║                         priority); status pipeline (Open→In   ║
+║                         Progress→Resolved→Closed); create/edit ║
+║                         modal with all section 5.12 fields;   ║
+║                         one-click status advance; resolution   ║
+║                         notes; activity log per ticket; role  ║
+║                         check (PM/Dev only); tab hidden for   ║
+║                         non-running/maintenance projects.      ║
 ║  v0.11.0 [2026-02-28]  Gantt Chart: canvas+DOM rendering; task  ║
 ║                         bars (start→due); sprint grouping rows;  ║
 ║                         milestone diamond markers; today line;    ║

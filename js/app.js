@@ -175,10 +175,12 @@ function registerAllRoutes() {
     await renderGantt({ id: params.id });
   });
 
-  // Maintenance
-  registerRoute('/projects/:id/maintenance', (params) => {
+  // Maintenance — Phase 12 full implementation
+  registerRoute('/projects/:id/maintenance', async (params) => {
     if (!requireAuth()) return;
-    setContent(renderPageShell('Maintenance', `Project ${params.id}`));
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading maintenance...</p></div></div>');
+    const { render: renderMaintenance } = await import('./modules/maintenance.js');
+    await renderMaintenance({ id: params.id });
   });
 
   // Reports
