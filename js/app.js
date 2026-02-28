@@ -168,9 +168,11 @@ function registerAllRoutes() {
   });
 
   // Gantt
-  registerRoute('/projects/:id/gantt', (params) => {
+  registerRoute('/projects/:id/gantt', async (params) => {
     if (!requireAuth()) return;
-    setContent(renderPageShell('Gantt Chart', `Project ${params.id}`));
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading Gantt…</p></div></div>');
+    const { render: renderGantt } = await import('./modules/gantt.js');
+    await renderGantt({ id: params.id });
   });
 
   // Maintenance

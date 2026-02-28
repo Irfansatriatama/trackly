@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v0.10.0-alpha` |
-| **Current Phase** | Phase 11 — Gantt Chart |
+| **Current Version** | `v0.11.0-alpha` |
+| **Current Phase** | Phase 12 — Maintenance Module |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -723,16 +723,16 @@ Tasks:
 **Deliverable**: Interactive Gantt chart per project
 
 Tasks:
-- Gantt chart rendered on `<canvas>` or pure DOM (no external chart library)
-- Task rows with horizontal bars (start → due date)
-- Milestone markers (diamond shape)
-- Sprint grouping rows
-- Dependency arrows between tasks
-- Zoom controls (Day / Week / Month)
-- Drag to move task dates
-- Drag to resize task duration
-- Today line indicator
-- Export to PNG via `canvas.toBlob()`
+- [x] Gantt chart rendered on `<canvas>` or pure DOM (no external chart library)
+- [x] Task rows with horizontal bars (start → due date)
+- [x] Milestone markers (diamond shape)
+- [x] Sprint grouping rows
+- [x] Dependency arrows between tasks
+- [x] Zoom controls (Day / Week / Month)
+- [x] Drag to move task dates
+- [x] Drag to resize task duration
+- [x] Today line indicator
+- [x] Export to PNG via `canvas.toBlob()`
 
 ---
 
@@ -844,10 +844,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v0.10.0-alpha                              ║
-║  Current Phase     : Phase 11 — Gantt Chart                     ║
+║  Current Version   : v0.11.0-alpha                              ║
+║  Current Phase     : Phase 12 — Maintenance Module              ║
 ║  Phase Status      : NOT STARTED                                ║
-║  Next Phase        : Phase 12 — Maintenance Module              ║
+║  Next Phase        : Phase 13 — Maintenance Report & Invoice    ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -861,7 +861,7 @@ Tasks:
 ║  [x] Phase 8  — Task Management & Backlog          v0.8.0      ║
 ║  [x] Phase 9  — Kanban Board                       v0.9.0      ║
 ║  [x] Phase 10 — Sprint Management                  v0.10.0     ║
-║  [ ] Phase 11 — Gantt Chart                        v0.11.0     ║
+║  [x] Phase 11 — Gantt Chart                        v0.11.0     ║
 ║  [ ] Phase 12 — Maintenance Module                 v0.12.0     ║
 ║  [ ] Phase 13 — Maintenance Report & Invoice       v0.13.0     ║
 ║  [ ] Phase 14 — Asset Management                   v0.14.0     ║
@@ -908,6 +908,12 @@ Tasks:
 ║                         assignee chip picker, tag input, story  ║
 ║                         points, checklist widget; project       ║
 ║                         subnav context on all backlog views.    ║
+║  v0.11.0 [2026-02-28]  Gantt Chart: canvas+DOM rendering; task  ║
+║                         bars (start→due); sprint grouping rows;  ║
+║                         milestone diamond markers; today line;    ║
+║                         zoom Day/Week/Month; drag-to-move and     ║
+║                         drag-to-resize bars; export PNG via       ║
+║                         canvas.toBlob(); sprint filter dropdown.  ║
 ║  v0.10.0 [2026-02-28]  Sprint Management: sprint CRUD with     ║
 ║                         name/dates/goal; two-pane planning view  ║
 ║                         with native drag-and-drop (backlog ↔      ║
@@ -1233,4 +1239,4 @@ When given a `.zip` from a previous phase and asked to continue to the next phas
 ---
 
 *TRACKLY — Track Everything, Deliver Anything*  
-*v0.9.0-alpha | Phase 9 of 17 complete | Internal IT Consultant PMIS*
+*v0.11.0-alpha | Phase 11 of 17 complete | Internal IT Consultant PMIS*
