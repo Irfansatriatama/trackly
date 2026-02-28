@@ -121,10 +121,12 @@ function registerAllRoutes() {
     renderLogin();
   });
 
-  // Dashboard
-  registerRoute('/dashboard', () => {
+  // Dashboard — Phase 16 full implementation
+  registerRoute('/dashboard', async () => {
     if (!requireAuth()) return;
-    setContent(renderPageShell('Dashboard', 'Overview of all projects and activity'));
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading dashboard...</p></div></div>');
+    const { render: renderDashboard } = await import('./modules/dashboard.js');
+    await renderDashboard({});
   });
 
   // Projects list — Phase 7 full implementation
@@ -217,10 +219,12 @@ function registerAllRoutes() {
     await renderMembers({});
   });
 
-  // Settings
-  registerRoute('/settings', () => {
+  // Settings — Phase 16 full implementation
+  registerRoute('/settings', async () => {
     if (!requireAuth()) return;
-    setContent(renderPageShell('Settings', 'System configuration and preferences'));
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading settings...</p></div></div>');
+    const { render: renderSettings } = await import('./modules/settings.js');
+    await renderSettings({});
   });
 
   // 404 fallback
@@ -433,6 +437,7 @@ async function renderLogin() {
       mountAppShell(user);
       // Register routes and init router (first login — router not yet running)
       registerAllRoutes();
+      initMobileNav();
       initRouter();
       navigate(dest);
 
@@ -493,6 +498,26 @@ function renderAppShell() {
 
 function initSidebarToggle() {
   // Toggle is now handled by initSidebar() in sidebar.js
+}
+
+// ============================================================
+// MOBILE NAVIGATION
+// ============================================================
+
+function initMobileNav() {
+  const nav = document.getElementById('mobileNav');
+  if (!nav) return;
+  nav.style.display = '';
+  updateMobileNavActive();
+}
+
+function updateMobileNavActive() {
+  const hash = window.location.hash.replace('#', '') || '/dashboard';
+  document.querySelectorAll('.mobile-nav__item').forEach(item => {
+    const route = item.dataset.route || '';
+    item.classList.toggle('is-active', hash === route || (route !== '/dashboard' && hash.startsWith(route)));
+  });
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // ============================================================
@@ -818,6 +843,7 @@ function renderWizard() {
         createSession(adminUser, false);
         mountAppShell(adminUser);
         registerAllRoutes();
+        initMobileNav();
         initRouter();
         navigate('/dashboard');
       });
@@ -947,12 +973,16 @@ async function bootstrap() {
   // Register all routes
   registerAllRoutes();
 
+  // Mobile nav: show after shell is mounted
+  initMobileNav();
+
   // Listen for hash changes
-  window.addEventListener('hashchange', updateActiveNav);
+  window.addEventListener('hashchange', () => { updateActiveNav(); updateMobileNavActive(); });
 
   // Init router (dispatches current hash)
   initRouter();
   updateActiveNav();
+  updateMobileNavActive();
 
   debug('TRACKLY ready');
 }

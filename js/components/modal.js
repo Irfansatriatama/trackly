@@ -55,9 +55,21 @@ export function openModal({ title, body, footer = '', size = 'md', onClose } = {
     if (e.target === backdrop) closeModal();
   });
 
-  // Close on ESC
+  // Close on ESC + Tab focus trap
+  const FOCUSABLE = 'input, select, textarea, button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
   const handleKeydown = (e) => {
-    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Escape') { closeModal(); return; }
+    if (e.key === 'Tab') {
+      const focusables = Array.from(backdrop.querySelectorAll(FOCUSABLE));
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last  = focusables[focusables.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
+      }
+    }
   };
   document.addEventListener('keydown', handleKeydown);
   backdrop._handleKeydown = handleKeydown;

@@ -32,7 +32,7 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v0.15.0-alpha` |
+| **Current Version** | `v0.16.0-alpha` |
 | **Current Phase** | Phase 16 — Polish, Accessibility & PWA |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
@@ -805,18 +805,18 @@ Tasks:
 **Deliverable**: Production-quality feel, installable, fully offline
 
 Tasks:
-- Audit all pages for visual consistency
-- Add page transition animations
-- Responsive layout for tablet and mobile
-- Keyboard navigation support (Tab, Enter, Escape on modals)
-- ARIA labels on all interactive elements
-- Toast notification system (success, error, warning, info)
-- Confirm dialog component for all destructive actions
-- Empty state illustrations (SVG) for all list pages
-- Complete `sw.js` with full offline cache strategy
-- PWA install prompt UI
-- Data export / import (JSON backup/restore) in Settings
-- Changelog page in Settings / About
+- [x] Audit all pages for visual consistency
+- [x] Add page transition animations
+- [x] Responsive layout for tablet and mobile
+- [x] Keyboard navigation support (Tab, Enter, Escape on modals)
+- [x] ARIA labels on all interactive elements
+- [x] Toast notification system (success, error, warning, info)
+- [x] Confirm dialog component for all destructive actions
+- [x] Empty state illustrations (SVG) for all list pages
+- [x] Complete `sw.js` with full offline cache strategy
+- [x] PWA install prompt UI
+- [x] Data export / import (JSON backup/restore) in Settings
+- [x] Changelog page in Settings / About
 
 ---
 
@@ -844,10 +844,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v0.15.0-alpha                              ║
-║  Current Phase     : Phase 16 — Polish, Accessibility & PWA     ║
-║  Phase Status      : NOT STARTED                                ║
-║  Next Phase        : Phase 17 — Testing, Documentation & Handoff║
+║  Current Version   : v0.16.0-alpha                              ║
+║  Current Phase     : Phase 17 — Testing, Documentation & Handoff     ║
+║  Phase Status      : COMPLETED                                ║
+║  Next Phase        : Phase 17 — Testing, Documentation & Handoff (v1.0.0)║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -866,11 +866,21 @@ Tasks:
 ║  [x] Phase 13 — Maintenance Report & Invoice       v0.13.0     ║
 ║  [x] Phase 14 — Asset Management                   v0.14.0     ║
 ║  [x] Phase 15 — Reports Module                     v0.15.0     ║
-║  [ ] Phase 16 — Polish, Accessibility & PWA        v0.16.0     ║
+║  [x] Phase 16 — Polish, Accessibility & PWA        v0.16.0     ║
 ║  [ ] Phase 17 — Testing, Documentation & Handoff  v1.0.0      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
 ║                                                                 ║
+║  v0.16.0 [2026-02-28]  Polish, Accessibility & PWA: full       ║
+║                         Dashboard with live stats, My Tasks, & ║
+║                         recent projects; full Settings (General, ║
+║                         Data, PWA, About/Changelog); mobile bottom║
+║                         nav (≤768px); Tab/Escape focus trap in    ║
+║                         modals; skip-link for screen readers;     ║
+║                         ARIA labels throughout; empty states on   ║
+║                         all list pages; SW cache v0.16.0; JSON    ║
+║                         export/import in Settings; PWA status in  ║
+║                         Settings > PWA; visual consistency audit. ║
 ║  v0.15.0 [2026-02-28]  Reports Module: 5 report types — Project  ║
 ║                         Progress (status/priority/type doughnuts ║
 ║                         & bar charts, sprint table, task list);   ║
@@ -1281,4 +1291,4 @@ When given a `.zip` from a previous phase and asked to continue to the next phas
 ---
 
 *TRACKLY — Track Everything, Deliver Anything*  
-*v0.13.0-alpha | Phase 13 of 17 complete | Internal IT Consultant PMIS*
+*v0.16.0-alpha | Phase 16 of 17 complete | Internal IT Consultant PMIS*

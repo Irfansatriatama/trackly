@@ -47,6 +47,9 @@
   <link rel="stylesheet" href="css/print.css" />
 </head>
 <body>
+  <!-- Skip to main content — accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
   <!-- App root — JS will mount the full application here -->
   <div id="app">
     <div class="app-loading">
@@ -54,6 +57,28 @@
       <p class="app-loading__text">Loading TRACKLY...</p>
     </div>
   </div>
+
+  <!-- Mobile bottom navigation (shown on ≤768px) -->
+  <nav class="mobile-nav" id="mobileNav" aria-label="Mobile navigation" style="display:none;">
+    <div class="mobile-nav__items">
+      <a href="#/dashboard" class="mobile-nav__item" data-route="/dashboard" aria-label="Dashboard">
+        <i data-lucide="layout-dashboard" aria-hidden="true"></i>
+        Home
+      </a>
+      <a href="#/projects" class="mobile-nav__item" data-route="/projects" aria-label="Projects">
+        <i data-lucide="folder" aria-hidden="true"></i>
+        Projects
+      </a>
+      <a href="#/members" class="mobile-nav__item" data-route="/members" aria-label="Members">
+        <i data-lucide="users" aria-hidden="true"></i>
+        Members
+      </a>
+      <a href="#/settings" class="mobile-nav__item" data-route="/settings" aria-label="Settings">
+        <i data-lucide="settings" aria-hidden="true"></i>
+        Settings
+      </a>
+    </div>
+  </nav>
 
   <!-- Application entry point (ES Module) -->
   <script type="module" src="js/app.js"></script>
