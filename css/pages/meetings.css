@@ -1,0 +1,736 @@
+/**
+ * TRACKLY — meetings.css
+ * Phase 19: Meeting Agenda & Notulensi styles.
+ */
+
+/* ─── Page Layout ─────────────────────────────────────────────────────────── */
+
+.meetings-page .page-header {
+  margin-bottom: var(--space-6);
+}
+
+.meetings-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .meetings-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Mini Calendar ───────────────────────────────────────────────────────── */
+
+.meetings-calendar-panel {
+  position: sticky;
+  top: var(--space-4);
+}
+
+.mini-cal {
+  width: 100%;
+}
+
+.mini-cal__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.mini-cal__month-label {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.mini-cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.mini-cal__day-header {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  padding: var(--space-1) 0;
+}
+
+.mini-cal__cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background 100ms;
+  position: relative;
+  color: var(--color-text);
+  user-select: none;
+}
+
+.mini-cal__cell:hover {
+  background: var(--color-surface);
+}
+
+.mini-cal__cell--empty {
+  cursor: default;
+}
+
+.mini-cal__cell--today {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.mini-cal__cell--selected {
+  background: var(--color-primary);
+  color: #fff !important;
+  font-weight: 700;
+}
+
+.mini-cal__cell--selected:hover {
+  background: var(--color-primary-dark);
+}
+
+.mini-cal__cell--has-events::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-warning);
+}
+
+.mini-cal__cell--selected.mini-cal__cell--has-events::after {
+  background: rgba(255,255,255,0.8);
+}
+
+/* ─── Week Calendar ───────────────────────────────────────────────────────── */
+
+.week-cal__days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.week-day-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-2) var(--space-1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 100ms;
+  position: relative;
+}
+
+.week-day-cell:hover {
+  background: var(--color-surface);
+}
+
+.week-day-cell--selected {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.week-day-cell--selected:hover {
+  background: var(--color-primary-dark);
+}
+
+.week-day-cell--today .week-day-cell__num {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.week-day-cell--selected .week-day-cell__num,
+.week-day-cell--selected .week-day-cell__name {
+  color: #fff;
+}
+
+.week-day-cell__name {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.week-day-cell__num {
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
+.week-day-cell__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-warning);
+}
+
+.week-day-cell--selected .week-day-cell__dot {
+  background: rgba(255,255,255,0.8);
+}
+
+/* ─── Day Panel ──────────────────────────────────────────────────────────── */
+
+.meetings-day-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.meetings-day-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.meetings-day-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ─── Meeting Card ───────────────────────────────────────────────────────── */
+
+.meeting-card {
+  display: flex;
+  overflow: hidden;
+  transition: transform 100ms, box-shadow 100ms;
+}
+
+.meeting-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}
+
+.meeting-card__type-bar {
+  width: 4px;
+  flex-shrink: 0;
+}
+
+.meeting-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.meeting-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.meeting-card__title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.meeting-card__title:hover {
+  color: var(--color-primary);
+}
+
+.meeting-card__meta {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.meeting-card__meta i {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 2px;
+}
+
+.meeting-card__badges {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.meeting-card__projects {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-2);
+}
+
+.meeting-card__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.meeting-card__attendees {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.meeting-card__actions {
+  margin-left: auto;
+  display: flex;
+  gap: var(--space-1);
+}
+
+/* ─── Avatar Group ───────────────────────────────────────────────────────── */
+
+.avatar-group {
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+.avatar-group .avatar {
+  margin-left: -8px;
+  border: 2px solid var(--color-card);
+}
+
+.avatar--overflow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--color-card);
+  margin-left: -8px;
+}
+
+/* ─── Meeting Detail Page ─────────────────────────────────────────────────── */
+
+.meeting-detail-page .page-header {
+  margin-bottom: var(--space-4);
+}
+
+.meeting-detail-type-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #fff;
+  margin-bottom: var(--space-2);
+}
+
+.meeting-detail-meta {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: var(--space-1);
+}
+
+.meeting-detail-meta i {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 2px;
+}
+
+.meeting-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .meeting-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-4);
+}
+
+.section-title i {
+  width: 18px;
+  height: 18px;
+  color: var(--color-primary);
+}
+
+/* ─── Agenda Checklist ───────────────────────────────────────────────────── */
+
+.agenda-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.agenda-check-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.agenda-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+}
+
+.agenda-check-item label {
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  transition: color 150ms;
+  user-select: none;
+}
+
+.agenda-check-item__text--done {
+  text-decoration: line-through;
+  color: var(--color-text-muted) !important;
+}
+
+/* ─── Agenda Editor (in modal) ───────────────────────────────────────────── */
+
+.agenda-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.agenda-item-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.agenda-item-row__drag {
+  color: var(--color-text-muted);
+  cursor: grab;
+  display: flex;
+  align-items: center;
+}
+
+.agenda-item-text {
+  flex: 1;
+}
+
+/* ─── Progress Bar ───────────────────────────────────────────────────────── */
+
+.progress-bar--sm {
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
+  width: 80px;
+  margin-top: 4px;
+}
+
+.progress-bar--sm .progress-bar__fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 2px;
+  transition: width 300ms ease;
+}
+
+/* ─── Notulensi Panel ────────────────────────────────────────────────────── */
+
+.notulensi-mode-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-2);
+}
+
+.notulensi-tab.is-active {
+  color: var(--color-primary);
+  border-bottom: 2px solid var(--color-primary);
+}
+
+.notulensi-editor-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-2);
+}
+
+.notulensi-textarea {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--text-sm);
+  min-height: 200px;
+  resize: vertical;
+}
+
+.notulensi-preview {
+  min-height: 200px;
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.notulensi-preview h1,
+.notulensi-preview h2,
+.notulensi-preview h3 {
+  margin: var(--space-3) 0 var(--space-2);
+  font-weight: 600;
+}
+
+.notulensi-preview ul {
+  padding-left: var(--space-5);
+  margin: var(--space-2) 0;
+}
+
+.notulensi-preview code {
+  background: var(--color-border);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+}
+
+.notulensi-preview p {
+  margin: var(--space-2) 0;
+}
+
+/* ─── Attachments ────────────────────────────────────────────────────────── */
+
+.attachments-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.attachment-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.attachment-row i {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.attachment-row__name {
+  flex: 1;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-row__size {
+  flex-shrink: 0;
+}
+
+.file-upload-area {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* ─── Action Items ───────────────────────────────────────────────────────── */
+
+.action-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  margin-bottom: var(--space-3);
+  transition: border-color 150ms;
+}
+
+.action-item-row:hover {
+  border-color: var(--color-primary);
+}
+
+.action-item-row--converted {
+  border-color: var(--color-success);
+  background: #f0fdf4;
+}
+
+.action-item-row__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.action-item-row__text {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  display: block;
+  margin-bottom: var(--space-1);
+}
+
+.action-item-row__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.action-item-row__actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ─── Attendees List ─────────────────────────────────────────────────────── */
+
+.attendees-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.attendee-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+/* ─── Modal Tabs ─────────────────────────────────────────────────────────── */
+
+.modal-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--color-border);
+  margin-bottom: var(--space-4);
+}
+
+.modal-tab {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color 150ms, border-color 150ms;
+}
+
+.modal-tab:hover {
+  color: var(--color-text);
+}
+
+.modal-tab.is-active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.modal-tab-panel {
+  display: none;
+}
+
+.modal-tab-panel.is-active {
+  display: block;
+}
+
+/* ─── Checkbox List (in modal) ───────────────────────────────────────────── */
+
+.checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-2);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background 100ms;
+  font-size: var(--text-sm);
+  user-select: none;
+}
+
+.checkbox-label:hover {
+  background: var(--color-card);
+}
+
+.checkbox-label input[type="checkbox"] {
+  accent-color: var(--color-primary);
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* ─── Mobile ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .meeting-card__top {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .meeting-card__badges {
+    flex-wrap: wrap;
+  }
+
+  .meetings-day-title {
+    font-size: var(--text-base);
+  }
+
+  .action-item-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .action-item-row__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

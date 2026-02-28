@@ -201,6 +201,21 @@ function registerAllRoutes() {
     await renderLog({ id: params.id });
   });
 
+  // Meetings — Phase 19
+  registerRoute('/meetings', async () => {
+    if (!requireAuth()) return;
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading meetings...</p></div></div>');
+    const { render: renderMeetings } = await import('./modules/meetings.js');
+    await renderMeetings({});
+  });
+
+  registerRoute('/meetings/:id', async (params) => {
+    if (!requireAuth()) return;
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading meeting detail...</p></div></div>');
+    const { renderDetail: renderMeetingDetail } = await import('./modules/meetings.js');
+    await renderMeetingDetail({ id: params.id });
+  });
+
   // Clients
   // Clients — Phase 6 full implementation
   registerRoute('/clients', async () => {

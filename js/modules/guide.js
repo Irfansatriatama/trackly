@@ -64,6 +64,7 @@ function buildGuideHTML() {
             <li><a href="#guide-assets"><i data-lucide="package" aria-hidden="true"></i> 13. Assets</a></li>
             <li><a href="#guide-settings"><i data-lucide="settings" aria-hidden="true"></i> 14. Settings &amp; Data</a></li>
             <li><a href="#guide-pwa"><i data-lucide="smartphone" aria-hidden="true"></i> 15. PWA &amp; Offline Use</a></li>
+            <li><a href="#guide-meetings"><i data-lucide="calendar" aria-hidden="true"></i> 16. Meetings &amp; Notulensi</a></li>
           </ul>
         </div>
       </div>
@@ -471,6 +472,36 @@ function buildGuideHTML() {
           </div>
           <h3>Clearing Cache</h3>
           <p>To force a refresh of all cached assets, unregister the Service Worker from your browser's developer tools (Application → Service Workers → Unregister), then reload the page.</p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <!-- Section 16: Meetings & Notulensi -->
+      <div class="guide-section card" id="guide-meetings">
+        <div class="card__body">
+          <h2 class="guide-section__title">
+            <i data-lucide="calendar" aria-hidden="true"></i>
+            16. Meetings &amp; Notulensi
+          </h2>
+          <p>The Meetings module (Admin/PM only) lets you schedule, manage, and document all team and client meetings in one place. Access it from the sidebar under Management.</p>
+          <h3>Calendar View</h3>
+          <p>The Meetings page shows a mini-calendar on the left and the day's meeting list on the right. Click any date to see its meetings. Toggle between Month view (date grid) and Week view (7-day strip) using the buttons in the page header.</p>
+          <h3>Creating a Meeting</h3>
+          <p>Click "New Meeting" to open the meeting form. Fill in the title, type, date, time range, and location. Use the Agenda tab to add checklist-style agenda items, and the Attendees &amp; Projects tab to link team members and related projects.</p>
+          <h3>Meeting Types</h3>
+          <p>Available types are: Internal, Client Meeting, Sprint Review, Retrospective, and Other. Each type is shown with a distinct color bar on the meeting card.</p>
+          <h3>Meeting Detail Page</h3>
+          <p>Click "View" on any meeting card to open its detail page. Here you can see the full agenda, attendees, linked projects, and status. Use the status advance button to move the meeting through: Scheduled → Ongoing → Done. You can also cancel a meeting from this page.</p>
+          <h3>Agenda Checklist</h3>
+          <p>During or after the meeting, check off agenda items directly on the detail page. The progress bar at the top tracks how many items have been completed.</p>
+          <h3>Notulensi (Meeting Notes)</h3>
+          <p>The Notulensi panel has two modes. In Text Editor mode, write meeting notes using Markdown and toggle a live preview. In File Attachment mode, upload supporting documents (PDF, DOCX, images) up to 5MB each. Files are stored as base64 and can be downloaded later.</p>
+          <h3>Action Items</h3>
+          <p>Add follow-up tasks using the Action Items section. Each item has a description, assignee, and due date. Click "Create Task" to convert any action item into a real task in the selected project's backlog — the task will be pre-filled with the action item text, assignee, and due date.</p>
+          <div class="guide-tip">
+            <i data-lucide="lightbulb" aria-hidden="true"></i>
+            <p>All meeting actions (create, update, status change, cancel) are recorded in the Audit Trail.</p>
+          </div>
         </div>
       </div>
 

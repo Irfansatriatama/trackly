@@ -6,7 +6,7 @@
  */
 
 const DB_NAME = 'trackly_db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 /** @type {IDBDatabase|null} */
 let _db = null;
@@ -24,6 +24,7 @@ const STORES = {
   maintenance:  { keyPath: 'id', indexes: ['project_id', 'status'] },
   invoices:     { keyPath: 'id', indexes: ['project_id'] },
   activity_log: { keyPath: 'id', indexes: ['project_id', 'user_id'] },
+  meetings:     { keyPath: 'id', indexes: ['date'] },
   settings:     { keyPath: 'key', indexes: [] },
 };
 

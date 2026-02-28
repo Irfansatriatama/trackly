@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.1.0` |
-| **Current Phase** | Phase 19 — Meeting Agenda & Notulensi (next up) |
+| **Current Version** | `v1.2.0` |
+| **Current Phase** | Phase 20 — Project Discussion (next up) |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -982,30 +982,30 @@ Tasks:
 **Deliverable**: Admin/PM can create, manage, and document meetings; action items can become tasks
 
 Tasks:
-- [ ] Add `meetings` store to `db.js` — bump DB version to `2`, add store with `date` index
-- [ ] Add `MTG-` prefix to `ID_PREFIX` in `utils.js`
-- [ ] Build `js/modules/meetings.js` — list + calendar view
-- [ ] Calendar UI: left panel mini-calendar (month grid, week strip), right panel day's meeting list
-- [ ] Toggle between **Month view** (grid) and **Week view** (time-slot columns)
-- [ ] Meeting list card: title, type badge, time range, project links, attendee avatars, status badge
-- [ ] Create / Edit meeting modal — all fields from section 5.16
-- [ ] Attendee picker — multi-select with avatar chips (from members list)
-- [ ] Project link picker — optional multi-select from projects list
-- [ ] Agenda items widget — ordered checklist, drag to reorder, check off during meeting
-- [ ] Meeting detail page (`#/meetings/:id`) — full view with all sections
-- [ ] Quick status advance button: Scheduled → Ongoing → Done → (back to Scheduled if needed)
-- [ ] **Notulensi panel** — two-mode tabbed interface:
-  - Mode 1: Markdown text editor with live preview toggle
-  - Mode 2: File attachment — upload (PDF/DOCX/image, max 5MB), display filename + size + download link
-- [ ] **Action Items** section inside meeting detail — add items with assignee + due date
-- [ ] "Create Task" button on each action item — opens task creation modal pre-filled, links back to meeting, saves to selected project's backlog
-- [ ] Sidebar entry: **Meetings** (Admin/PM only) — placed between Members and Settings
-- [ ] Add `Meetings` to mobile nav and topbar route title map
-- [ ] Add `css/pages/meetings.css`
-- [ ] Register routes `#/meetings` and `#/meetings/:id` in `app.js`
-- [ ] Call `logActivity()` for all meeting create/update/cancel/complete actions
-- [ ] Update `sw.js` cache to include `meetings.js`
-- [ ] Update User Guide (`guide.js`) to add Meeting section
+- [x] Add `meetings` store to `db.js` — bump DB version to `2`, add store with `date` index
+- [x] Add `MTG-` prefix to `ID_PREFIX` in `utils.js`
+- [x] Build `js/modules/meetings.js` — list + calendar view
+- [x] Calendar UI: left panel mini-calendar (month grid, week strip), right panel day's meeting list
+- [x] Toggle between **Month view** (grid) and **Week view** (time-slot columns)
+- [x] Meeting list card: title, type badge, time range, project links, attendee avatars, status badge
+- [x] Create / Edit meeting modal — all fields from section 5.16
+- [x] Attendee picker — multi-select with avatar chips (from members list)
+- [x] Project link picker — optional multi-select from projects list
+- [x] Agenda items widget — ordered checklist, drag to reorder, check off during meeting
+- [x] Meeting detail page (`#/meetings/:id`) — full view with all sections
+- [x] Quick status advance button: Scheduled → Ongoing → Done → (back to Scheduled if needed)
+- [x] **Notulensi panel** — two-mode tabbed interface:
+  - [x] Mode 1: Markdown text editor with live preview toggle
+  - [x] Mode 2: File attachment — upload (PDF/DOCX/image, max 5MB), display filename + size + download link
+- [x] **Action Items** section inside meeting detail — add items with assignee + due date
+- [x] "Create Task" button on each action item — opens task creation modal pre-filled, links back to meeting, saves to selected project's backlog
+- [x] Sidebar entry: **Meetings** (Admin/PM only) — placed between Members and Settings
+- [x] Add `Meetings` to mobile nav and topbar route title map
+- [x] Add `css/pages/meetings.css`
+- [x] Register routes `#/meetings` and `#/meetings/:id` in `app.js`
+- [x] Call `logActivity()` for all meeting create/update/cancel/complete actions
+- [x] Update `sw.js` cache to include `meetings.js`
+- [x] Update User Guide (`guide.js`) to add Meeting section
 
 ---
 
@@ -1044,8 +1044,8 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v1.1.0                                     ║
-║  Current Phase     : Phase 19 — Meeting Agenda & Notulensi      ║
+║  Current Version   : v1.2.0                                     ║
+║  Current Phase     : Phase 20 — Project Discussion              ║
 ║  Phase Status      : NOT STARTED                                ║
 ║  Next Phase        : Phase 20 — Project Discussion               ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -1069,11 +1069,29 @@ Tasks:
 ║  [x] Phase 16 — Polish, Accessibility & PWA        v0.16.0     ║
 ║  [x] Phase 17 — Testing, Documentation & Handoff  v1.0.0      ║
 ║  [x] Phase 18 — Audit Trail                        v1.1.0      ║
-║  [ ] Phase 19 — Meeting Agenda & Notulensi         v1.2.0      ║
+║  [x] Phase 19 — Meeting Agenda & Notulensi         v1.2.0      ║
 ║  [ ] Phase 20 — Project Discussion                 v1.3.0      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
 ║                                                                 ║
+║  v1.2.0 [2026-02-28]  Phase 19 — Meeting Agenda & Notulensi:   ║
+║                         meetings store added to db.js (DB v2);   ║
+║                         MTG- prefix in ID_PREFIX; meetings.js    ║
+║                         module with calendar (month/week toggle), ║
+║                         mini-calendar left panel + day list right;║
+║                         meeting CRUD modal (tabs: Details, Agenda,║
+║                         Attendees & Projects); meeting detail page║
+║                         (#/meetings/:id) with agenda checklist,  ║
+║                         quick status advance, attendees panel;    ║
+║                         Notulensi panel (Mode 1: Markdown editor  ║
+║                         + live preview; Mode 2: file upload base64║
+║                         max 5MB + download); Action Items with    ║
+║                         assignee + due date + Create Task button; ║
+║                         Meetings in sidebar (Admin/PM) + topbar   ║
+║                         title map; meetings.css; routes registered║
+║                         in app.js; logActivity() on all actions;  ║
+║                         sw.js bumped to v1.2.0; guide.js section  ║
+║                         16 added.                                  ║
 ║  v1.1.0 [2026-02-28]  Phase 18 — Audit Trail: logActivity()    ║
 ║                         helper in utils.js; ACT- prefix in        ║
 ║                         ID_PREFIX; log.js module with timeline,   ║

@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   {
     section: 'Management',
     items: [
+      { route: '/meetings', icon: 'calendar',   label: 'Meetings',  tooltip: 'Schedule and manage meetings, agendas, and notulensi', adminOnly: true },
       { route: '/clients', icon: 'building-2', label: 'Clients',  tooltip: 'Manage client companies and contacts' },
       { route: '/members', icon: 'users',       label: 'Members',  tooltip: 'Manage team members, roles, and accounts' },
       { route: '/assets',  icon: 'package',     label: 'Assets',   tooltip: 'Track hardware, software licenses, and other assets' },

@@ -10,6 +10,7 @@ import { appStore } from '../core/store.js';
 const ROUTE_TITLES = {
   '/dashboard':  'Dashboard',
   '/projects':   'Projects',
+  '/meetings':   'Meetings',
   '/clients':    'Clients',
   '/members':    'Members',
   '/assets':     'Assets',
