@@ -662,12 +662,9 @@ function _openPostModal(existingPost = null) {
     .map(([val, info]) => `<option value="${val}" ${existingPost?.type === val ? 'selected' : ''}>${info.label}</option>`)
     .join('');
 
-  const modalContent = `
-    <div class="modal-header">
-      <h2 class="modal-title">${isEdit ? 'Edit Post' : 'New Post'}</h2>
-      <button class="modal-close" id="closePostModal" aria-label="Close"><i data-lucide="x" aria-hidden="true"></i></button>
-    </div>
-    <div class="modal-body">
+  const modalTitle = isEdit ? 'Edit Post' : 'New Post';
+
+  const modalBody = `
       <div class="form-group">
         <label class="form-label" for="dscPostTitle">Title <span class="text-muted">(optional)</span></label>
         <input type="text" class="form-input" id="dscPostTitle" placeholder="Post title..." value="${sanitize(existingPost?.title || '')}" />
@@ -691,17 +688,15 @@ function _openPostModal(existingPost = null) {
         <div id="dscAttachmentList" class="dsc-attachment-list">
           ${_renderAttachmentList()}
         </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn--outline" id="cancelPostModal">Cancel</button>
-      <button class="btn btn--primary" id="savePostModal">${isEdit ? 'Save Changes' : 'Post'}</button>
-    </div>`;
+      </div>`;
 
-  openModal({ content: modalContent, size: 'lg' });
+  const modalFooter = `
+      <button class="btn btn--outline" id="cancelPostModal">Cancel</button>
+      <button class="btn btn--primary" id="savePostModal">${isEdit ? 'Save Changes' : 'Post'}</button>`;
+
+  openModal({ title: modalTitle, body: modalBody, footer: modalFooter, size: 'lg' });
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
-  document.getElementById('closePostModal')?.addEventListener('click', () => closeModal());
   document.getElementById('cancelPostModal')?.addEventListener('click', () => closeModal());
   document.getElementById('savePostModal')?.addEventListener('click', () => _savePost(existingPost));
 

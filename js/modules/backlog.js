@@ -444,7 +444,7 @@ function openTaskModal(task) {
           ${projectMembers.length === 0 ? '<p class="text-muted" style="font-size:var(--text-sm);">No members in this project. Add members in the Members section first.</p>' : projectMembers.map(m => {
             const isSel = (task?.assignees||[]).includes(m.id);
             const initials = (m.full_name||'?').split(' ').filter(Boolean).slice(0,2).map(n=>n[0].toUpperCase()).join('');
-            return `<label class="assignee-chip${isSel?' is-selected':''}" data-uid="${sanitize(m.id)}" title="${sanitize(m.full_name)}"><input type="checkbox" class="assignee-chip__check" value="${sanitize(m.id)}" ${isSel?'checked':''} /><div class="avatar avatar--xs" style="${m.avatar?'':'background:var(--color-primary);"}'>${m.avatar?`<img src="${m.avatar}" alt="" class="avatar__img" />`:`<span class="avatar__initials">${sanitize(initials)}</span>`}</div><span class="assignee-chip__name">${sanitize(m.full_name.split(' ')[0])}</span></label>`;
+            return `<label class="assignee-chip${isSel?' is-selected':''}" data-uid="${sanitize(m.id)}" title="${sanitize(m.full_name)}"><input type="checkbox" class="assignee-chip__check" value="${sanitize(m.id)}" ${isSel?'checked':''} /><div class="avatar avatar--xs" style="${m.avatar?'':'background:var(--color-primary);'}">${m.avatar?`<img src="${m.avatar}" alt="" class="avatar__img" />`:`<span class="avatar__initials">${sanitize(initials)}</span>`}</div><span class="assignee-chip__name">${sanitize(m.full_name.split(' ')[0])}</span></label>`;
           }).join('')}
         </div>
       </div>

@@ -32,7 +32,7 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.3.1` |
+| **Current Version** | `v1.3.2` |
 | **Current Phase** | Phase 22 — (TBD) |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
@@ -1110,9 +1110,9 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v1.3.1                                     ║
-║  Current Phase     : Phase 22 — (TBD)                          ║
-║  Phase Status      : NOT STARTED                                ║
+║  Current Version   : v1.3.2                                     ║
+║  Current Phase     : Phase 22 — Bugfix                         ║
+║  Phase Status      : DONE                                       ║
 ║  Next Phase        : Phase 23 — (TBD)                          ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
@@ -1138,8 +1138,23 @@ Tasks:
 ║  [x] Phase 19 — Meeting Agenda & Notulensi         v1.2.0      ║
 ║  [x] Phase 20 — Project Discussion                 v1.3.0      ║
 ║  [x] Phase 21 — Maintenance Enhancement            v1.3.1      ║
+║  [x] Phase 22 — Bugfix                             v1.3.2      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
+║                                                                 ║
+║  v1.3.2 [2026-03-02]  Bugfix Phase 22:                        ║
+║                         Bug #1: Fixed syntax error in           ║
+║                         backlog.js (misplaced `"` in ternary    ║
+║                         style attribute) that broke Board,      ║
+║                         Backlog, and Sprint tabs. Bug #2: Fixed ║
+║                         gantt.css `.gantt-bars` missing width,  ║
+║                         height & overflow so task bars no       ║
+║                         longer overlap the date header. Bug #3: ║
+║                         Refactored discussion.js                ║
+║                         `_openPostModal()` to pass `title`,     ║
+║                         `body`, `footer` to `openModal()`       ║
+║                         instead of `content`, fixing the        ║
+║                         "undefined undefined" modal bug.        ║
 ║                                                                 ║
 ║  v1.3.1 [2026-02-28]  Phase 21 — Maintenance Enhancement:    ║
 ║                         DB version bumped to 4; maintenance.js  ║
