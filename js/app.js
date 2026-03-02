@@ -281,6 +281,14 @@ function registerAllRoutes() {
     await renderGuide({});
   });
 
+  // Notification Center — Phase 23
+  registerRoute('/notifications', async () => {
+    if (!requireAuth()) return;
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading notifications...</p></div></div>');
+    const { render: renderNotifications } = await import('./modules/notifications.js');
+    await renderNotifications();
+  });
+
   // 404 fallback
   setNotFound(({ path }) => {
     setContent(`

@@ -40,6 +40,7 @@ export const ID_PREFIX = {
   ACTIVITY:    'ACT',
   MEETING:     'MTG',
   DISCUSSION:  'DSC',
+  NOTIFICATION: 'NTF',
 };
 
 /**
@@ -335,6 +336,9 @@ export async function logActivity({
     const allLogs = await getAll('activity_log');
     const id = generateSequentialId(ID_PREFIX.ACTIVITY, allLogs);
 
+    const actorId   = session?.userId || null;
+    const actorName = session?.fullName || session?.username || 'Unknown';
+
     const entry = {
       id,
       project_id,
@@ -342,19 +346,125 @@ export async function logActivity({
       entity_id,
       entity_name,
       action,
-      actor_id: session?.userId || null,
-      actor_name: session?.fullName || session?.username || 'Unknown',
+      actor_id: actorId,
+      actor_name: actorName,
       changes,
       metadata,
       created_at: nowISO(),
     };
 
     await add('activity_log', entry);
+
+    // ── Generate Notifications ──────────────────────────────────
+    try {
+      await _generateNotifications({
+        add, getAll,
+        actorId, actorName,
+        project_id, entity_type, entity_id, entity_name, action, metadata,
+      });
+    } catch (_err) {
+      if (localStorage.getItem('trackly_debug') === 'true') {
+        console.warn('[TRACKLY] generateNotifications failed:', _err);
+      }
+    }
   } catch (err) {
     // Never let logging failures break the UI
     if (localStorage.getItem('trackly_debug') === 'true') {
       console.warn('[TRACKLY] logActivity failed:', err);
     }
+  }
+}
+
+/**
+ * Internal helper — build and persist notifications for an activity event.
+ */
+async function _generateNotifications({ add, getAll, actorId, actorName, project_id, entity_type, entity_id, entity_name, action, metadata }) {
+  const users = await getAll('users');
+
+  // Determine recipient user IDs
+  let recipientIds = [];
+
+  if (entity_type === 'meeting' && metadata?.attendee_ids?.length) {
+    // Meeting: notify attendees
+    recipientIds = metadata.attendee_ids.filter((uid) => uid !== actorId);
+  } else if (project_id) {
+    // Project-scoped: notify all members of the project
+    const projects = await getAll('projects');
+    const project = projects.find((p) => p.id === project_id);
+    if (project && Array.isArray(project.member_ids)) {
+      recipientIds = project.member_ids.filter((uid) => uid !== actorId);
+    }
+  } else {
+    // Global action: notify admins and PMs
+    recipientIds = users
+      .filter((u) => (u.role === 'admin' || u.role === 'pm') && u.id !== actorId)
+      .map((u) => u.id);
+  }
+
+  if (!recipientIds.length) return;
+
+  // Build message
+  const actionVerbs = {
+    created:        'membuat',
+    updated:        'mengubah',
+    deleted:        'menghapus',
+    status_changed: 'mengubah status',
+    commented:      'mengomentari',
+    assigned:       'mengassign',
+    resolved:       'menyelesaikan',
+    reopened:       'membuka kembali',
+    closed:         'menutup',
+    archived:       'mengarsipkan',
+    restored:       'memulihkan',
+    started:        'memulai',
+    completed:      'menyelesaikan',
+  };
+  const verb = actionVerbs[action] || action;
+
+  let projectName = null;
+  if (project_id) {
+    const projects = await getAll('projects');
+    const proj = projects.find((p) => p.id === project_id);
+    projectName = proj?.name || null;
+  }
+
+  let message;
+  if (projectName) {
+    message = `${actorName} ${verb} ${entity_name} di ${projectName}`;
+  } else {
+    message = `${actorName} ${verb} ${entity_name}`;
+  }
+
+  // Get actor avatar snapshot
+  const actorUser = users.find((u) => u.id === actorId);
+  const actorAvatar = actorUser?.avatar || '';
+
+  // Get all existing notifications to generate sequential IDs
+  const allNotifs = await getAll('notifications');
+  let notifCounter = allNotifs.length;
+
+  const createdAt = nowISO();
+
+  for (const uid of recipientIds) {
+    notifCounter++;
+    const notifId = `NTF-${String(notifCounter).padStart(4, '0')}`;
+    const notif = {
+      id: notifId,
+      user_id: uid,
+      actor_id: actorId,
+      actor_name: actorName,
+      actor_avatar: actorAvatar,
+      entity_type,
+      entity_id,
+      entity_name,
+      action,
+      message,
+      project_id: project_id || null,
+      project_name: projectName || null,
+      read: false,
+      created_at: createdAt,
+    };
+    await add('notifications', notif);
   }
 }
 

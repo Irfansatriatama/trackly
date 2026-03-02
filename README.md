@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.3.2` |
-| **Current Phase** | Phase 22 — (TBD) |
+| **Current Version** | `v1.4.0` |
+| **Current Phase** | Phase 23 — Notification Center |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -201,6 +201,7 @@ Hash-based routing (`window.location.hash`) — no server required.
 #/members
 #/settings
 #/guide
+#/notifications
 #/login
 ```
 
@@ -565,6 +566,39 @@ A **Discussion** tab inside every project (visible to all project members — Ad
 
 ---
 
+### 5.19 Notification Center (Phase 23)
+
+Real-time in-app notification system that automatically informs relevant team members whenever significant actions are performed in the system.
+
+**Data Model — `notifications` store:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String | Auto-generated (`NTF-XXXX`) |
+| `user_id` | Ref | User ID penerima notifikasi |
+| `actor_id` | Ref | User ID yang melakukan aksi (bisa null untuk sistem) |
+| `actor_name` | String | Snapshot nama aktor |
+| `actor_avatar` | String | Snapshot avatar aktor |
+| `entity_type` | Enum | `task`, `sprint`, `project`, `maintenance`, `meeting`, `discussion`, `member`, `client`, `asset` |
+| `entity_id` | String | ID entitas terkait |
+| `entity_name` | String | Snapshot nama entitas |
+| `action` | String | `created`, `updated`, `deleted`, `status_changed`, dll. |
+| `message` | String | Pesan siap tampil — contoh: "Budi membuat task X di Project Alpha" |
+| `project_id` | String | Project context (nullable) |
+| `project_name` | String | Snapshot nama project (nullable) |
+| `read` | Boolean | `false` = unread, `true` = sudah dibaca |
+| `created_at` | Timestamp | ISO string |
+
+**Features:**
+- **Bell icon** di topbar dengan badge merah menampilkan jumlah unread (max "99+")
+- **Dropdown panel** (360px) — 20 notifikasi terbaru, animasi slide-in, mark-all-as-read
+- **Notification Center page** (`#/notifications`) — full list, tab Semua/Belum Dibaca, paginasi 30/halaman
+- **Auto-generate**: setiap `logActivity()` membuat notifikasi untuk semua member relevan (kecuali aktor sendiri)
+- **Navigasi cerdas**: klik item → mark as read + navigate ke halaman relevan
+- **IndexedDB v5**: `notifications` store dengan index `user_id`, `read`, `created_at`
+
+---
+
 ## 6. Role & Permission Matrix
 
 | Feature / Page | Admin / PM | Developer | Viewer / Client |
@@ -611,7 +645,7 @@ A **Discussion** tab inside every project (visible to all project members — Ad
 
 ```
 Database name: trackly_db
-Version: 4
+Version: 5
 
 Object Stores:
 ├── users           (keyPath: id)
@@ -625,6 +659,7 @@ Object Stores:
 ├── activity_log    (keyPath: id)    — indexes: project_id, user_id  ← activated in Phase 18
 ├── meetings        (keyPath: id)    — indexes: date                 ← new in Phase 19
 ├── discussions     (keyPath: id)    — indexes: project_id           ← new in Phase 20
+├── notifications   (keyPath: id)    — indexes: user_id, read, created_at  ← new in Phase 23
 ```
 
 > **Note:** No new stores in Phase 21. DB bumped to version `4` to trigger `onupgradeneeded` for any migration logic needed by future phases.
@@ -652,6 +687,7 @@ All IDs follow a consistent prefixed pattern:
 | Activity Log | `ACT-` | `ACT-0001` |
 | Meeting | `MTG-` | `MTG-0001` |
 | Discussion | `DSC-` | `DSC-0001` |
+| Notification | `NTF-` | `NTF-0001` |
 
 ---
 
@@ -1100,6 +1136,25 @@ Tasks:
 
 ---
 
+### Phase 23 — Notification Center
+**Scope**: Topbar bell icon, notification dropdown panel, full Notification Center page, auto-generate notifications from logActivity()  
+**Version**: `v1.4.0`  
+**Deliverable**: Bell icon in topbar with unread badge, dropdown with 20 latest notifications, full page at `#/notifications` with tab filter and pagination, notifications auto-generated for relevant members on every logActivity() call.
+
+Tasks:
+- [x] Bump DB version to `5` in `db.js` — add `notifications` object store (keyPath: `id`, indexes: `user_id`, `read`, `created_at`)
+- [x] Add `NTF` prefix to `ID_PREFIX` in `utils.js`
+- [x] Update `logActivity()` in `utils.js` — auto-generate notifications for all relevant recipients after writing activity log
+- [x] Update `js/components/topbar.js` — add bell icon, unread badge, dropdown panel
+- [x] Create `js/modules/notifications.js` — full Notification Center page
+- [x] Create `css/pages/notifications.css` — bell, badge, dropdown, page styles
+- [x] Register route `#/notifications` in `app.js`
+- [x] Add `css/pages/notifications.css` to `index.html`
+- [x] Update `sw.js` — add `notifications.js` and `notifications.css` to cache, bump to `v1.4.0`
+- [x] Update README — section 5.19, section 7 (object stores), section 4 (routes), section 12 (file structure), version `v1.4.0`
+
+---
+
 ---
 
 ## 10. Development Log
@@ -1110,10 +1165,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v1.3.2                                     ║
-║  Current Phase     : Phase 22 — Bugfix                         ║
+║  Current Version   : v1.4.0                                     ║
+║  Current Phase     : Phase 23 — Notification Center            ║
 ║  Phase Status      : DONE                                       ║
-║  Next Phase        : Phase 23 — (TBD)                          ║
+║  Next Phase        : Phase 24 — (TBD)                          ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -1139,8 +1194,21 @@ Tasks:
 ║  [x] Phase 20 — Project Discussion                 v1.3.0      ║
 ║  [x] Phase 21 — Maintenance Enhancement            v1.3.1      ║
 ║  [x] Phase 22 — Bugfix                             v1.3.2      ║
+║  [x] Phase 23 — Notification Center                v1.4.0      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
+║                                                                 ║
+║  v1.4.0 [2026-03-02]  Phase 23 — Notification Center:        ║
+║                         New `notifications` IndexedDB store     ║
+║                         (DB v5); bell icon + unread badge in    ║
+║                         topbar; dropdown panel with 20 latest   ║
+║                         notifs, mark-as-read, navigation;       ║
+║                         full Notification Center page           ║
+║                         (#/notifications) with tab filter       ║
+║                         (Semua/Belum Dibaca) and pagination;    ║
+║                         logActivity() auto-generates notifs     ║
+║                         for relevant members; sw.js bumped to   ║
+║                         v1.4.0 cache.                           ║
 ║                                                                 ║
 ║  v1.3.2 [2026-03-02]  Bugfix Phase 22:                        ║
 ║                         Bug #1: Fixed syntax error in           ║
@@ -1433,7 +1501,8 @@ trackly/
 │   │   ├── sprint.css
 │   │   ├── log.css             ← Phase 18
 │   │   ├── meetings.css        ← Phase 19
-│   │   └── discussion.css      ← Phase 20
+│   │   ├── discussion.css      ← Phase 20
+│   │   └── notifications.css   ← Phase 23
 │   └── print.css               # Print / PDF export styles
 │
 └── js/
@@ -1460,7 +1529,8 @@ trackly/
     │   ├── guide.js
     │   ├── log.js              ← Phase 18
     │   ├── meetings.js         ← Phase 19
-    │   └── discussion.js       ← Phase 20
+    │   ├── discussion.js       ← Phase 20
+    │   └── notifications.js    ← Phase 23
     └── components/
         ├── modal.js
         ├── toast.js
