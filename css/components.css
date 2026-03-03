@@ -2345,6 +2345,18 @@ body.modal-open {
   border-bottom-color: var(--color-primary);
 }
 
+/* ---- Page-header inside project detail tabs (Board, Backlog, Sprint, etc.) ---- */
+.board-page .page-header,
+.backlog-page .page-header,
+.sprint-page .page-header,
+#gantt-root .page-header,
+.page-container .page-header {
+  margin-top: 0;
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-card);
+}
+
 /* ---- Project Stats Row ---- */
 .project-stats-row {
   display: grid;

@@ -70,7 +70,7 @@ function _renderPage() {
   content.innerHTML = `
     <div class="page-container page-enter sprint-page">
       ${banner}
-      <div class="page-header" style="margin-top:var(--space-6);">
+      <div class="page-header">
         <div class="page-header__info">
           <h1 class="page-header__title">Sprint Management</h1>
           <p class="page-header__subtitle">${sanitize(_project.name)} &mdash; ${_sprints.length} sprint${_sprints.length !== 1 ? 's' : ''}</p>
@@ -90,6 +90,9 @@ function _renderPage() {
     </div>`;
 
   if (typeof lucide !== 'undefined') lucide.createIcons();
+  document.getElementById('btnBannerEditProject')?.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('trackly:editProject', { detail: { projectId: _project.id } }));
+  });
   _bindPageEvents();
   if (_activeTab === 'velocity') requestAnimationFrame(() => _drawVelocityChart());
   if (_activeTab === 'planning') requestAnimationFrame(() => _bindPlanningDragDrop());

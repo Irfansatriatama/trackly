@@ -32,7 +32,7 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.6.3` |
+| **Current Version** | `v1.6.4` |
 | **Current Phase** | Phase 25 — Notes Sharing & Collaboration Audit |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
@@ -1339,6 +1339,25 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ║  [x] Phase 25 — Notes Sharing & Collaboration Audit v1.6.0     ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
+║                                                                 ║
+║  v1.6.4 [2026-03-04]  UX Fix: Project Subnav Consistency     ║
+║    & Edit Project Button                                        ║
+║    - Removed inline margin-top:var(--space-6) from             ║
+║      .page-header in all project detail tabs: board.js,        ║
+║      backlog.js, sprint.js, gantt.js, maintenance.js,          ║
+║      discussion.js, log.js                                      ║
+║    - Added CSS rules in components.css so .page-header         ║
+║      inside project tabs has margin-top:0, padding, and        ║
+║      border-bottom — consistent with Overview's spacing        ║
+║    - Changed "Edit Project" button in buildProjectBanner()     ║
+║      (utils.js) from <a href> to <button id=                   ║
+║      "btnBannerEditProject"> with data-project-id attribute    ║
+║    - Added window listener for custom event                     ║
+║      'trackly:editProject' in projects.js — opens edit         ║
+║      modal directly without redirecting to Overview            ║
+║    - Each tab module dispatches trackly:editProject on          ║
+║      banner button click; Overview tab unaffected              ║
+║    - Tab Reports unaffected                                     ║
 ║                                                                 ║
 ║  v1.6.3 [2026-03-04]  UX Enhancement: Dashboard              ║
 ║    - Live clock (day, date, HH:MM:SS) with setInterval in     ║

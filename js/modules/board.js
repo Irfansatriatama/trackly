@@ -142,7 +142,7 @@ function _renderBoardPage() {
     <div class="page-container page-enter board-page">
       ${banner}
 
-      <div class="page-header" style="margin-top:var(--space-6);">
+      <div class="page-header">
         <div class="page-header__info">
           <h1 class="page-header__title">Board</h1>
           <p class="page-header__subtitle">${sanitize(_project.name)}</p>
@@ -185,6 +185,9 @@ function _renderBoardPage() {
   `;
 
   if (typeof lucide !== 'undefined') lucide.createIcons();
+  document.getElementById('btnBannerEditProject')?.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('trackly:editProject', { detail: { projectId: _project.id } }));
+  });
   _renderColumns();
   _bindPageEvents();
 }

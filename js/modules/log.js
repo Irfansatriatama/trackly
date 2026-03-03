@@ -77,7 +77,7 @@ export async function render(params) {
     content.innerHTML = `
       <div class="page-container page-enter">
         ${bannerHtml}
-        <div class="page-header" style="margin-top:${_projectId && project ? 'var(--space-6)' : '0'};">
+        <div class="page-header">
           <div class="page-header__info">
             <h1 class="page-header__title">
               <i data-lucide="clock" aria-hidden="true"></i>
@@ -102,6 +102,11 @@ export async function render(params) {
       </div>`;
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (_projectId && project) {
+      document.getElementById('btnBannerEditProject')?.addEventListener('click', () => {
+        window.dispatchEvent(new CustomEvent('trackly:editProject', { detail: { projectId: project.id } }));
+      });
+    }
     _bindFilterBar();
     _renderLogContent();
   } catch (err) {

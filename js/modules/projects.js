@@ -332,6 +332,22 @@ function refreshContent() {
 }
 
 // ============================================================
+// GLOBAL EDIT PROJECT EVENT (for non-Overview tabs via banner button)
+// ============================================================
+
+window.addEventListener('trackly:editProject', async (e) => {
+  const { projectId } = e.detail || {};
+  if (!projectId) return;
+  try {
+    const projects = await getAll('projects');
+    const project = projects.find(p => p.id === projectId);
+    if (project) openProjectModal(project);
+  } catch (err) {
+    console.error('trackly:editProject error', err);
+  }
+});
+
+// ============================================================
 // PROJECT MODAL
 // ============================================================
 

@@ -158,6 +158,9 @@ export async function render(params = {}) {
     content.innerHTML = _buildPageHTML();
     _bindEvents();
     if (typeof lucide !== 'undefined') lucide.createIcons();
+    document.getElementById('btnBannerEditProject')?.addEventListener('click', () => {
+      window.dispatchEvent(new CustomEvent('trackly:editProject', { detail: { projectId: _project.id } }));
+    });
   } catch (err) {
     content.innerHTML = `<div class="page-container page-enter"><div class="empty-state"><i data-lucide="alert-circle" class="empty-state__icon"></i><p class="empty-state__title">Failed to load discussion</p><p class="empty-state__text">${sanitize(String(err.message))}</p></div></div>`;
     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -173,7 +176,7 @@ function _buildPageHTML() {
   return `
     <div class="page-container page-enter">
       ${banner}
-      <div class="page-header" style="margin-top:var(--space-6);">
+      <div class="page-header">
         <div class="page-header__info">
           <h1 class="page-header__title">Discussion</h1>
           <p class="page-header__subtitle">${sanitize(_project.name)} — Project updates, questions, decisions, and blockers</p>

@@ -96,7 +96,7 @@ function _renderPage() {
 <div class="page-container page-enter" id="gantt-root">
   ${banner}
 
-  <div class="page-header" style="margin-top:var(--space-6);">
+  <div class="page-header">
     <div class="page-header__info">
       <h1 class="page-header__title"><i data-lucide="gantt-chart" aria-hidden="true"></i> Gantt Chart</h1>
       <p class="page-header__subtitle">${sanitize(_project.name)}</p>
@@ -154,6 +154,9 @@ function _renderPage() {
 
   document.getElementById('main-content').innerHTML = html;
   _icons();
+  document.getElementById('btnBannerEditProject')?.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('trackly:editProject', { detail: { projectId: _project.id } }));
+  });
   _bindToolbar();
   _drawGantt();
   setTimeout(_scrollToToday, 100);

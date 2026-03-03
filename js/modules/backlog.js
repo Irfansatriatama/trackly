@@ -102,7 +102,7 @@ function renderBacklogPage() {
     <div class="page-container page-enter backlog-page">
       ${banner}
 
-      <div class="page-header" style="margin-top:var(--space-6);">
+      <div class="page-header">
         <div class="page-header__info">
           <h1 class="page-header__title">Backlog</h1>
           <p class="page-header__subtitle">${sanitize(_project.name)} &mdash; ${_tasks.length} task${_tasks.length !== 1 ? 's' : ''} total</p>
@@ -167,6 +167,9 @@ function renderBacklogPage() {
     <aside class="task-slideover" id="taskSlideover" aria-label="Task Detail"></aside>`;
 
   if (typeof lucide !== 'undefined') lucide.createIcons();
+  document.getElementById('btnBannerEditProject')?.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('trackly:editProject', { detail: { projectId: _project.id } }));
+  });
   bindPageEvents();
 }
 

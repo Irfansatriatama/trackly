@@ -543,9 +543,9 @@ export function buildProjectBanner(project, activeTab, options = {}) {
             ${project.description ? '<p class="project-detail-banner__desc">' + sanitize(project.description) + '</p>' : ''}
           </div>
           <div class="project-detail-banner__actions">
-            <a href="#/projects/${id}" class="btn btn--outline-white">
+            <button class="btn btn--outline-white" id="btnBannerEditProject" data-project-id="${id}">
               <i data-lucide="pencil" aria-hidden="true"></i> Edit Project
-            </a>
+            </button>
           </div>
         </div>
       </div>
