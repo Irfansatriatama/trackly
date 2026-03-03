@@ -261,6 +261,21 @@
   color: var(--color-text-muted);
 }
 
+/* Badge variant untuk dipakai di atas project banner */
+.badge--on-banner {
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(4px);
+}
+
+.badge--success.badge--on-banner  { background: rgba(22, 163, 74, 0.55); }
+.badge--warning.badge--on-banner  { background: rgba(217, 119, 6, 0.60); }
+.badge--danger.badge--on-banner   { background: rgba(220, 38, 38, 0.60); }
+.badge--info.badge--on-banner     { background: rgba(8, 145, 178, 0.55); }
+.badge--primary.badge--on-banner  { background: rgba(37, 99, 235, 0.55); }
+.badge--secondary.badge--on-banner { background: rgba(124, 58, 237, 0.55); }
+.badge--neutral.badge--on-banner  { background: rgba(255, 255, 255, 0.20); }
+
 /* ============================================================
    CARDS
    ============================================================ */
@@ -2350,11 +2365,30 @@ body.modal-open {
 .backlog-page .page-header,
 .sprint-page .page-header,
 #gantt-root .page-header,
-.page-container .page-header {
+.project-detail-page .page-header {
   margin-top: 0;
   padding: var(--space-4) var(--space-6);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-card);
+}
+
+/* ---- Inner content padding for project detail tab pages ---- */
+/* The outer container uses project-detail-page { padding:0 } so the banner
+   renders edge-to-edge. Inner content (after page-header) is wrapped in
+   .project-tab-body which restores standard page padding. */
+.project-detail-page .project-tab-body {
+  padding: 0 var(--space-6) var(--space-6);
+}
+
+/* Board is special: it's a flex column layout with overflow, so its
+   inner toolbar/scroll elements need their own horizontal padding instead. */
+.board-page .board-filterbar,
+.board-page .filter-chips { padding-left: var(--space-6); padding-right: var(--space-6); }
+.board-page .board-scroll-wrapper {
+  padding-left: var(--space-2);
+  padding-right: var(--space-2);
+  margin-left: 0;
+  margin-right: 0;
 }
 
 /* ---- Project Stats Row ---- */

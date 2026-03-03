@@ -68,7 +68,7 @@ function _renderPage() {
   const activeSprint = _sprints.find(s => s.status === 'active');
 
   content.innerHTML = `
-    <div class="page-container page-enter sprint-page">
+    <div class="page-container page-enter sprint-page project-detail-page">
       ${banner}
       <div class="page-header">
         <div class="page-header__info">
@@ -80,6 +80,7 @@ function _renderPage() {
         </div>
       </div>
       ${activeSprint ? _renderActiveBanner(activeSprint) : ''}
+      <div class="project-tab-body">
       <div class="sprint-tabs">
         <button class="sprint-tab${_activeTab==='list'?' is-active':''}" data-tab="list"><i data-lucide="list" aria-hidden="true"></i> Sprints</button>
         <button class="sprint-tab${_activeTab==='planning'?' is-active':''}" data-tab="planning"><i data-lucide="move" aria-hidden="true"></i> Planning</button>
@@ -87,6 +88,7 @@ function _renderPage() {
         <button class="sprint-tab${_activeTab==='velocity'?' is-active':''}" data-tab="velocity"><i data-lucide="bar-chart-2" aria-hidden="true"></i> Velocity</button>
       </div>
       <div class="sprint-view" id="sprintView">${_renderActiveTabContent()}</div>
+      </div>
     </div>`;
 
   if (typeof lucide !== 'undefined') lucide.createIcons();

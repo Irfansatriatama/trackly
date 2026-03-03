@@ -99,7 +99,7 @@ function renderBacklogPage() {
   const banner = buildProjectBanner(_project, 'backlog', { renderBadge, isAdminOrPM });
 
   content.innerHTML = `
-    <div class="page-container page-enter backlog-page">
+    <div class="page-container page-enter backlog-page project-detail-page">
       ${banner}
 
       <div class="page-header">
@@ -112,6 +112,7 @@ function renderBacklogPage() {
         </div>
       </div>
 
+      <div class="project-tab-body">
       <div class="backlog-toolbar">
         <div class="backlog-search">
           <i data-lucide="search" class="backlog-search__icon" aria-hidden="true"></i>
@@ -161,6 +162,7 @@ function renderBacklogPage() {
       </div>
 
       <div id="backlogContent">${renderBacklogContent()}</div>
+      </div>
     </div>
 
     <div class="task-slideover-overlay" id="slideoverOverlay"></div>

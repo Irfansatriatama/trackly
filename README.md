@@ -32,7 +32,7 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.6.4` |
+| **Current Version** | `v1.6.5` |
 | **Current Phase** | Phase 25 — Notes Sharing & Collaboration Audit |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
@@ -1339,6 +1339,31 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ║  [x] Phase 25 — Notes Sharing & Collaboration Audit v1.6.0     ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
+║                                                                 ║
+║  v1.6.5 [2026-03-04]  UX Fix: Banner Badge Contrast,          ║
+║    Dashboard Show More & Subnav Layout Consistency             ║
+║    - Banner badge contrast (badge--on-banner variant):         ║
+║      Added .badge--on-banner modifier in components.css        ║
+║      with white text, solid semi-opaque bg per variant,        ║
+║      and glass border for readability over cover colors        ║
+║    - Updated buildProjectBanner() in utils.js to use           ║
+║      local bannerBadge() helper instead of renderBadge()       ║
+║      so all 4 badges (status/phase/priority/overdue)           ║
+║      in banner always render with badge--on-banner class       ║
+║    - Updated renderBadge() in badge.js with optional 3rd       ║
+║      param onBanner; Overview tab badges also updated          ║
+║    - Dashboard show more: border-top separator added,          ║
+║      chevron-down icon with rotate(180deg) CSS transition      ║
+║      on is-expanded, count label in Indonesian                 ║
+║      ("Tampilkan lebih banyak / lebih sedikit"); lucide icons  ║
+║      re-rendered after toggle; CSS in dashboard.css            ║
+║    - Subnav layout audit & fix: All non-Overview tabs          ║
+║      (board, backlog, sprint, gantt, maintenance, discussion,  ║
+║      log) now use project-detail-page class on outer           ║
+║      container (padding:0) for edge-to-edge banner;            ║
+║      inner content wrapped in .project-tab-body with           ║
+║      padding:0 var(--space-6) var(--space-6); board uses       ║
+║      dedicated CSS for its flex-overflow layout                ║
 ║                                                                 ║
 ║  v1.6.4 [2026-03-04]  UX Fix: Project Subnav Consistency     ║
 ║    & Edit Project Button                                        ║

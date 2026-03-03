@@ -174,7 +174,7 @@ function _buildPageHTML() {
   const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
   const banner = buildProjectBanner(_project, 'discussion', { renderBadge, isAdminOrPM });
   return `
-    <div class="page-container page-enter">
+    <div class="page-container page-enter project-detail-page">
       ${banner}
       <div class="page-header">
         <div class="page-header__info">

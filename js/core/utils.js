@@ -514,10 +514,14 @@ export function buildProjectBanner(project, activeTab, options = {}) {
   const id           = sanitize(project.id);
   const adminOrPm    = isAdminOrPM;
 
-  const statusBadge   = badge(STATUS_LABEL[project.status]   || project.status,   STATUS_VARIANT[project.status]   || 'neutral');
-  const phaseBadge    = project.phase  ? badge(PHASE_LABEL[project.phase]     || project.phase,    'info')                                    : '';
-  const priorityBadge = project.priority ? badge(PRIORITY_LABEL[project.priority] || project.priority, PRIORITY_VARIANT[project.priority] || 'neutral') : '';
-  const overdueBadge  = isOverdue ? badge('Overdue', 'danger') : '';
+  // Local helper: badge with on-banner styling (white text, semi-solid bg)
+  const bannerBadge = (label, variant) =>
+    `<span class="badge badge--${variant} badge--on-banner">${label}</span>`;
+
+  const statusBadge   = bannerBadge(STATUS_LABEL[project.status]   || project.status,   STATUS_VARIANT[project.status]   || 'neutral');
+  const phaseBadge    = project.phase    ? bannerBadge(PHASE_LABEL[project.phase]         || project.phase,    'info')                                    : '';
+  const priorityBadge = project.priority ? bannerBadge(PRIORITY_LABEL[project.priority]   || project.priority, PRIORITY_VARIANT[project.priority] || 'neutral') : '';
+  const overdueBadge  = isOverdue ? bannerBadge('Overdue', 'danger') : '';
 
   const tabLink = (tab, icon, label, tabId) =>
     '<a class="project-subnav__link' + (activeTab === tabId ? ' is-active' : '') + '" href="#/projects/' + id + (tabId === 'overview' ? '' : '/' + tabId) + '">' +

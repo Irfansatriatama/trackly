@@ -93,7 +93,7 @@ function _renderPage() {
   ).join('');
 
   const html = `
-<div class="page-container page-enter" id="gantt-root">
+<div class="page-container page-enter project-detail-page" id="gantt-root">
   ${banner}
 
   <div class="page-header">
@@ -108,6 +108,7 @@ function _renderPage() {
     </div>
   </div>
 
+  <div class="project-tab-body">
   <div class="gantt-toolbar card">
     <div class="gantt-toolbar__group">
       <span class="gantt-toolbar__label">Zoom</span>
@@ -149,6 +150,7 @@ function _renderPage() {
     <span class="gantt-legend__item"><span class="gantt-legend__dot" style="background:var(--color-success)"></span>Done</span>
     <span class="gantt-legend__item"><span class="gantt-legend__dot gantt-legend__dot--diamond"></span>Milestone</span>
     <span class="gantt-legend__item"><span class="gantt-legend__line--today"></span>Today</span>
+  </div>
   </div>
 </div>`;
 

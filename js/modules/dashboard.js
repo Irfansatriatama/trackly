@@ -485,7 +485,8 @@ export async function render(params = {}) {
             ${hasMore ? `
             <div class="activity-timeline-show-more">
               <button class="btn btn--ghost btn--sm" id="activity-show-more-btn" data-expanded="false">
-                Show more (${recentLogs.length - SHOW_DEFAULT} more)
+                <i data-lucide="chevron-down" aria-hidden="true"></i>
+                Tampilkan lebih banyak (${recentLogs.length - SHOW_DEFAULT} lagi)
               </button>
             </div>` : ''}
           </div>
@@ -508,11 +509,13 @@ export async function render(params = {}) {
           const expanded = btn.dataset.expanded === 'true';
           if (!expanded) {
             list.innerHTML = buildTimelineItems(recentLogs);
-            btn.textContent = 'Show less';
+            btn.innerHTML = '<i data-lucide="chevron-down" aria-hidden="true"></i> Tampilkan lebih sedikit';
+            btn.classList.add('is-expanded');
             btn.dataset.expanded = 'true';
           } else {
             list.innerHTML = buildTimelineItems(recentLogs.slice(0, SHOW_DEFAULT));
-            btn.textContent = `Show more (${recentLogs.length - SHOW_DEFAULT} more)`;
+            btn.innerHTML = `<i data-lucide="chevron-down" aria-hidden="true"></i> Tampilkan lebih banyak (${recentLogs.length - SHOW_DEFAULT} lagi)`;
+            btn.classList.remove('is-expanded');
             btn.dataset.expanded = 'false';
           }
           if (typeof lucide !== 'undefined') lucide.createIcons();

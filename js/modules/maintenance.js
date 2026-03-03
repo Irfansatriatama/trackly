@@ -164,7 +164,7 @@ function renderMaintenancePage() {
   const banner = buildProjectBanner(_project, 'maintenance', { renderBadge, isAdminOrPM });
 
   content.innerHTML = `
-    <div class="page-container page-enter">
+    <div class="page-container page-enter project-detail-page">
       ${banner}
 
       <div class="page-header">
@@ -182,6 +182,7 @@ function renderMaintenancePage() {
         </div>
       </div>
 
+      <div class="project-tab-body">
       <div class="mnt-stats-row">
         <div class="mnt-stat-card">
           <span class="mnt-stat-card__num">${stats.total}</span>
@@ -226,6 +227,7 @@ function renderMaintenancePage() {
       </div>
 
       <div id="mntTicketList">${_renderTicketList()}</div>
+      </div>
     </div>`;
 
   if (typeof lucide !== 'undefined') lucide.createIcons();

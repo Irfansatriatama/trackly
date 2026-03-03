@@ -75,7 +75,7 @@ export async function render(params) {
     _filterDateTo = '';
 
     content.innerHTML = `
-      <div class="page-container page-enter">
+      <div class="page-container page-enter${bannerHtml ? ' project-detail-page' : ''}">
         ${bannerHtml}
         <div class="page-header">
           <div class="page-header__info">
@@ -86,6 +86,7 @@ export async function render(params) {
             <p class="page-header__subtitle">Complete history of actions${project ? ' in this project' : ' across all projects'}.</p>
           </div>
         </div>
+        <div class="project-tab-body">
         <div class="log-filter-trigger-wrap" style="display:flex;flex-direction:column;gap:var(--space-2);margin-bottom:var(--space-4);">
           <div style="display:flex;align-items:center;gap:var(--space-2);">
             <div class="filter-btn-wrap">
@@ -99,6 +100,7 @@ export async function render(params) {
           <div class="filter-chips" id="logFilterChips">${_renderLogFilterChips()}</div>
         </div>
         <div id="logContent"></div>
+        </div>
       </div>`;
 
     if (typeof lucide !== 'undefined') lucide.createIcons();

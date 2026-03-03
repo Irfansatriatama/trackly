@@ -10,8 +10,9 @@
  * @param {string} variant  'primary' | 'success' | 'warning' | 'danger' | 'info' | 'secondary' | 'neutral'
  * @returns {string} HTML string
  */
-export function renderBadge(label, variant = 'neutral') {
-  return `<span class="badge badge--${variant}">${label}</span>`;
+export function renderBadge(label, variant = 'neutral', onBanner = false) {
+  const extra = onBanner ? ' badge--on-banner' : '';
+  return `<span class="badge badge--${variant}${extra}">${label}</span>`;
 }
 
 export default { renderBadge };

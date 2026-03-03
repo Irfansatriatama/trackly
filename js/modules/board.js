@@ -139,7 +139,7 @@ function _renderBoardPage() {
   const banner = buildProjectBanner(_project, 'board', { renderBadge, isAdminOrPM });
 
   content.innerHTML = `
-    <div class="page-container page-enter board-page">
+    <div class="page-container page-enter board-page project-detail-page">
       ${banner}
 
       <div class="page-header">

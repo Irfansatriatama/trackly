@@ -709,10 +709,10 @@ async function renderProjectDetail(projectId) {
             <div class="project-detail-banner__info">
               <div class="project-detail-banner__text">
                 <div class="project-detail-banner__badges">
-                  ${renderBadge(statusOpt?.label || project.status, getStatusVariant(project.status))}
-                  ${phaseOpt ? renderBadge(phaseOpt.label, 'info') : ''}
-                  ${priorityOpt ? renderBadge(priorityOpt.label, getPriorityVariant(project.priority)) : ''}
-                  ${isOverdue ? renderBadge('Overdue', 'danger') : ''}
+                  ${renderBadge(statusOpt?.label || project.status, getStatusVariant(project.status), true)}
+                  ${phaseOpt ? renderBadge(phaseOpt.label, 'info', true) : ''}
+                  ${priorityOpt ? renderBadge(priorityOpt.label, getPriorityVariant(project.priority), true) : ''}
+                  ${isOverdue ? renderBadge('Overdue', 'danger', true) : ''}
                 </div>
                 <h1 class="project-detail-banner__title">${sanitize(project.name)}</h1>
                 <p class="project-detail-banner__code text-mono">${sanitize(project.code || project.id)}</p>
