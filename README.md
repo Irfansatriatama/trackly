@@ -32,7 +32,7 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.5.0` |
+| **Current Version** | `v1.5.1` |
 | **Current Phase** | Phase 24 — Personal Notes |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
@@ -1254,6 +1254,13 @@ Tasks:
 ║  [x] Phase 24 — Personal Notes                     v1.5.0      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
+║                                                                 ║
+║  v1.5.1 [2026-03-03]  Bugfix & Enhancement: Personal Notes   ║
+║                         — back button folder navigation;        ║
+║                         close active note button; upload .md   ║
+║                         from computer; move note to folder;    ║
+║                         formatting toolbar (Bold/Italic/H1-3); ║
+║                         autosave indicator improvement.         ║
 ║                                                                 ║
 ║  v1.5.0 [2026-03-03]  Phase 24 — Personal Notes:             ║
 ║                         New `notes` IndexedDB store (DB v6);   ║

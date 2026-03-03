@@ -369,17 +369,7 @@
   color: var(--color-warning, #f59e0b);
 }
 
-.notes-save-indicator {
-  font-size: 0.75rem;
-  color: var(--color-success, #16a34a);
-  margin-left: auto;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.notes-save-indicator.is-visible {
-  opacity: 1;
-}
+/* Save indicator — see extended definition below */
 
 /* Editor body */
 .notes-editor-body {
@@ -725,4 +715,151 @@
   font-size: 0.8125rem;
   color: var(--color-text-tertiary, #9ca3af);
   text-align: center;
+}
+
+/* ============================================================
+   FOLDER BACK BAR (Bug #1)
+   ============================================================ */
+
+.notes-folder-back-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-surface-secondary, #f9fafb);
+  flex-shrink: 0;
+}
+
+.notes-folder-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-primary, #2563eb);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm, 4px);
+  transition: background 0.12s;
+  flex-shrink: 0;
+}
+
+.notes-folder-back-btn:hover {
+  background: var(--color-primary-light, #eff6ff);
+}
+
+.notes-folder-back-bar__name {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #374151);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+   FORMATTING TOOLBAR (Feature #2)
+   ============================================================ */
+
+.notes-format-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.3rem 1rem;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-surface, #ffffff);
+  flex-shrink: 0;
+}
+
+.notes-format-toolbar__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 26px;
+  padding: 0 0.4rem;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  color: var(--color-text-secondary, #374151);
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.notes-format-toolbar__btn:hover {
+  background: var(--color-hover, rgba(0,0,0,0.06));
+  border-color: var(--color-border, #e5e7eb);
+}
+
+.notes-format-toolbar__btn--italic em {
+  font-style: italic;
+}
+
+.notes-format-toolbar__sep {
+  width: 1px;
+  height: 18px;
+  background: var(--color-border, #e5e7eb);
+  margin: 0 0.25rem;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   MOVE TO FOLDER (Feature #3)
+   ============================================================ */
+
+.notes-move-folder-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.notes-move-folder-select {
+  font-size: 0.75rem;
+  font-family: inherit;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-sm, 4px);
+  padding: 0.2rem 0.4rem;
+  background: var(--color-surface, #ffffff);
+  color: var(--color-text-secondary, #374151);
+  cursor: pointer;
+  max-width: 140px;
+  outline: none;
+  transition: border-color 0.12s;
+}
+
+.notes-move-folder-select:focus {
+  border-color: var(--color-primary, #2563eb);
+}
+
+/* ============================================================
+   AUTOSAVE INDICATOR IMPROVEMENTS
+   ============================================================ */
+
+.notes-save-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary, #9ca3af);
+  opacity: 0;
+  transition: opacity 0.25s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.notes-save-indicator.is-visible {
+  opacity: 1;
+}
+
+.notes-save-indicator.is-saved {
+  color: var(--color-success, #16a34a);
 }

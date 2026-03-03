@@ -180,7 +180,18 @@ function renderLeftPanel() {
     html += '</div>';
   } else if (_state.activeFolderId) {
     const folder = _state.folders.find((f) => f.id === _state.activeFolderId);
-    html += `<div class="notes-section"><div class="notes-section__header"><span class="notes-section__title"><i data-lucide="folder" style="width:11px;height:11px"></i> ${sanitize(folder?.name || 'Folder')}</span></div>`;
+    html += `
+      <div class="notes-folder-back-bar">
+        <button class="notes-folder-back-btn" id="btnFolderBack">
+          <i data-lucide="arrow-left" style="width:13px;height:13px"></i> Back
+        </button>
+        <span class="notes-folder-back-bar__name">
+          <i data-lucide="folder" style="width:12px;height:12px"></i>
+          ${sanitize(folder?.name || 'Folder')}
+        </span>
+      </div>
+    `;
+    html += `<div class="notes-section">`;
     if (folderFiltered && folderFiltered.length === 0) {
       html += `<div class="notes-list-empty">No notes in this folder</div>`;
     } else {
@@ -258,8 +269,11 @@ function renderEditorToolbar(note) {
         </button>
       </div>
       <span class="notes-save-indicator" id="noteSaveIndicator">
-        <i data-lucide="check" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Saved
+        <i data-lucide="check" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Tersimpan
       </span>
+      <button class="notes-toolbar-btn notes-editor-close-btn" id="btnCloseNote" title="Close note" style="margin-left:auto">
+        <i data-lucide="x" style="width:13px;height:13px"></i>
+      </button>
     </div>
   `;
 }
@@ -282,6 +296,17 @@ function renderBottomToolbar(note) {
     </span>
   `).join('');
 
+  const folderOptions = [
+    `<option value="">— Tanpa Folder (All Notes)</option>`,
+    ..._state.folders.map((f) => `<option value="${f.id}" ${note.folder_id === f.id ? 'selected' : ''}>${sanitize(f.name)}</option>`)
+  ].join('');
+
+  const moveToFolderControl = _state.folders.length === 0
+    ? `<span style="font-size:0.75rem;color:var(--color-text-tertiary)">Belum ada folder.</span>`
+    : `<select class="notes-move-folder-select" id="noteMoveFolder" title="Pindah ke folder">
+        ${folderOptions}
+      </select>`;
+
   return `
     <div class="notes-bottom-toolbar">
       <div class="notes-tags-area">
@@ -292,6 +317,10 @@ function renderBottomToolbar(note) {
       <div class="notes-color-picker" title="Note color">
         ${colorSwatches}
       </div>
+      <div class="notes-move-folder-wrap" title="Pindah ke folder">
+        <i data-lucide="folder-input" style="width:13px;height:13px;color:var(--color-text-tertiary);flex-shrink:0"></i>
+        ${moveToFolderControl}
+      </div>
       <button class="notes-toolbar-btn notes-toolbar-btn--pin ${note.pinned ? 'is-pinned' : ''}" id="btnPinNote" title="${note.pinned ? 'Unpin note' : 'Pin note'}">
         <i data-lucide="pin" style="width:13px;height:13px"></i>
         ${note.pinned ? 'Pinned' : 'Pin'}
@@ -299,6 +328,19 @@ function renderBottomToolbar(note) {
       <button class="notes-toolbar-btn notes-toolbar-btn--danger" id="btnDeleteNote" title="Delete note">
         <i data-lucide="trash-2" style="width:13px;height:13px"></i> Delete
       </button>
+    </div>
+  `;
+}
+
+function renderFormattingToolbar() {
+  return `
+    <div class="notes-format-toolbar" id="notesFormatToolbar">
+      <button class="notes-format-toolbar__btn" data-fmt="bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
+      <button class="notes-format-toolbar__btn notes-format-toolbar__btn--italic" data-fmt="italic" title="Italic (Ctrl+I)"><em>I</em></button>
+      <div class="notes-format-toolbar__sep"></div>
+      <button class="notes-format-toolbar__btn" data-fmt="h1" title="Heading 1">H1</button>
+      <button class="notes-format-toolbar__btn" data-fmt="h2" title="Heading 2">H2</button>
+      <button class="notes-format-toolbar__btn" data-fmt="h3" title="Heading 3">H3</button>
     </div>
   `;
 }
@@ -318,6 +360,7 @@ function renderEditor(note) {
   }
 
   const toolbarHTML = renderEditorToolbar(note);
+  const formatToolbarHTML = _state.editMode ? renderFormattingToolbar() : '';
   const contentHTML = _state.editMode
     ? `<textarea class="notes-textarea" id="noteContentTextarea" placeholder="Tulis catatan di sini... (Markdown didukung)">${sanitize(note.content || '')}</textarea>`
     : `<div class="notes-preview" id="notePreview">${renderMarkdown(note.content)}</div>`;
@@ -326,6 +369,7 @@ function renderEditor(note) {
 
   return `
     ${toolbarHTML}
+    ${formatToolbarHTML}
     <div class="notes-editor-body">
       <input type="text" class="notes-title-input" id="noteTitleInput"
         value="${sanitize(note.title || '')}"
@@ -381,6 +425,10 @@ export async function render() {
           <h1 class="notes-page__title">Personal Notes</h1>
         </div>
         <div class="notes-page__header-actions">
+          <button class="btn btn--ghost btn--sm" id="btnUploadMd">
+            <i data-lucide="file-up" aria-hidden="true"></i> Upload .md
+          </button>
+          <input type="file" id="notesUploadMdInput" accept=".md,.txt" style="display:none">
           <button class="btn btn--ghost btn--sm" id="btnImportNotes">
             <i data-lucide="upload" aria-hidden="true"></i> Import
           </button>
@@ -494,6 +542,16 @@ function wireEvents(userId) {
     else if (e.target.closest('#btnPinNote')) { togglePin(userId); }
     else if (e.target.closest('#btnDeleteNote')) { deleteActiveNote(userId); }
     else if (e.target.closest('#btnExportNote')) { exportNoteAsMd(); }
+    // BUG #2: Close active note
+    else if (e.target.closest('#btnCloseNote')) {
+      _state.activeNoteId = null;
+      refreshAll();
+    }
+    // FEATURE: Formatting toolbar
+    else if (e.target.closest('[data-fmt]')) {
+      const fmt = e.target.closest('[data-fmt]').getAttribute('data-fmt');
+      applyFormatting(fmt, userId);
+    }
     else if (e.target.closest('[data-color]')) {
       const color = e.target.closest('[data-color]').getAttribute('data-color');
       setNoteColor(userId, color);
@@ -501,6 +559,21 @@ function wireEvents(userId) {
     else if (e.target.closest('.notes-tag-chip__remove')) {
       const tag = e.target.closest('.notes-tag-chip__remove').getAttribute('data-tag');
       removeTag(userId, tag);
+    }
+  });
+
+  // FEATURE: Move to folder (change event on select)
+  document.getElementById('notesPanelRight')?.addEventListener('change', (e) => {
+    if (e.target.id === 'noteMoveFolder') {
+      moveNoteToFolder(userId, e.target.value || null);
+    }
+  });
+
+  // Ctrl+B / Ctrl+I shortcuts
+  document.getElementById('notesPanelRight')?.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.target.id === 'noteContentTextarea') {
+      if (e.key === 'b' || e.key === 'B') { e.preventDefault(); applyFormatting('bold', userId); }
+      if (e.key === 'i' || e.key === 'I') { e.preventDefault(); applyFormatting('italic', userId); }
     }
   });
 
@@ -523,6 +596,53 @@ function wireEvents(userId) {
   // Export / Import header buttons
   document.getElementById('btnExportNotes')?.addEventListener('click', () => openExportModal(userId));
   document.getElementById('btnImportNotes')?.addEventListener('click', () => openImportModal(userId));
+
+  // FEATURE: Upload .md
+  document.getElementById('btnUploadMd')?.addEventListener('click', () => {
+    document.getElementById('notesUploadMdInput')?.click();
+  });
+  document.getElementById('notesUploadMdInput')?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (ext !== 'md' && ext !== 'txt') {
+      showToast('Hanya file .md dan .txt yang didukung.', 'error');
+      e.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onerror = () => showToast('Gagal membaca file.', 'error');
+    reader.onload = async (ev) => {
+      try {
+        const content = ev.target.result;
+        const titleFromFile = file.name.replace(/\.(md|txt)$/i, '');
+        const allNotes = await getAll('notes');
+        const id = generateSequentialId(ID_PREFIX.NOTE, allNotes);
+        const now = nowISO();
+        const note = {
+          id,
+          user_id: userId,
+          title: titleFromFile,
+          content,
+          folder_id: _state.activeFolderId || null,
+          pinned: false,
+          color: null,
+          tags: [],
+          created_at: now,
+          updated_at: now,
+        };
+        await saveNote(note);
+        _state.activeNoteId = id;
+        _state.editMode = true;
+        refreshAll();
+        showToast('File berhasil diupload sebagai note baru.', 'success');
+      } catch {
+        showToast('Gagal membaca file.', 'error');
+      }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
 
   // Mobile drawer
   const drawerToggle = document.getElementById('notesDrawerToggle');
@@ -579,6 +699,13 @@ function selectNote(noteId) {
 
 function triggerAutosave(userId) {
   if (_state.saveTimer) clearTimeout(_state.saveTimer);
+  // Show "Menyimpan…" while queued
+  const indicator = document.getElementById('noteSaveIndicator');
+  if (indicator) {
+    indicator.textContent = 'Menyimpan…';
+    indicator.classList.add('is-visible');
+    indicator.classList.remove('is-saved');
+  }
   _state.saveTimer = setTimeout(() => persistCurrentNote(userId), 800);
 }
 
@@ -598,8 +725,12 @@ async function persistCurrentNote(userId) {
   // Show save indicator
   const indicator = document.getElementById('noteSaveIndicator');
   if (indicator) {
-    indicator.classList.add('is-visible');
-    setTimeout(() => indicator.classList.remove('is-visible'), 2000);
+    indicator.innerHTML = '<i data-lucide="check" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Tersimpan';
+    indicator.classList.add('is-visible', 'is-saved');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    setTimeout(() => {
+      indicator.classList.remove('is-visible', 'is-saved');
+    }, 2000);
   }
 
   // Update list item title
@@ -688,6 +819,98 @@ function exportNoteAsMd() {
   a.click();
   URL.revokeObjectURL(url);
   showToast('Catatan berhasil diekspor.', 'success');
+}
+
+// ============================================================
+// FORMATTING TOOLBAR ACTIONS
+// ============================================================
+
+function applyFormatting(fmt, userId) {
+  const textarea = document.getElementById('noteContentTextarea');
+  if (!textarea) return;
+
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const value = textarea.value;
+  const selectedText = value.slice(start, end);
+
+  if (fmt === 'bold' || fmt === 'italic') {
+    const marker = fmt === 'bold' ? '**' : '*';
+    const placeholder = fmt === 'bold' ? 'teks bold' : 'teks italic';
+
+    if (selectedText) {
+      // Toggle: if already wrapped, unwrap; else wrap
+      if (selectedText.startsWith(marker) && selectedText.endsWith(marker)) {
+        const inner = selectedText.slice(marker.length, -marker.length);
+        textarea.value = value.slice(0, start) + inner + value.slice(end);
+        textarea.selectionStart = start;
+        textarea.selectionEnd = start + inner.length;
+      } else {
+        const wrapped = marker + selectedText + marker;
+        textarea.value = value.slice(0, start) + wrapped + value.slice(end);
+        textarea.selectionStart = start + marker.length;
+        textarea.selectionEnd = start + marker.length + selectedText.length;
+      }
+    } else {
+      const insert = marker + placeholder + marker;
+      textarea.value = value.slice(0, start) + insert + value.slice(end);
+      textarea.selectionStart = start + marker.length;
+      textarea.selectionEnd = start + marker.length + placeholder.length;
+    }
+  } else if (fmt === 'h1' || fmt === 'h2' || fmt === 'h3') {
+    const prefix = fmt === 'h1' ? '# ' : fmt === 'h2' ? '## ' : '### ';
+    // Find start of current line
+    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+    const lineEnd = value.indexOf('\n', start);
+    const lineEndActual = lineEnd === -1 ? value.length : lineEnd;
+    const lineContent = value.slice(lineStart, lineEndActual);
+
+    // Remove existing heading prefixes
+    const stripped = lineContent.replace(/^#{1,3} /, '');
+
+    let newLine;
+    if (lineContent.startsWith(prefix)) {
+      // Toggle off
+      newLine = stripped;
+    } else {
+      newLine = prefix + stripped;
+    }
+
+    textarea.value = value.slice(0, lineStart) + newLine + value.slice(lineEndActual);
+    const cursorPos = lineStart + newLine.length;
+    textarea.selectionStart = cursorPos;
+    textarea.selectionEnd = cursorPos;
+  }
+
+  textarea.focus();
+  triggerAutosave(userId);
+}
+
+// ============================================================
+// MOVE TO FOLDER
+// ============================================================
+
+async function moveNoteToFolder(userId, folderId) {
+  const note = _state.notes.find((n) => n.id === _state.activeNoteId);
+  if (!note) return;
+
+  // Persist current editor content before changing folder
+  const titleInput = document.getElementById('noteTitleInput');
+  const contentTextarea = document.getElementById('noteContentTextarea');
+  if (titleInput) note.title = titleInput.value;
+  if (contentTextarea) note.content = contentTextarea.value;
+
+  note.folder_id = folderId || null;
+  note.updated_at = nowISO();
+  await saveNote(note);
+
+  const folderName = folderId
+    ? (_state.folders.find((f) => f.id === folderId)?.name || 'folder')
+    : 'All Notes';
+  showToast(folderId ? `Note dipindah ke "${folderName}".` : 'Note dipindah ke All Notes.', 'success');
+  refreshLeftPanel();
+  refreshBottomToolbar(note);
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // ============================================================
@@ -921,6 +1144,12 @@ function refreshLeftPanel() {
   document.getElementById('btnNewFolder')?.addEventListener('click', () => {
     const session = getSession();
     if (session) promptNewFolder(session.userId);
+  });
+
+  // BUG #1: Back button inside folder view
+  document.getElementById('btnFolderBack')?.addEventListener('click', () => {
+    _state.activeFolderId = null;
+    refreshLeftPanel();
   });
 }
 
