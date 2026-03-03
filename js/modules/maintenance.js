@@ -211,23 +211,17 @@ function renderMaintenancePage() {
           <input type="text" class="form-input projects-search__input" id="mntSearch"
             placeholder="Search tickets..." value="${sanitize(_searchQuery)}" autocomplete="off" />
         </div>
-        <div class="projects-filters">
-          <select class="form-select" id="mntFilterStatus">
-            <option value="">All Status</option>
-            ${TICKET_STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus === s.value ? 'selected' : ''}>${s.label}</option>`).join('')}
-          </select>
-          <select class="form-select" id="mntFilterType">
-            <option value="">All Types</option>
-            ${TICKET_TYPE_OPTIONS.map(t => `<option value="${t.value}" ${_filterType === t.value ? 'selected' : ''}>${t.label}</option>`).join('')}
-          </select>
-          <select class="form-select" id="mntFilterPriority">
-            <option value="">All Priority</option>
-            ${TICKET_PRIORITY_OPTIONS.map(p => `<option value="${p.value}" ${_filterPriority === p.value ? 'selected' : ''}>${p.label}</option>`).join('')}
-          </select>
-          <select class="form-select" id="mntFilterSeverity">
-            <option value="">All Severity</option>
-            ${TICKET_SEVERITY_OPTIONS.map(s => `<option value="${s.value}" ${_filterSeverity === s.value ? 'selected' : ''}>${s.label}</option>`).join('')}
-          </select>
+        <div class="filter-trigger-wrap">
+          <div class="filter-trigger-row">
+            <div class="filter-btn-wrap">
+              <button class="btn btn--secondary" id="btnOpenFilterModal">
+                <i data-lucide="filter" aria-hidden="true"></i> Filter
+              </button>
+              ${[_filterStatus, _filterType, _filterPriority, _filterSeverity].filter(Boolean).length > 0
+                ? `<span class="filter-badge">${[_filterStatus, _filterType, _filterPriority, _filterSeverity].filter(Boolean).length}</span>` : ''}
+            </div>
+          </div>
+          <div class="filter-chips" id="mntFilterChips">${_renderMntFilterChips()}</div>
         </div>
       </div>
 
@@ -374,10 +368,8 @@ function _bindPageEvents() {
     _refreshList();
   });
 
-  document.getElementById('mntFilterStatus')?.addEventListener('change', e => { _filterStatus = e.target.value; _refreshList(); });
-  document.getElementById('mntFilterType')?.addEventListener('change',   e => { _filterType   = e.target.value; _refreshList(); });
-  document.getElementById('mntFilterPriority')?.addEventListener('change', e => { _filterPriority = e.target.value; _refreshList(); });
-  document.getElementById('mntFilterSeverity')?.addEventListener('change', e => { _filterSeverity = e.target.value; _refreshList(); });
+  document.getElementById('btnOpenFilterModal')?.addEventListener('click', _openMntFilterModal);
+  document.getElementById('mntFilterChips')?.addEventListener('click', _handleMntChipRemove);
 
   document.getElementById('mntTicketList')?.addEventListener('click', e => {
     const viewBtn = e.target.closest('.btn-view-ticket');
@@ -387,6 +379,105 @@ function _bindPageEvents() {
     else if (editBtn) _openTicketModal(editBtn.dataset.id);
     else if (delBtn)  _deleteTicket(delBtn.dataset.id);
   });
+}
+
+function _renderMntFilterChips() {
+  const chips = [];
+  if (_filterStatus) {
+    const lbl = TICKET_STATUS_OPTIONS.find(s => s.value === _filterStatus)?.label || _filterStatus;
+    chips.push(`<span class="filter-chip" data-key="status"><span class="filter-chip__label">Status: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  if (_filterType) {
+    const lbl = TICKET_TYPE_OPTIONS.find(t => t.value === _filterType)?.label || _filterType;
+    chips.push(`<span class="filter-chip" data-key="type"><span class="filter-chip__label">Type: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  if (_filterPriority) {
+    const lbl = TICKET_PRIORITY_OPTIONS.find(p => p.value === _filterPriority)?.label || _filterPriority;
+    chips.push(`<span class="filter-chip" data-key="priority"><span class="filter-chip__label">Priority: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  if (_filterSeverity) {
+    const lbl = TICKET_SEVERITY_OPTIONS.find(s => s.value === _filterSeverity)?.label || _filterSeverity;
+    chips.push(`<span class="filter-chip" data-key="severity"><span class="filter-chip__label">Severity: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  return chips.join('');
+}
+
+function _handleMntChipRemove(e) {
+  const btn = e.target.closest('.filter-chip__remove');
+  if (!btn) return;
+  const key = btn.closest('.filter-chip')?.dataset.key;
+  if (key === 'status') _filterStatus = '';
+  if (key === 'type') _filterType = '';
+  if (key === 'priority') _filterPriority = '';
+  if (key === 'severity') _filterSeverity = '';
+  _refreshList(); _updateMntFilterUI();
+}
+
+function _openMntFilterModal() {
+  openModal({
+    title: 'Filter Maintenance',
+    size: 'md',
+    body: `<div class="filter-modal-grid">
+      <div class="form-group">
+        <label class="form-label" for="fmMntFilterStatus">Status</label>
+        <select class="form-select" id="fmMntFilterStatus">
+          <option value="">All Status</option>
+          ${TICKET_STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus===s.value?'selected':''}>${s.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fmMntFilterType">Type</label>
+        <select class="form-select" id="fmMntFilterType">
+          <option value="">All Types</option>
+          ${TICKET_TYPE_OPTIONS.map(t => `<option value="${t.value}" ${_filterType===t.value?'selected':''}>${t.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fmMntFilterPriority">Priority</label>
+        <select class="form-select" id="fmMntFilterPriority">
+          <option value="">All Priority</option>
+          ${TICKET_PRIORITY_OPTIONS.map(p => `<option value="${p.value}" ${_filterPriority===p.value?'selected':''}>${p.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fmMntFilterSeverity">Severity</label>
+        <select class="form-select" id="fmMntFilterSeverity">
+          <option value="">All Severity</option>
+          ${TICKET_SEVERITY_OPTIONS.map(s => `<option value="${s.value}" ${_filterSeverity===s.value?'selected':''}>${s.label}</option>`).join('')}
+        </select>
+      </div>
+    </div>`,
+    footer: `
+      <button class="btn btn--outline" id="btnResetMntFilter">Reset Filter</button>
+      <button class="btn btn--primary" id="btnApplyMntFilter"><i data-lucide="check" aria-hidden="true"></i> Terapkan Filter</button>`,
+  });
+  document.getElementById('btnResetMntFilter')?.addEventListener('click', () => {
+    _filterStatus = ''; _filterType = ''; _filterPriority = ''; _filterSeverity = '';
+    closeModal(); _refreshList(); _updateMntFilterUI();
+  });
+  document.getElementById('btnApplyMntFilter')?.addEventListener('click', () => {
+    _filterStatus   = document.getElementById('fmMntFilterStatus')?.value || '';
+    _filterType     = document.getElementById('fmMntFilterType')?.value || '';
+    _filterPriority = document.getElementById('fmMntFilterPriority')?.value || '';
+    _filterSeverity = document.getElementById('fmMntFilterSeverity')?.value || '';
+    closeModal(); _refreshList(); _updateMntFilterUI();
+  });
+}
+
+function _updateMntFilterUI() {
+  const wrap = document.getElementById('btnOpenFilterModal')?.closest('.filter-btn-wrap');
+  if (wrap) {
+    wrap.querySelector('.filter-badge')?.remove();
+    const count = [_filterStatus, _filterType, _filterPriority, _filterSeverity].filter(Boolean).length;
+    if (count > 0) {
+      const badge = document.createElement('span');
+      badge.className = 'filter-badge';
+      badge.textContent = count;
+      wrap.appendChild(badge);
+    }
+  }
+  const chips = document.getElementById('mntFilterChips');
+  if (chips) chips.innerHTML = _renderMntFilterChips();
 }
 
 function _refreshList() {

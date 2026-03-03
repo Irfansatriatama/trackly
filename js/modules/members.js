@@ -76,15 +76,17 @@ function renderMembersPage() {
             placeholder="Search by name, email, or username…"
             value="${sanitize(_searchQuery)}" autocomplete="off" />
         </div>
-        <div class="members-filters">
-          <select class="form-select members-filter" id="filterRole">
-            <option value="">All Roles</option>
-            ${ROLE_OPTIONS.map(r => `<option value="${r.value}" ${_filterRole===r.value?'selected':''}>${r.label}</option>`).join('')}
-          </select>
-          <select class="form-select members-filter" id="filterStatus">
-            <option value="">All Status</option>
-            ${STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus===s.value?'selected':''}>${s.label}</option>`).join('')}
-          </select>
+        <div class="filter-trigger-wrap">
+          <div class="filter-trigger-row">
+            <div class="filter-btn-wrap">
+              <button class="btn btn--secondary" id="btnOpenFilterModal">
+                <i data-lucide="filter" aria-hidden="true"></i> Filter
+              </button>
+              ${[_filterRole, _filterStatus].filter(Boolean).length > 0
+                ? `<span class="filter-badge">${[_filterRole, _filterStatus].filter(Boolean).length}</span>` : ''}
+            </div>
+          </div>
+          <div class="filter-chips" id="membersFilterChips">${renderMembersFilterChips()}</div>
         </div>
       </div>
       <div class="card">
@@ -180,9 +182,82 @@ function bindPageEvents() {
   document.getElementById('btnAddMember')?.addEventListener('click', ()=>openMemberModal(null));
   document.getElementById('btnAddMemberEmpty')?.addEventListener('click', ()=>openMemberModal(null));
   document.getElementById('membersSearch')?.addEventListener('input', e=>{ _searchQuery=e.target.value; refreshTable(); });
-  document.getElementById('filterRole')?.addEventListener('change', e=>{ _filterRole=e.target.value; refreshTable(); });
-  document.getElementById('filterStatus')?.addEventListener('change', e=>{ _filterStatus=e.target.value; refreshTable(); });
+  document.getElementById('btnOpenFilterModal')?.addEventListener('click', openMembersFilterModal);
+  document.getElementById('membersFilterChips')?.addEventListener('click', handleMembersChipRemove);
   document.getElementById('membersTableContainer')?.addEventListener('click', handleTableAction);
+}
+
+function renderMembersFilterChips() {
+  const chips = [];
+  if (_filterRole) {
+    const lbl = ROLE_OPTIONS.find(r => r.value === _filterRole)?.label || _filterRole;
+    chips.push(`<span class="filter-chip" data-key="role"><span class="filter-chip__label">Role: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  if (_filterStatus) {
+    const lbl = STATUS_OPTIONS.find(s => s.value === _filterStatus)?.label || _filterStatus;
+    chips.push(`<span class="filter-chip" data-key="status"><span class="filter-chip__label">Status: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  return chips.join('');
+}
+
+function handleMembersChipRemove(e) {
+  const btn = e.target.closest('.filter-chip__remove');
+  if (!btn) return;
+  const key = btn.closest('.filter-chip')?.dataset.key;
+  if (key === 'role') _filterRole = '';
+  if (key === 'status') _filterStatus = '';
+  refreshTable(); updateMembersFilterUI();
+}
+
+function openMembersFilterModal() {
+  openModal({
+    title: 'Filter Members',
+    size: 'md',
+    body: `<div class="filter-modal-grid">
+      <div class="form-group">
+        <label class="form-label" for="fmFilterRole">Role</label>
+        <select class="form-select" id="fmFilterRole">
+          <option value="">All Roles</option>
+          ${ROLE_OPTIONS.map(r => `<option value="${r.value}" ${_filterRole===r.value?'selected':''}>${r.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fmFilterStatus">Status</label>
+        <select class="form-select" id="fmFilterStatus">
+          <option value="">All Status</option>
+          ${STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus===s.value?'selected':''}>${s.label}</option>`).join('')}
+        </select>
+      </div>
+    </div>`,
+    footer: `
+      <button class="btn btn--outline" id="btnResetMembersFilter">Reset Filter</button>
+      <button class="btn btn--primary" id="btnApplyMembersFilter"><i data-lucide="check" aria-hidden="true"></i> Terapkan Filter</button>`,
+  });
+  document.getElementById('btnResetMembersFilter')?.addEventListener('click', () => {
+    _filterRole = ''; _filterStatus = '';
+    closeModal(); refreshTable(); updateMembersFilterUI();
+  });
+  document.getElementById('btnApplyMembersFilter')?.addEventListener('click', () => {
+    _filterRole   = document.getElementById('fmFilterRole')?.value || '';
+    _filterStatus = document.getElementById('fmFilterStatus')?.value || '';
+    closeModal(); refreshTable(); updateMembersFilterUI();
+  });
+}
+
+function updateMembersFilterUI() {
+  const wrap = document.getElementById('btnOpenFilterModal')?.closest('.filter-btn-wrap');
+  if (wrap) {
+    wrap.querySelector('.filter-badge')?.remove();
+    const count = [_filterRole, _filterStatus].filter(Boolean).length;
+    if (count > 0) {
+      const badge = document.createElement('span');
+      badge.className = 'filter-badge';
+      badge.textContent = count;
+      wrap.appendChild(badge);
+    }
+  }
+  const chips = document.getElementById('membersFilterChips');
+  if (chips) chips.innerHTML = renderMembersFilterChips();
 }
 
 function handleTableAction(e) {

@@ -100,19 +100,17 @@ function renderProjectsPage() {
             placeholder="Search by name, code, or client..."
             value="${sanitize(_searchQuery)}" autocomplete="off" />
         </div>
-        <div class="projects-filters">
-          <select class="form-select projects-filter" id="filterStatus">
-            <option value="">All Status</option>
-            ${STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus === s.value ? 'selected' : ''}>${s.label}</option>`).join('')}
-          </select>
-          <select class="form-select projects-filter" id="filterPhase">
-            <option value="">All Phases</option>
-            ${PHASE_OPTIONS.map(p => `<option value="${p.value}" ${_filterPhase === p.value ? 'selected' : ''}>${p.label}</option>`).join('')}
-          </select>
-          <select class="form-select projects-filter" id="filterClient">
-            <option value="">All Clients</option>
-            ${_clients.map(c => `<option value="${c.id}" ${_filterClient === c.id ? 'selected' : ''}>${sanitize(c.company_name)}</option>`).join('')}
-          </select>
+        <div class="filter-trigger-wrap">
+          <div class="filter-trigger-row">
+            <div class="filter-btn-wrap">
+              <button class="btn btn--secondary" id="btnOpenFilterModal">
+                <i data-lucide="filter" aria-hidden="true"></i> Filter
+              </button>
+              ${[_filterStatus, _filterPhase, _filterClient].filter(Boolean).length > 0
+                ? `<span class="filter-badge">${[_filterStatus, _filterPhase, _filterClient].filter(Boolean).length}</span>` : ''}
+            </div>
+          </div>
+          <div class="filter-chips" id="projectsFilterChips">${renderProjectsFilterChips()}</div>
         </div>
       </div>
       <div id="projectsContent">${renderProjectsContent()}</div>
@@ -217,10 +215,98 @@ function bindPageEvents() {
   document.getElementById('btnNewProject')?.addEventListener('click', () => openProjectModal(null));
   document.getElementById('btnNewProjectEmpty')?.addEventListener('click', () => openProjectModal(null));
   document.getElementById('projectsSearch')?.addEventListener('input', e => { _searchQuery = e.target.value; refreshContent(); });
-  document.getElementById('filterStatus')?.addEventListener('change', e => { _filterStatus = e.target.value; refreshContent(); });
-  document.getElementById('filterPhase')?.addEventListener('change', e => { _filterPhase = e.target.value; refreshContent(); });
-  document.getElementById('filterClient')?.addEventListener('change', e => { _filterClient = e.target.value; refreshContent(); });
+  document.getElementById('btnOpenFilterModal')?.addEventListener('click', openProjectsFilterModal);
+  document.getElementById('projectsFilterChips')?.addEventListener('click', handleChipRemove);
   document.getElementById('projectsContent')?.addEventListener('click', handleContentAction);
+}
+
+function renderProjectsFilterChips() {
+  const chips = [];
+  if (_filterStatus) {
+    const lbl = STATUS_OPTIONS.find(s => s.value === _filterStatus)?.label || _filterStatus;
+    chips.push(`<span class="filter-chip" data-key="status"><span class="filter-chip__label">Status: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  if (_filterPhase) {
+    const lbl = PHASE_OPTIONS.find(p => p.value === _filterPhase)?.label || _filterPhase;
+    chips.push(`<span class="filter-chip" data-key="phase"><span class="filter-chip__label">Phase: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  if (_filterClient) {
+    const lbl = _clients.find(c => c.id === _filterClient)?.company_name || _filterClient;
+    chips.push(`<span class="filter-chip" data-key="client"><span class="filter-chip__label">Client: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  return chips.join('');
+}
+
+function handleChipRemove(e) {
+  const btn = e.target.closest('.filter-chip__remove');
+  if (!btn) return;
+  const chip = btn.closest('.filter-chip');
+  if (!chip) return;
+  const key = chip.dataset.key;
+  if (key === 'status') _filterStatus = '';
+  if (key === 'phase') _filterPhase = '';
+  if (key === 'client') _filterClient = '';
+  refreshContent();
+  updateProjectsFilterUI();
+}
+
+function openProjectsFilterModal() {
+  openModal({
+    title: 'Filter Projects',
+    size: 'md',
+    body: `<div class="filter-modal-grid">
+      <div class="form-group">
+        <label class="form-label" for="fmFilterStatus">Status</label>
+        <select class="form-select" id="fmFilterStatus">
+          <option value="">All Status</option>
+          ${STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus === s.value ? 'selected' : ''}>${s.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fmFilterPhase">Phase</label>
+        <select class="form-select" id="fmFilterPhase">
+          <option value="">All Phases</option>
+          ${PHASE_OPTIONS.map(p => `<option value="${p.value}" ${_filterPhase === p.value ? 'selected' : ''}>${p.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fmFilterClient">Client</label>
+        <select class="form-select" id="fmFilterClient">
+          <option value="">All Clients</option>
+          ${_clients.map(c => `<option value="${c.id}" ${_filterClient === c.id ? 'selected' : ''}>${sanitize(c.company_name)}</option>`).join('')}
+        </select>
+      </div>
+    </div>`,
+    footer: `
+      <button class="btn btn--outline" id="btnResetProjectsFilter">Reset Filter</button>
+      <button class="btn btn--primary" id="btnApplyProjectsFilter"><i data-lucide="check" aria-hidden="true"></i> Terapkan Filter</button>`,
+  });
+  document.getElementById('btnResetProjectsFilter')?.addEventListener('click', () => {
+    _filterStatus = ''; _filterPhase = ''; _filterClient = '';
+    closeModal(); refreshContent(); updateProjectsFilterUI();
+  });
+  document.getElementById('btnApplyProjectsFilter')?.addEventListener('click', () => {
+    _filterStatus  = document.getElementById('fmFilterStatus')?.value || '';
+    _filterPhase   = document.getElementById('fmFilterPhase')?.value || '';
+    _filterClient  = document.getElementById('fmFilterClient')?.value || '';
+    closeModal(); refreshContent(); updateProjectsFilterUI();
+  });
+}
+
+function updateProjectsFilterUI() {
+  const wrap = document.getElementById('btnOpenFilterModal')?.closest('.filter-btn-wrap');
+  if (wrap) {
+    wrap.querySelector('.filter-badge')?.remove();
+    const count = [_filterStatus, _filterPhase, _filterClient].filter(Boolean).length;
+    if (count > 0) {
+      const badge = document.createElement('span');
+      badge.className = 'filter-badge';
+      badge.textContent = count;
+      wrap.appendChild(badge);
+    }
+  }
+  const chips = document.getElementById('projectsFilterChips');
+  if (chips) chips.innerHTML = renderProjectsFilterChips();
 }
 
 function handleContentAction(e) {

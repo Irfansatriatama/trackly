@@ -108,25 +108,17 @@ function renderAssetsPage() {
             placeholder="Search by name, serial number, or vendor..."
             value="${sanitize(_searchQuery)}" autocomplete="off" />
         </div>
-        <div class="assets-filters">
-          <select class="form-select assets-filter" id="filterCategory">
-            <option value="">All Categories</option>
-            ${CATEGORY_OPTIONS.map(c => `<option value="${c.value}" ${_filterCategory === c.value ? 'selected' : ''}>${c.label}</option>`).join('')}
-          </select>
-          <select class="form-select assets-filter" id="filterStatus">
-            <option value="">All Status</option>
-            ${STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus === s.value ? 'selected' : ''}>${s.label}</option>`).join('')}
-          </select>
-          <select class="form-select assets-filter" id="filterAssignee">
-            <option value="">All Assignees</option>
-            <option value="__unassigned__" ${_filterAssignee === '__unassigned__' ? 'selected' : ''}>Unassigned</option>
-            ${_members.map(m => `<option value="${sanitize(m.id)}" ${_filterAssignee === m.id ? 'selected' : ''}>${sanitize(m.full_name)}</option>`).join('')}
-          </select>
-          <select class="form-select assets-filter" id="filterProject">
-            <option value="">All Projects</option>
-            <option value="__none__" ${_filterProject === '__none__' ? 'selected' : ''}>No Project</option>
-            ${_projects.map(p => `<option value="${sanitize(p.id)}" ${_filterProject === p.id ? 'selected' : ''}>${sanitize(p.name)}</option>`).join('')}
-          </select>
+        <div class="filter-trigger-wrap">
+          <div class="filter-trigger-row">
+            <div class="filter-btn-wrap">
+              <button class="btn btn--secondary" id="btnOpenFilterModal">
+                <i data-lucide="filter" aria-hidden="true"></i> Filter
+              </button>
+              ${[_filterCategory, _filterStatus, _filterAssignee, _filterProject].filter(Boolean).length > 0
+                ? `<span class="filter-badge">${[_filterCategory, _filterStatus, _filterAssignee, _filterProject].filter(Boolean).length}</span>` : ''}
+            </div>
+          </div>
+          <div class="filter-chips" id="assetsFilterChips">${renderAssetsFilterChips()}</div>
         </div>
       </div>
 
@@ -354,11 +346,110 @@ function bindPageEvents() {
   document.getElementById('btnAddAsset')?.addEventListener('click', () => openAssetModal(null));
   document.getElementById('btnAddAssetEmpty')?.addEventListener('click', () => openAssetModal(null));
   document.getElementById('assetsSearch')?.addEventListener('input', e => { _searchQuery = e.target.value; refreshContent(); });
-  document.getElementById('filterCategory')?.addEventListener('change', e => { _filterCategory = e.target.value; refreshContent(); });
-  document.getElementById('filterStatus')?.addEventListener('change', e => { _filterStatus = e.target.value; refreshContent(); });
-  document.getElementById('filterAssignee')?.addEventListener('change', e => { _filterAssignee = e.target.value; refreshContent(); });
-  document.getElementById('filterProject')?.addEventListener('change', e => { _filterProject = e.target.value; refreshContent(); });
+  document.getElementById('btnOpenFilterModal')?.addEventListener('click', openAssetsFilterModal);
+  document.getElementById('assetsFilterChips')?.addEventListener('click', handleAssetsChipRemove);
   document.getElementById('assetsContent')?.addEventListener('click', handleContentAction);
+}
+
+function renderAssetsFilterChips() {
+  const chips = [];
+  if (_filterCategory) {
+    const lbl = CATEGORY_OPTIONS.find(c => c.value === _filterCategory)?.label || _filterCategory;
+    chips.push(`<span class="filter-chip" data-key="category"><span class="filter-chip__label">Category: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  if (_filterStatus) {
+    const lbl = STATUS_OPTIONS.find(s => s.value === _filterStatus)?.label || _filterStatus;
+    chips.push(`<span class="filter-chip" data-key="status"><span class="filter-chip__label">Status: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  if (_filterAssignee) {
+    const lbl = _filterAssignee === '__unassigned__' ? 'Unassigned' : (_members.find(m => m.id === _filterAssignee)?.full_name || _filterAssignee);
+    chips.push(`<span class="filter-chip" data-key="assignee"><span class="filter-chip__label">Assignee: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  if (_filterProject) {
+    const lbl = _filterProject === '__none__' ? 'No Project' : (_projects.find(p => p.id === _filterProject)?.name || _filterProject);
+    chips.push(`<span class="filter-chip" data-key="project"><span class="filter-chip__label">Project: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  return chips.join('');
+}
+
+function handleAssetsChipRemove(e) {
+  const btn = e.target.closest('.filter-chip__remove');
+  if (!btn) return;
+  const key = btn.closest('.filter-chip')?.dataset.key;
+  if (key === 'category') _filterCategory = '';
+  if (key === 'status') _filterStatus = '';
+  if (key === 'assignee') _filterAssignee = '';
+  if (key === 'project') _filterProject = '';
+  refreshContent(); updateAssetsFilterUI();
+}
+
+function openAssetsFilterModal() {
+  openModal({
+    title: 'Filter Assets',
+    size: 'md',
+    body: `<div class="filter-modal-grid">
+      <div class="form-group">
+        <label class="form-label" for="fmFilterCategory">Category</label>
+        <select class="form-select" id="fmFilterCategory">
+          <option value="">All Categories</option>
+          ${CATEGORY_OPTIONS.map(c => `<option value="${c.value}" ${_filterCategory===c.value?'selected':''}>${c.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fmFilterStatus">Status</label>
+        <select class="form-select" id="fmFilterStatus">
+          <option value="">All Status</option>
+          ${STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus===s.value?'selected':''}>${s.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fmFilterAssignee">Assignee</label>
+        <select class="form-select" id="fmFilterAssignee">
+          <option value="">All Assignees</option>
+          <option value="__unassigned__" ${_filterAssignee==='__unassigned__'?'selected':''}>Unassigned</option>
+          ${_members.map(m => `<option value="${sanitize(m.id)}" ${_filterAssignee===m.id?'selected':''}>${sanitize(m.full_name)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fmFilterProject">Project</label>
+        <select class="form-select" id="fmFilterProject">
+          <option value="">All Projects</option>
+          <option value="__none__" ${_filterProject==='__none__'?'selected':''}>No Project</option>
+          ${_projects.map(p => `<option value="${sanitize(p.id)}" ${_filterProject===p.id?'selected':''}>${sanitize(p.name)}</option>`).join('')}
+        </select>
+      </div>
+    </div>`,
+    footer: `
+      <button class="btn btn--outline" id="btnResetAssetsFilter">Reset Filter</button>
+      <button class="btn btn--primary" id="btnApplyAssetsFilter"><i data-lucide="check" aria-hidden="true"></i> Terapkan Filter</button>`,
+  });
+  document.getElementById('btnResetAssetsFilter')?.addEventListener('click', () => {
+    _filterCategory = ''; _filterStatus = ''; _filterAssignee = ''; _filterProject = '';
+    closeModal(); refreshContent(); updateAssetsFilterUI();
+  });
+  document.getElementById('btnApplyAssetsFilter')?.addEventListener('click', () => {
+    _filterCategory = document.getElementById('fmFilterCategory')?.value || '';
+    _filterStatus   = document.getElementById('fmFilterStatus')?.value || '';
+    _filterAssignee = document.getElementById('fmFilterAssignee')?.value || '';
+    _filterProject  = document.getElementById('fmFilterProject')?.value || '';
+    closeModal(); refreshContent(); updateAssetsFilterUI();
+  });
+}
+
+function updateAssetsFilterUI() {
+  const wrap = document.getElementById('btnOpenFilterModal')?.closest('.filter-btn-wrap');
+  if (wrap) {
+    wrap.querySelector('.filter-badge')?.remove();
+    const count = [_filterCategory, _filterStatus, _filterAssignee, _filterProject].filter(Boolean).length;
+    if (count > 0) {
+      const badge = document.createElement('span');
+      badge.className = 'filter-badge';
+      badge.textContent = count;
+      wrap.appendChild(badge);
+    }
+  }
+  const chips = document.getElementById('assetsFilterChips');
+  if (chips) chips.innerHTML = renderAssetsFilterChips();
 }
 
 function handleContentAction(e) {

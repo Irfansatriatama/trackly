@@ -9,6 +9,7 @@ import { formatDate, nowISO, sanitize, debug, buildProjectBanner } from '../core
 import { showToast } from '../components/toast.js';
 import { renderBadge } from '../components/badge.js';
 import { getSession } from '../core/auth.js';
+import { openModal, closeModal } from '../components/modal.js';
 
 // ─── Module State ─────────────────────────────────────────────────────────────
 let _projectId  = null;
@@ -118,11 +119,12 @@ function _renderPage() {
     </div>
     <div class="gantt-toolbar__group">
       <span class="gantt-toolbar__label">Sprint</span>
-      <select class="form-control form-control--sm" id="gantt-sprint-filter">
-        <option value="all">All Sprints</option>
-        <option value="none">No Sprint</option>
-        ${sprintOptions}
-      </select>
+      <div class="filter-btn-wrap" style="display:inline-flex;">
+        <button class="btn btn--secondary btn--sm" id="gantt-filter-btn">
+          <i data-lucide="filter" aria-hidden="true"></i> Filter
+        </button>
+        ${_filterSprint !== 'all' ? `<span class="filter-badge">1</span>` : ''}
+      </div>
     </div>
     <div class="gantt-toolbar__group">
       <button class="btn btn--secondary btn--sm" id="gantt-today-btn">
@@ -651,6 +653,51 @@ function _exportPNG() {
   });
 }
 
+// ─── Gantt Filter Modal ───────────────────────────────────────────────────────
+
+function _openGanttFilterModal() {
+  const sprintOptions = _sprints.map(s =>
+    `<option value="${sanitize(s.id)}" ${_filterSprint===s.id?'selected':''}>${sanitize(s.name)}</option>`
+  ).join('');
+
+  openModal({
+    title: 'Filter Gantt',
+    size: 'sm',
+    body: `<div class="form-group">
+      <label class="form-label" for="fmGanttSprint">Sprint</label>
+      <select class="form-select" id="fmGanttSprint">
+        <option value="all" ${_filterSprint==='all'?'selected':''}>All Sprints</option>
+        <option value="none" ${_filterSprint==='none'?'selected':''}>No Sprint</option>
+        ${sprintOptions}
+      </select>
+    </div>`,
+    footer: `
+      <button class="btn btn--outline" id="btnResetGanttFilter">Reset Filter</button>
+      <button class="btn btn--primary" id="btnApplyGanttFilter"><i data-lucide="check" aria-hidden="true"></i> Terapkan Filter</button>`,
+  });
+  document.getElementById('btnResetGanttFilter')?.addEventListener('click', () => {
+    _filterSprint = 'all';
+    closeModal(); _drawGantt(); _updateGanttFilterUI();
+  });
+  document.getElementById('btnApplyGanttFilter')?.addEventListener('click', () => {
+    _filterSprint = document.getElementById('fmGanttSprint')?.value || 'all';
+    closeModal(); _drawGantt(); _updateGanttFilterUI();
+  });
+}
+
+function _updateGanttFilterUI() {
+  const wrap = document.getElementById('gantt-filter-btn')?.closest('.filter-btn-wrap');
+  if (wrap) {
+    wrap.querySelector('.filter-badge')?.remove();
+    if (_filterSprint !== 'all') {
+      const badge = document.createElement('span');
+      badge.className = 'filter-badge';
+      badge.textContent = '1';
+      wrap.appendChild(badge);
+    }
+  }
+}
+
 // ─── Toolbar ──────────────────────────────────────────────────────────────────
 
 function _bindToolbar() {
@@ -665,13 +712,9 @@ function _bindToolbar() {
     });
   });
 
-  const sprintFilter = document.getElementById('gantt-sprint-filter');
+  const sprintFilter = document.getElementById('gantt-filter-btn');
   if (sprintFilter) {
-    sprintFilter.value = _filterSprint;
-    sprintFilter.addEventListener('change', () => {
-      _filterSprint = sprintFilter.value;
-      _drawGantt();
-    });
+    sprintFilter.addEventListener('click', _openGanttFilterModal);
   }
 
   const todayBtn = document.getElementById('gantt-today-btn');

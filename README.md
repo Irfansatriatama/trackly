@@ -32,7 +32,7 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.6.0` |
+| **Current Version** | `v1.6.1` |
 | **Current Phase** | Phase 25 — Notes Sharing & Collaboration Audit |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
@@ -1248,6 +1248,30 @@ Tasks:
 - [x] Tambahkan semua class CSS baru ke `css/pages/notes.css` (prefix `notes-share__` dan `notes-audit__`)
 - [x] Bump `sw.js` cache version ke `v1.6.0`
 - [x] Update README.md — section 5.20, section 7 (data models), section 9 (phases), section 10 (dev log), version `v1.6.0`
+
+---
+
+**Version**: `v1.6.1`  
+**Date**: 2025-03-03  
+**Type**: UX Improvement (Hotfix)
+
+### UX Improvement: Filter Modal System
+
+Refactored filter UI across 9 pages from inline dropdown bars to a unified modal-based system.
+
+**Files changed:**
+- `css/components.css` — Added `.filter-btn-wrap`, `.filter-badge`, `.filter-chips`, `.filter-chip`, `.filter-modal-grid` global styles
+- `js/modules/projects.js` — Replaced `.projects-filters` bar with Filter Modal + chips
+- `js/modules/members.js` — Replaced `.members-filters` bar with Filter Modal + chips
+- `js/modules/clients.js` — Replaced `.clients-filters` selects with Filter Modal + chips (view toggle preserved)
+- `js/modules/backlog.js` — Replaced `.backlog-filters` selects with Filter Modal + chips (sort controls preserved)
+- `js/modules/board.js` — Replaced `.board-filterbar` selects with Filter Modal + chips (search preserved)
+- `js/modules/assets.js` — Replaced `.assets-filters` bar with Filter Modal + chips
+- `js/modules/maintenance.js` — Replaced `.projects-filters` bar with Filter Modal + chips
+- `js/modules/log.js` — Replaced `.log-filter-bar` card with Filter Modal + chips; added `openModal`/`closeModal` import
+- `js/modules/gantt.js` — Replaced inline `#gantt-sprint-filter` select with Filter Modal; added `openModal`/`closeModal` import
+
+**No changes to filter logic** (`getFilteredXxx`, `_getFilteredTasks`, etc.) — only UI rendering and event binding were modified. All filter state variables (`_filterXxx`) remain intact.
 
 ---
 

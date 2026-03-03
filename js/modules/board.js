@@ -165,23 +165,15 @@ function _renderBoardPage() {
           <i data-lucide="search" class="board-search__icon" aria-hidden="true"></i>
           <input type="text" class="form-input board-search__input" id="boardSearch" placeholder="Search tasks..." autocomplete="off" />
         </div>
-        <select class="form-select board-filter" id="boardFilterAssignee">
-          <option value="">All Assignees</option>
-          ${_members.map(m => `<option value="${sanitize(m.id)}">${sanitize(m.full_name)}</option>`).join('')}
-        </select>
-        <select class="form-select board-filter" id="boardFilterPriority">
-          <option value="">All Priorities</option>
-          ${TASK_PRIORITY_OPTIONS.map(p => `<option value="${p.value}">${p.label}</option>`).join('')}
-        </select>
-        ${_allTags.length ? `<select class="form-select board-filter" id="boardFilterLabel">
-          <option value="">All Labels</option>
-          ${_allTags.map(tag => `<option value="${sanitize(tag)}">${sanitize(tag)}</option>`).join('')}
-        </select>` : ''}
-        ${_sprints.length ? `<select class="form-select board-filter" id="boardFilterSprint">
-          <option value="">All Sprints</option>
-          ${_sprints.map(s => `<option value="${sanitize(s.id)}">${sanitize(s.name)}</option>`).join('')}
-        </select>` : ''}
+        <div class="filter-btn-wrap">
+          <button class="btn btn--secondary btn--sm" id="btnOpenFilterModal">
+            <i data-lucide="filter" aria-hidden="true"></i> Filter
+          </button>
+          ${[_filterAssignee, _filterPriority, _filterLabel, _filterSprint].filter(Boolean).length > 0
+            ? `<span class="filter-badge">${[_filterAssignee, _filterPriority, _filterLabel, _filterSprint].filter(Boolean).length}</span>` : ''}
+        </div>
       </div>
+      <div class="filter-chips" id="boardFilterChips" style="padding:0 var(--space-1) var(--space-3);">${_renderBoardFilterChips()}</div>
 
       <div class="board-scroll-wrapper">
         <div class="board-columns" id="boardColumns"></div>
@@ -477,11 +469,107 @@ function _bindPageEvents() {
     _renderColumns();
   });
   document.getElementById('boardSearch')?.addEventListener('input', e => { _searchQuery = e.target.value; _renderColumns(); });
-  document.getElementById('boardFilterAssignee')?.addEventListener('change', e => { _filterAssignee = e.target.value; _renderColumns(); });
-  document.getElementById('boardFilterPriority')?.addEventListener('change', e => { _filterPriority = e.target.value; _renderColumns(); });
-  document.getElementById('boardFilterLabel')?.addEventListener('change', e => { _filterLabel = e.target.value; _renderColumns(); });
-  document.getElementById('boardFilterSprint')?.addEventListener('change', e => { _filterSprint = e.target.value; _renderColumns(); });
+  document.getElementById('btnOpenFilterModal')?.addEventListener('click', _openBoardFilterModal);
+  document.getElementById('boardFilterChips')?.addEventListener('click', _handleBoardChipRemove);
   document.getElementById('slideoverOverlay')?.addEventListener('click', _closeSlideover);
+}
+
+function _renderBoardFilterChips() {
+  const chips = [];
+  if (_filterAssignee) {
+    const lbl = _members.find(m => m.id === _filterAssignee)?.full_name || _filterAssignee;
+    chips.push(`<span class="filter-chip" data-key="assignee"><span class="filter-chip__label">Assignee: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  if (_filterPriority) {
+    const lbl = TASK_PRIORITY_OPTIONS.find(p => p.value === _filterPriority)?.label || _filterPriority;
+    chips.push(`<span class="filter-chip" data-key="priority"><span class="filter-chip__label">Priority: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  if (_filterLabel) {
+    chips.push(`<span class="filter-chip" data-key="label"><span class="filter-chip__label">Label: ${sanitize(_filterLabel)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  if (_filterSprint) {
+    const lbl = _sprints.find(s => s.id === _filterSprint)?.name || _filterSprint;
+    chips.push(`<span class="filter-chip" data-key="sprint"><span class="filter-chip__label">Sprint: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  return chips.join('');
+}
+
+function _handleBoardChipRemove(e) {
+  const btn = e.target.closest('.filter-chip__remove');
+  if (!btn) return;
+  const key = btn.closest('.filter-chip')?.dataset.key;
+  if (key === 'assignee') _filterAssignee = '';
+  if (key === 'priority') _filterPriority = '';
+  if (key === 'label') _filterLabel = '';
+  if (key === 'sprint') _filterSprint = '';
+  _renderColumns(); _updateBoardFilterUI();
+}
+
+function _openBoardFilterModal() {
+  openModal({
+    title: 'Filter Board',
+    size: 'md',
+    body: `<div class="filter-modal-grid">
+      <div class="form-group">
+        <label class="form-label" for="fmFilterAssignee">Assignee</label>
+        <select class="form-select" id="fmFilterAssignee">
+          <option value="">All Assignees</option>
+          ${_members.map(m => `<option value="${sanitize(m.id)}" ${_filterAssignee===m.id?'selected':''}>${sanitize(m.full_name)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fmFilterPriority">Priority</label>
+        <select class="form-select" id="fmFilterPriority">
+          <option value="">All Priorities</option>
+          ${TASK_PRIORITY_OPTIONS.map(p => `<option value="${p.value}" ${_filterPriority===p.value?'selected':''}>${p.label}</option>`).join('')}
+        </select>
+      </div>
+      ${_allTags.length ? `<div class="form-group">
+        <label class="form-label" for="fmFilterLabel">Label</label>
+        <select class="form-select" id="fmFilterLabel">
+          <option value="">All Labels</option>
+          ${_allTags.map(tag => `<option value="${sanitize(tag)}" ${_filterLabel===tag?'selected':''}>${sanitize(tag)}</option>`).join('')}
+        </select>
+      </div>` : ''}
+      ${_sprints.length ? `<div class="form-group">
+        <label class="form-label" for="fmFilterSprint">Sprint</label>
+        <select class="form-select" id="fmFilterSprint">
+          <option value="">All Sprints</option>
+          ${_sprints.map(s => `<option value="${sanitize(s.id)}" ${_filterSprint===s.id?'selected':''}>${sanitize(s.name)}</option>`).join('')}
+        </select>
+      </div>` : ''}
+    </div>`,
+    footer: `
+      <button class="btn btn--outline" id="btnResetBoardFilter">Reset Filter</button>
+      <button class="btn btn--primary" id="btnApplyBoardFilter"><i data-lucide="check" aria-hidden="true"></i> Terapkan Filter</button>`,
+  });
+  document.getElementById('btnResetBoardFilter')?.addEventListener('click', () => {
+    _filterAssignee = ''; _filterPriority = ''; _filterLabel = ''; _filterSprint = '';
+    closeModal(); _renderColumns(); _updateBoardFilterUI();
+  });
+  document.getElementById('btnApplyBoardFilter')?.addEventListener('click', () => {
+    _filterAssignee = document.getElementById('fmFilterAssignee')?.value || '';
+    _filterPriority = document.getElementById('fmFilterPriority')?.value || '';
+    _filterLabel    = document.getElementById('fmFilterLabel')?.value || '';
+    _filterSprint   = document.getElementById('fmFilterSprint')?.value || '';
+    closeModal(); _renderColumns(); _updateBoardFilterUI();
+  });
+}
+
+function _updateBoardFilterUI() {
+  const wrap = document.getElementById('btnOpenFilterModal')?.closest('.filter-btn-wrap');
+  if (wrap) {
+    wrap.querySelector('.filter-badge')?.remove();
+    const count = [_filterAssignee, _filterPriority, _filterLabel, _filterSprint].filter(Boolean).length;
+    if (count > 0) {
+      const badge = document.createElement('span');
+      badge.className = 'filter-badge';
+      badge.textContent = count;
+      wrap.appendChild(badge);
+    }
+  }
+  const chips = document.getElementById('boardFilterChips');
+  if (chips) chips.innerHTML = _renderBoardFilterChips();
 }
 
 // ─── Add Column ───────────────────────────────────────────────────────────────

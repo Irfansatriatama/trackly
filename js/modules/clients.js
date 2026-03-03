@@ -70,14 +70,13 @@ function renderClientsPage() {
             value="${sanitize(_searchQuery)}" autocomplete="off" />
         </div>
         <div class="clients-filters">
-          <select class="form-select clients-filter" id="filterStatus">
-            <option value="">All Status</option>
-            ${STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus === s.value ? 'selected' : ''}>${s.label}</option>`).join('')}
-          </select>
-          <select class="form-select clients-filter" id="filterIndustry">
-            <option value="">All Industries</option>
-            ${INDUSTRY_OPTIONS.map(i => `<option value="${i}" ${_filterIndustry === i ? 'selected' : ''}>${sanitize(i)}</option>`).join('')}
-          </select>
+          <div class="filter-btn-wrap">
+            <button class="btn btn--secondary" id="btnOpenFilterModal">
+              <i data-lucide="filter" aria-hidden="true"></i> Filter
+            </button>
+            ${[_filterStatus, _filterIndustry].filter(Boolean).length > 0
+              ? `<span class="filter-badge">${[_filterStatus, _filterIndustry].filter(Boolean).length}</span>` : ''}
+          </div>
           <div class="view-toggle">
             <button class="view-toggle__btn ${_viewMode === 'card' ? 'is-active' : ''}" id="btnViewCard" title="Card view">
               <i data-lucide="layout-grid" aria-hidden="true"></i>
@@ -88,6 +87,7 @@ function renderClientsPage() {
           </div>
         </div>
       </div>
+      <div class="filter-chips" id="clientsFilterChips" style="padding:0 var(--space-1) var(--space-2);">${renderClientsFilterChips()}</div>
       <div id="clientsContent">${renderClientsContent()}</div>
     </div>`;
   if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -231,11 +231,83 @@ function bindPageEvents() {
   document.getElementById('btnAddClient')?.addEventListener('click', () => openClientModal(null));
   document.getElementById('btnAddClientEmpty')?.addEventListener('click', () => openClientModal(null));
   document.getElementById('clientsSearch')?.addEventListener('input', e => { _searchQuery = e.target.value; refreshContent(); });
-  document.getElementById('filterStatus')?.addEventListener('change', e => { _filterStatus = e.target.value; refreshContent(); });
-  document.getElementById('filterIndustry')?.addEventListener('change', e => { _filterIndustry = e.target.value; refreshContent(); });
+  document.getElementById('btnOpenFilterModal')?.addEventListener('click', openClientsFilterModal);
+  document.getElementById('clientsFilterChips')?.addEventListener('click', handleClientsChipRemove);
   document.getElementById('btnViewCard')?.addEventListener('click', () => { _viewMode = 'card'; refreshContent(); updateViewToggle(); });
   document.getElementById('btnViewTable')?.addEventListener('click', () => { _viewMode = 'table'; refreshContent(); updateViewToggle(); });
   document.getElementById('clientsContent')?.addEventListener('click', handleContentAction);
+}
+
+function renderClientsFilterChips() {
+  const chips = [];
+  if (_filterStatus) {
+    const lbl = STATUS_OPTIONS.find(s => s.value === _filterStatus)?.label || _filterStatus;
+    chips.push(`<span class="filter-chip" data-key="status"><span class="filter-chip__label">Status: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  if (_filterIndustry) {
+    chips.push(`<span class="filter-chip" data-key="industry"><span class="filter-chip__label">Industry: ${sanitize(_filterIndustry)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  return chips.join('');
+}
+
+function handleClientsChipRemove(e) {
+  const btn = e.target.closest('.filter-chip__remove');
+  if (!btn) return;
+  const key = btn.closest('.filter-chip')?.dataset.key;
+  if (key === 'status') _filterStatus = '';
+  if (key === 'industry') _filterIndustry = '';
+  refreshContent(); updateClientsFilterUI();
+}
+
+function openClientsFilterModal() {
+  openModal({
+    title: 'Filter Clients',
+    size: 'md',
+    body: `<div class="filter-modal-grid">
+      <div class="form-group">
+        <label class="form-label" for="fmFilterStatus">Status</label>
+        <select class="form-select" id="fmFilterStatus">
+          <option value="">All Status</option>
+          ${STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus===s.value?'selected':''}>${s.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fmFilterIndustry">Industry</label>
+        <select class="form-select" id="fmFilterIndustry">
+          <option value="">All Industries</option>
+          ${INDUSTRY_OPTIONS.map(i => `<option value="${i}" ${_filterIndustry===i?'selected':''}>${sanitize(i)}</option>`).join('')}
+        </select>
+      </div>
+    </div>`,
+    footer: `
+      <button class="btn btn--outline" id="btnResetClientsFilter">Reset Filter</button>
+      <button class="btn btn--primary" id="btnApplyClientsFilter"><i data-lucide="check" aria-hidden="true"></i> Terapkan Filter</button>`,
+  });
+  document.getElementById('btnResetClientsFilter')?.addEventListener('click', () => {
+    _filterStatus = ''; _filterIndustry = '';
+    closeModal(); refreshContent(); updateClientsFilterUI();
+  });
+  document.getElementById('btnApplyClientsFilter')?.addEventListener('click', () => {
+    _filterStatus   = document.getElementById('fmFilterStatus')?.value || '';
+    _filterIndustry = document.getElementById('fmFilterIndustry')?.value || '';
+    closeModal(); refreshContent(); updateClientsFilterUI();
+  });
+}
+
+function updateClientsFilterUI() {
+  const wrap = document.getElementById('btnOpenFilterModal')?.closest('.filter-btn-wrap');
+  if (wrap) {
+    wrap.querySelector('.filter-badge')?.remove();
+    const count = [_filterStatus, _filterIndustry].filter(Boolean).length;
+    if (count > 0) {
+      const badge = document.createElement('span');
+      badge.className = 'filter-badge';
+      badge.textContent = count;
+      wrap.appendChild(badge);
+    }
+  }
+  const chips = document.getElementById('clientsFilterChips');
+  if (chips) chips.innerHTML = renderClientsFilterChips();
 }
 
 function updateViewToggle() {

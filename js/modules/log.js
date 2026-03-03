@@ -8,6 +8,7 @@ import { getAll, getByIndex } from '../core/db.js';
 import { sanitize, formatDate, formatRelativeDate, toTitleCase, getInitials, buildProjectBanner } from '../core/utils.js';
 import { getSession } from '../core/auth.js';
 import { renderBadge } from '../components/badge.js';
+import { openModal, closeModal } from '../components/modal.js';
 
 const PAGE_SIZE = 50;
 
@@ -85,7 +86,18 @@ export async function render(params) {
             <p class="page-header__subtitle">Complete history of actions${project ? ' in this project' : ' across all projects'}.</p>
           </div>
         </div>
-        ${_renderFilterBar()}
+        <div class="log-filter-trigger-wrap" style="display:flex;flex-direction:column;gap:var(--space-2);margin-bottom:var(--space-4);">
+          <div style="display:flex;align-items:center;gap:var(--space-2);">
+            <div class="filter-btn-wrap">
+              <button class="btn btn--secondary" id="btnOpenLogFilter">
+                <i data-lucide="filter" aria-hidden="true"></i> Filter
+              </button>
+              ${[_filterEntityType, _filterActorId, _filterAction, _filterDateFrom, _filterDateTo].filter(Boolean).length > 0
+                ? `<span class="filter-badge">${[_filterEntityType, _filterActorId, _filterAction, _filterDateFrom, _filterDateTo].filter(Boolean).length}</span>` : ''}
+            </div>
+          </div>
+          <div class="filter-chips" id="logFilterChips">${_renderLogFilterChips()}</div>
+        </div>
         <div id="logContent"></div>
       </div>`;
 
@@ -153,77 +165,110 @@ function _renderProjectHeader(project, coverColor) {
     </div>`;
 }
 
-// ─── Filter Bar ───────────────────────────────────────────────────────────────
+// ─── Filter Modal ─────────────────────────────────────────────────────────────
 
-function _renderFilterBar() {
+function _renderLogFilterChips() {
+  const uniqueActors = [...new Map(_logs.map(l => [l.actor_id, { id: l.actor_id, name: l.actor_name }])).values()];
+  const chips = [];
+  if (_filterEntityType) chips.push(`<span class="filter-chip" data-key="entity"><span class="filter-chip__label">Entity: ${sanitize(toTitleCase(_filterEntityType))}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  if (_filterActorId) {
+    const actor = uniqueActors.find(a => a.id === _filterActorId);
+    chips.push(`<span class="filter-chip" data-key="actor"><span class="filter-chip__label">Actor: ${sanitize(actor?.name || _filterActorId)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  if (_filterAction) chips.push(`<span class="filter-chip" data-key="action"><span class="filter-chip__label">Action: ${sanitize(toTitleCase(_filterAction.replace(/_/g,' ')))}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  if (_filterDateFrom) chips.push(`<span class="filter-chip" data-key="dateFrom"><span class="filter-chip__label">From: ${sanitize(_filterDateFrom)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  if (_filterDateTo) chips.push(`<span class="filter-chip" data-key="dateTo"><span class="filter-chip__label">To: ${sanitize(_filterDateTo)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  return chips.join('');
+}
+
+function _bindFilterBar() {
+  document.getElementById('btnOpenLogFilter')?.addEventListener('click', _openLogFilterModal);
+  document.getElementById('logFilterChips')?.addEventListener('click', _handleLogChipRemove);
+}
+
+function _handleLogChipRemove(e) {
+  const btn = e.target.closest('.filter-chip__remove');
+  if (!btn) return;
+  const key = btn.closest('.filter-chip')?.dataset.key;
+  if (key === 'entity') _filterEntityType = '';
+  if (key === 'actor') _filterActorId = '';
+  if (key === 'action') _filterAction = '';
+  if (key === 'dateFrom') _filterDateFrom = '';
+  if (key === 'dateTo') _filterDateTo = '';
+  _currentPage = 1; _renderLogContent(); _updateLogFilterUI();
+}
+
+function _openLogFilterModal() {
   const uniqueActors = [...new Map(_logs.map(l => [l.actor_id, { id: l.actor_id, name: l.actor_name }])).values()];
   const entityTypes = [...new Set(_logs.map(l => l.entity_type))].filter(Boolean);
   const actions = [...new Set(_logs.map(l => l.action))].filter(Boolean);
 
-  return `
-    <div class="log-filter-bar card" style="margin-bottom:var(--space-4);">
-      <div class="log-filter-bar__inner">
-        <div class="form-group" style="margin:0;min-width:140px;">
-          <label class="form-label" for="logFilterEntity">Entity Type</label>
-          <select class="form-select" id="logFilterEntity">
-            <option value="">All types</option>
-            ${entityTypes.map(t => `<option value="${sanitize(t)}">${sanitize(toTitleCase(t))}</option>`).join('')}
-          </select>
-        </div>
-        <div class="form-group" style="margin:0;min-width:140px;">
-          <label class="form-label" for="logFilterActor">Actor</label>
-          <select class="form-select" id="logFilterActor">
-            <option value="">All users</option>
-            ${uniqueActors.map(a => `<option value="${sanitize(a.id || '')}">${sanitize(a.name || 'Unknown')}</option>`).join('')}
-          </select>
-        </div>
-        <div class="form-group" style="margin:0;min-width:140px;">
-          <label class="form-label" for="logFilterAction">Action</label>
-          <select class="form-select" id="logFilterAction">
-            <option value="">All actions</option>
-            ${actions.map(a => `<option value="${sanitize(a)}">${sanitize(toTitleCase(a.replace(/_/g,' ')))}</option>`).join('')}
-          </select>
-        </div>
-        <div class="form-group" style="margin:0;min-width:130px;">
-          <label class="form-label" for="logFilterDateFrom">From</label>
-          <input type="date" class="form-input" id="logFilterDateFrom" />
-        </div>
-        <div class="form-group" style="margin:0;min-width:130px;">
-          <label class="form-label" for="logFilterDateTo">To</label>
-          <input type="date" class="form-input" id="logFilterDateTo" />
-        </div>
-        <button class="btn btn--outline btn--sm" id="logFilterReset" style="align-self:flex-end;">
-          <i data-lucide="x" aria-hidden="true"></i> Reset
-        </button>
+  openModal({
+    title: 'Filter Audit Log',
+    size: 'md',
+    body: `<div class="filter-modal-grid">
+      <div class="form-group">
+        <label class="form-label" for="fmLogFilterEntity">Entity Type</label>
+        <select class="form-select" id="fmLogFilterEntity">
+          <option value="">All types</option>
+          ${entityTypes.map(t => `<option value="${sanitize(t)}" ${_filterEntityType===t?'selected':''}>${sanitize(toTitleCase(t))}</option>`).join('')}
+        </select>
       </div>
-    </div>`;
+      <div class="form-group">
+        <label class="form-label" for="fmLogFilterActor">Actor</label>
+        <select class="form-select" id="fmLogFilterActor">
+          <option value="">All users</option>
+          ${uniqueActors.map(a => `<option value="${sanitize(a.id||'')}" ${_filterActorId===(a.id||'')?'selected':''}>${sanitize(a.name||'Unknown')}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fmLogFilterAction">Action</label>
+        <select class="form-select" id="fmLogFilterAction">
+          <option value="">All actions</option>
+          ${actions.map(a => `<option value="${sanitize(a)}" ${_filterAction===a?'selected':''}>${sanitize(toTitleCase(a.replace(/_/g,' ')))}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fmLogFilterDateFrom">From</label>
+        <input type="date" class="form-input" id="fmLogFilterDateFrom" value="${sanitize(_filterDateFrom)}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fmLogFilterDateTo">To</label>
+        <input type="date" class="form-input" id="fmLogFilterDateTo" value="${sanitize(_filterDateTo)}" />
+      </div>
+    </div>`,
+    footer: `
+      <button class="btn btn--outline" id="btnResetLogFilter">Reset Filter</button>
+      <button class="btn btn--primary" id="btnApplyLogFilter"><i data-lucide="check" aria-hidden="true"></i> Terapkan Filter</button>`,
+  });
+  document.getElementById('btnResetLogFilter')?.addEventListener('click', () => {
+    _filterEntityType = ''; _filterActorId = ''; _filterAction = ''; _filterDateFrom = ''; _filterDateTo = '';
+    closeModal(); _currentPage = 1; _renderLogContent(); _updateLogFilterUI();
+  });
+  document.getElementById('btnApplyLogFilter')?.addEventListener('click', () => {
+    _filterEntityType = document.getElementById('fmLogFilterEntity')?.value || '';
+    _filterActorId    = document.getElementById('fmLogFilterActor')?.value || '';
+    _filterAction     = document.getElementById('fmLogFilterAction')?.value || '';
+    _filterDateFrom   = document.getElementById('fmLogFilterDateFrom')?.value || '';
+    _filterDateTo     = document.getElementById('fmLogFilterDateTo')?.value || '';
+    closeModal(); _currentPage = 1; _renderLogContent(); _updateLogFilterUI();
+  });
 }
 
-function _bindFilterBar() {
-  const applyFilter = () => {
-    _filterEntityType = document.getElementById('logFilterEntity')?.value || '';
-    _filterActorId    = document.getElementById('logFilterActor')?.value || '';
-    _filterAction     = document.getElementById('logFilterAction')?.value || '';
-    _filterDateFrom   = document.getElementById('logFilterDateFrom')?.value || '';
-    _filterDateTo     = document.getElementById('logFilterDateTo')?.value || '';
-    _currentPage = 1;
-    _renderLogContent();
-  };
-
-  ['logFilterEntity','logFilterActor','logFilterAction','logFilterDateFrom','logFilterDateTo']
-    .forEach(id => document.getElementById(id)?.addEventListener('change', applyFilter));
-
-  document.getElementById('logFilterReset')?.addEventListener('click', () => {
-    ['logFilterEntity','logFilterActor','logFilterAction'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = '';
-    });
-    ['logFilterDateFrom','logFilterDateTo'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = '';
-    });
-    applyFilter();
-  });
+function _updateLogFilterUI() {
+  const wrap = document.getElementById('btnOpenLogFilter')?.closest('.filter-btn-wrap');
+  if (wrap) {
+    wrap.querySelector('.filter-badge')?.remove();
+    const count = [_filterEntityType, _filterActorId, _filterAction, _filterDateFrom, _filterDateTo].filter(Boolean).length;
+    if (count > 0) {
+      const badge = document.createElement('span');
+      badge.className = 'filter-badge';
+      badge.textContent = count;
+      wrap.appendChild(badge);
+    }
+  }
+  const chips = document.getElementById('logFilterChips');
+  if (chips) chips.innerHTML = _renderLogFilterChips();
 }
 
 // ─── Log Content ──────────────────────────────────────────────────────────────

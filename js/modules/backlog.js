@@ -118,22 +118,13 @@ function renderBacklogPage() {
           <input type="text" class="form-input backlog-search__input" id="backlogSearch" placeholder="Search tasks..." value="${sanitize(_searchQuery)}" autocomplete="off" />
         </div>
         <div class="backlog-filters">
-          <select class="form-select backlog-filter" id="filterStatus">
-            <option value="">All Status</option>
-            ${TASK_STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus === s.value ? 'selected' : ''}>${s.label}</option>`).join('')}
-          </select>
-          <select class="form-select backlog-filter" id="filterPriority">
-            <option value="">All Priority</option>
-            ${TASK_PRIORITY_OPTIONS.map(p => `<option value="${p.value}" ${_filterPriority === p.value ? 'selected' : ''}>${p.label}</option>`).join('')}
-          </select>
-          <select class="form-select backlog-filter" id="filterType">
-            <option value="">All Types</option>
-            ${TASK_TYPE_OPTIONS.map(t => `<option value="${t.value}" ${_filterType === t.value ? 'selected' : ''}>${t.label}</option>`).join('')}
-          </select>
-          <select class="form-select backlog-filter" id="filterAssignee">
-            <option value="">All Assignees</option>
-            ${_members.map(m => `<option value="${m.id}" ${_filterAssignee === m.id ? 'selected' : ''}>${sanitize(m.full_name)}</option>`).join('')}
-          </select>
+          <div class="filter-btn-wrap">
+            <button class="btn btn--secondary" id="btnOpenFilterModal">
+              <i data-lucide="filter" aria-hidden="true"></i> Filter
+            </button>
+            ${[_filterStatus, _filterPriority, _filterType, _filterAssignee].filter(Boolean).length > 0
+              ? `<span class="filter-badge">${[_filterStatus, _filterPriority, _filterType, _filterAssignee].filter(Boolean).length}</span>` : ''}
+          </div>
           <select class="form-select backlog-filter" id="sortField">
             <option value="created_at" ${_sortField === 'created_at' ? 'selected' : ''}>Sort: Created</option>
             <option value="priority" ${_sortField === 'priority' ? 'selected' : ''}>Sort: Priority</option>
@@ -146,6 +137,7 @@ function renderBacklogPage() {
           </button>
         </div>
       </div>
+      <div class="filter-chips" id="backlogFilterChips" style="padding:0 var(--space-1) var(--space-2);">${renderBacklogFilterChips()}</div>
 
       <div class="backlog-bulk-bar" id="bulkBar">
         <span class="backlog-bulk-bar__count"><span id="bulkCount">0</span> selected</span>
@@ -294,10 +286,8 @@ function getFilteredTasks() {
 function bindPageEvents() {
   document.getElementById('btnNewTask')?.addEventListener('click', () => openTaskModal(null));
   document.getElementById('backlogSearch')?.addEventListener('input', e => { _searchQuery = e.target.value; refreshContent(); });
-  document.getElementById('filterStatus')?.addEventListener('change', e => { _filterStatus = e.target.value; refreshContent(); });
-  document.getElementById('filterPriority')?.addEventListener('change', e => { _filterPriority = e.target.value; refreshContent(); });
-  document.getElementById('filterType')?.addEventListener('change', e => { _filterType = e.target.value; refreshContent(); });
-  document.getElementById('filterAssignee')?.addEventListener('change', e => { _filterAssignee = e.target.value; refreshContent(); });
+  document.getElementById('btnOpenFilterModal')?.addEventListener('click', openBacklogFilterModal);
+  document.getElementById('backlogFilterChips')?.addEventListener('click', handleBacklogChipRemove);
   document.getElementById('sortField')?.addEventListener('change', e => { _sortField = e.target.value; refreshContent(); });
   document.getElementById('btnToggleSortDir')?.addEventListener('click', () => { _sortDir = _sortDir === 'asc' ? 'desc' : 'asc'; refreshContent(); });
   const bc = document.getElementById('backlogContent');
@@ -308,6 +298,105 @@ function bindPageEvents() {
   document.getElementById('bulkPriorityChange')?.addEventListener('change', handleBulkPriorityChange);
   document.getElementById('bulkSprintAssign')?.addEventListener('change', handleBulkSprintAssign);
   document.getElementById('slideoverOverlay')?.addEventListener('click', closeSlideover);
+}
+
+function renderBacklogFilterChips() {
+  const chips = [];
+  if (_filterStatus) {
+    const lbl = TASK_STATUS_OPTIONS.find(s => s.value === _filterStatus)?.label || _filterStatus;
+    chips.push(`<span class="filter-chip" data-key="status"><span class="filter-chip__label">Status: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  if (_filterPriority) {
+    const lbl = TASK_PRIORITY_OPTIONS.find(p => p.value === _filterPriority)?.label || _filterPriority;
+    chips.push(`<span class="filter-chip" data-key="priority"><span class="filter-chip__label">Priority: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  if (_filterType) {
+    const lbl = TASK_TYPE_OPTIONS.find(t => t.value === _filterType)?.label || _filterType;
+    chips.push(`<span class="filter-chip" data-key="type"><span class="filter-chip__label">Type: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  if (_filterAssignee) {
+    const lbl = _members.find(m => m.id === _filterAssignee)?.full_name || _filterAssignee;
+    chips.push(`<span class="filter-chip" data-key="assignee"><span class="filter-chip__label">Assignee: ${sanitize(lbl)}</span><button class="filter-chip__remove" aria-label="Remove filter">×</button></span>`);
+  }
+  return chips.join('');
+}
+
+function handleBacklogChipRemove(e) {
+  const btn = e.target.closest('.filter-chip__remove');
+  if (!btn) return;
+  const key = btn.closest('.filter-chip')?.dataset.key;
+  if (key === 'status') _filterStatus = '';
+  if (key === 'priority') _filterPriority = '';
+  if (key === 'type') _filterType = '';
+  if (key === 'assignee') _filterAssignee = '';
+  refreshContent(); updateBacklogFilterUI();
+}
+
+function openBacklogFilterModal() {
+  openModal({
+    title: 'Filter Tasks',
+    size: 'md',
+    body: `<div class="filter-modal-grid">
+      <div class="form-group">
+        <label class="form-label" for="fmFilterStatus">Status</label>
+        <select class="form-select" id="fmFilterStatus">
+          <option value="">All Status</option>
+          ${TASK_STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus===s.value?'selected':''}>${s.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fmFilterPriority">Priority</label>
+        <select class="form-select" id="fmFilterPriority">
+          <option value="">All Priority</option>
+          ${TASK_PRIORITY_OPTIONS.map(p => `<option value="${p.value}" ${_filterPriority===p.value?'selected':''}>${p.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fmFilterType">Type</label>
+        <select class="form-select" id="fmFilterType">
+          <option value="">All Types</option>
+          ${TASK_TYPE_OPTIONS.map(t => `<option value="${t.value}" ${_filterType===t.value?'selected':''}>${t.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fmFilterAssignee">Assignee</label>
+        <select class="form-select" id="fmFilterAssignee">
+          <option value="">All Assignees</option>
+          ${_members.map(m => `<option value="${m.id}" ${_filterAssignee===m.id?'selected':''}>${sanitize(m.full_name)}</option>`).join('')}
+        </select>
+      </div>
+    </div>`,
+    footer: `
+      <button class="btn btn--outline" id="btnResetBacklogFilter">Reset Filter</button>
+      <button class="btn btn--primary" id="btnApplyBacklogFilter"><i data-lucide="check" aria-hidden="true"></i> Terapkan Filter</button>`,
+  });
+  document.getElementById('btnResetBacklogFilter')?.addEventListener('click', () => {
+    _filterStatus = ''; _filterPriority = ''; _filterType = ''; _filterAssignee = '';
+    closeModal(); refreshContent(); updateBacklogFilterUI();
+  });
+  document.getElementById('btnApplyBacklogFilter')?.addEventListener('click', () => {
+    _filterStatus   = document.getElementById('fmFilterStatus')?.value || '';
+    _filterPriority = document.getElementById('fmFilterPriority')?.value || '';
+    _filterType     = document.getElementById('fmFilterType')?.value || '';
+    _filterAssignee = document.getElementById('fmFilterAssignee')?.value || '';
+    closeModal(); refreshContent(); updateBacklogFilterUI();
+  });
+}
+
+function updateBacklogFilterUI() {
+  const wrap = document.getElementById('btnOpenFilterModal')?.closest('.filter-btn-wrap');
+  if (wrap) {
+    wrap.querySelector('.filter-badge')?.remove();
+    const count = [_filterStatus, _filterPriority, _filterType, _filterAssignee].filter(Boolean).length;
+    if (count > 0) {
+      const badge = document.createElement('span');
+      badge.className = 'filter-badge';
+      badge.textContent = count;
+      wrap.appendChild(badge);
+    }
+  }
+  const chips = document.getElementById('backlogFilterChips');
+  if (chips) chips.innerHTML = renderBacklogFilterChips();
 }
 
 function handleListClick(e) {
