@@ -13,6 +13,7 @@ const ROUTE_TITLES = {
   '/members':       'Members',
   '/assets':        'Assets',
   '/settings':      'Settings',
+  '/notes':         'Personal Notes',
   '/notifications': 'Notification Center',
 };
 

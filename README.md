@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.4.0` |
-| **Current Phase** | Phase 23 — Notification Center |
+| **Current Version** | `v1.5.0` |
+| **Current Phase** | Phase 24 — Personal Notes |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -202,6 +202,7 @@ Hash-based routing (`window.location.hash`) — no server required.
 #/settings
 #/guide
 #/notifications
+#/notes
 #/login
 ```
 
@@ -599,6 +600,44 @@ Real-time in-app notification system that automatically informs relevant team me
 
 ---
 
+### 5.20 Personal Notes (Phase 24)
+
+Private note-taking module per user. Inspired by Obsidian/Notion — simple, personal, not collaborative.
+
+**Data Model — `notes` store (IndexedDB v6):**
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | String | Auto-generated (`NOTE-XXXX`) |
+| `user_id` | Ref | User ID pemilik note |
+| `title` | String | Judul note (nullable — fallback ke 30 char pertama content) |
+| `content` | Text | Plain text dengan Markdown support |
+| `folder_id` | Ref | ID folder (nullable = All Notes) |
+| `pinned` | Boolean | `true` = tampil di atas list |
+| `color` | String | Hex color pastel (null = white) |
+| `tags` | Array | Tag string bebas |
+| `created_at` | Timestamp | ISO string |
+| `updated_at` | Timestamp | ISO string |
+
+**Folders** disimpan di `localStorage` key `notes_folders_{userId}` (bukan IndexedDB).
+
+**Features:**
+- Two-column layout: panel kiri (search, pinned, folders, all notes) + panel kanan (editor)
+- **Markdown editor** dengan toggle Edit/Preview — bold, italic, code, headings, lists, blockquote, links, hr
+- **Auto-save** debounce 800ms dengan indikator "Saved"
+- **Pin**: note pinned muncul di section Pinned di atas list
+- **Color**: 7 warna pastel untuk card/label di panel kiri
+- **Tags**: tambah/hapus tag inline di bottom toolbar
+- **Folder management**: buat, rename (double-click), hapus folder — hapus folder memindah notes ke All Notes
+- **Export per note**: tombol "Export .md" di toolbar → download file `.md`
+- **Export semua**: JSON (bisa diimport kembali) atau Markdown gabungan
+- **Import**: JSON dari hasil export — merge by ID (tidak menimpa yang sudah ada)
+- **Settings backup**: store `notes` ikut ter-backup/restore saat export/import penuh dari Settings
+- **Responsif**: panel kiri collapse jadi drawer overlay di layar ≤ 768px
+- Visible untuk semua role — ini catatan personal, bukan fitur kolaborasi
+
+---
+
 ## 6. Role & Permission Matrix
 
 | Feature / Page | Admin / PM | Developer | Viewer / Client |
@@ -660,6 +699,7 @@ Object Stores:
 ├── meetings        (keyPath: id)    — indexes: date                 ← new in Phase 19
 ├── discussions     (keyPath: id)    — indexes: project_id           ← new in Phase 20
 ├── notifications   (keyPath: id)    — indexes: user_id, read, created_at  ← new in Phase 23
+├── notes           (keyPath: id)    — indexes: user_id, folder_id, created_at, updated_at, pinned  ← new in Phase 24
 ```
 
 > **Note:** No new stores in Phase 21. DB bumped to version `4` to trigger `onupgradeneeded` for any migration logic needed by future phases.
@@ -1155,9 +1195,25 @@ Tasks:
 
 ---
 
----
+### Phase 24 — Personal Notes
+**Scope**: Private per-user note-taking module with folder management, Markdown editor, auto-save, color/pin/tag, import/export  
+**Version**: `v1.5.0`  
+**Deliverable**: Full Personal Notes page at `#/notes` — two-column layout with folder panel and Markdown editor, accessible from sidebar for all roles.
 
-## 10. Development Log
+Tasks:
+- [x] Add prefix `NOTE` and `NFLD` to `ID_PREFIX` in `utils.js`
+- [x] Bump DB version to `6` in `db.js` — add `notes` object store (keyPath: `id`, indexes: `user_id`, `folder_id`, `created_at`, `updated_at`, `pinned`)
+- [x] Create `js/modules/notes.js` — two-column layout, panel kiri (search, pinned, folders, all notes), Markdown editor with Edit/Preview toggle, debounced auto-save, pin, color, tags, folder management, per-note MD export, bulk export JSON/MD, import JSON
+- [x] Create `css/pages/notes.css` — full styling for two-column layout, note list items, editor, bottom toolbar, color picker, folder items, mobile drawer
+- [x] Register route `#/notes` in `app.js`
+- [x] Add "Personal Notes" entry to sidebar (`sidebar.js`) between Meetings and Clients — visible all roles
+- [x] Add `/notes` to topbar title map in `topbar.js`
+- [x] Add store `notes` to export/import arrays in `settings.js`
+- [x] Add `notes.css` to `index.html`
+- [x] Update `sw.js` — add `notes.js` and `notes.css` to cache, bump to `v1.5.0`
+- [x] Update README — section 5.20, section 4 (routes), section 7 (data models), section 8 (page map), section 9 (phases), section 10 (dev log), section 12 (file structure), version `v1.5.0`
+
+---
 
 > This section is updated at the start and end of every phase.
 
@@ -1165,10 +1221,10 @@ Tasks:
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v1.4.0                                     ║
-║  Current Phase     : Phase 23 — Notification Center            ║
+║  Current Version   : v1.5.0                                     ║
+║  Current Phase     : Phase 24 — Personal Notes                 ║
 ║  Phase Status      : DONE                                       ║
-║  Next Phase        : Phase 24 — (TBD)                          ║
+║  Next Phase        : Phase 25 — (TBD)                          ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -1195,8 +1251,24 @@ Tasks:
 ║  [x] Phase 21 — Maintenance Enhancement            v1.3.1      ║
 ║  [x] Phase 22 — Bugfix                             v1.3.2      ║
 ║  [x] Phase 23 — Notification Center                v1.4.0      ║
+║  [x] Phase 24 — Personal Notes                     v1.5.0      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
+║                                                                 ║
+║  v1.5.0 [2026-03-03]  Phase 24 — Personal Notes:             ║
+║                         New `notes` IndexedDB store (DB v6);   ║
+║                         ID prefixes NOTE & NFLD added to        ║
+║                         utils.js; full two-column Personal      ║
+║                         Notes page (#/notes) with folder mgmt  ║
+║                         (localStorage), note list panel,        ║
+║                         Markdown editor with Edit/Preview       ║
+║                         toggle, debounced auto-save, pin,       ║
+║                         color picker, tag system, per-note MD   ║
+║                         export, bulk JSON/MD export & JSON      ║
+║                         import; notes store added to            ║
+║                         settings.js backup/restore; sidebar     ║
+║                         entry added between Meetings & Clients; ║
+║                         sw.js bumped to v1.5.0 cache.           ║
 ║                                                                 ║
 ║  v1.3.3 [2026-03-03]  Hotfix: meetings, discussions,          ║
 ║                         notifications tidak ikut ter-export/    ║
@@ -1509,7 +1581,8 @@ trackly/
 │   │   ├── log.css             ← Phase 18
 │   │   ├── meetings.css        ← Phase 19
 │   │   ├── discussion.css      ← Phase 20
-│   │   └── notifications.css   ← Phase 23
+│   │   ├── notifications.css   ← Phase 23
+│   │   └── notes.css           ← Phase 24
 │   └── print.css               # Print / PDF export styles
 │
 └── js/
@@ -1537,7 +1610,8 @@ trackly/
     │   ├── log.js              ← Phase 18
     │   ├── meetings.js         ← Phase 19
     │   ├── discussion.js       ← Phase 20
-    │   └── notifications.js    ← Phase 23
+    │   ├── notifications.js    ← Phase 23
+    │   └── notes.js            ← Phase 24
     └── components/
         ├── modal.js
         ├── toast.js

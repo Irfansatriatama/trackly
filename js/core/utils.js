@@ -41,6 +41,8 @@ export const ID_PREFIX = {
   MEETING:     'MTG',
   DISCUSSION:  'DSC',
   NOTIFICATION: 'NTF',
+  NOTE:        'NOTE',
+  NOTE_FOLDER: 'NFLD',
 };
 
 /**

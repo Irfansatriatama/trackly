@@ -289,6 +289,13 @@ function registerAllRoutes() {
     await renderNotifications();
   });
 
+  registerRoute('/notes', async () => {
+    if (!requireAuth()) return;
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading notes...</p></div></div>');
+    const { render: renderNotes } = await import('./modules/notes.js');
+    await renderNotes();
+  });
+
   // 404 fallback
   setNotFound(({ path }) => {
     setContent(`
