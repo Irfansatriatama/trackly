@@ -65,6 +65,8 @@ function buildGuideHTML() {
             <li><a href="#guide-settings"><i data-lucide="settings" aria-hidden="true"></i> 14. Settings &amp; Data</a></li>
             <li><a href="#guide-pwa"><i data-lucide="smartphone" aria-hidden="true"></i> 15. PWA &amp; Offline Use</a></li>
             <li><a href="#guide-meetings"><i data-lucide="calendar" aria-hidden="true"></i> 16. Meetings &amp; Notulensi</a></li>
+            <li><a href="#guide-discussion"><i data-lucide="message-circle" aria-hidden="true"></i> 17. Project Discussion</a></li>
+            <li><a href="#guide-notes"><i data-lucide="notebook-pen" aria-hidden="true"></i> 18. Personal Notes</a></li>
           </ul>
         </div>
       </div>
@@ -559,10 +561,86 @@ function buildGuideHTML() {
         </div>
       </div>
 
+      <!-- Section 18: Personal Notes -->
+      <div class="guide-section card" id="guide-notes">
+        <div class="card__body">
+          <h2 class="guide-section__title">
+            <i data-lucide="notebook-pen" aria-hidden="true"></i>
+            18. Personal Notes
+          </h2>
+          <p>Personal Notes adalah modul catatan pribadi per-user, tersedia untuk semua role. Catatan bersifat personal dan tidak ditampilkan ke user lain — kecuali jika kamu memilih untuk membagikannya (Phase 25).</p>
+          <p>Akses dari sidebar: <strong>Personal Notes</strong>. Tersedia untuk Admin, PM, Developer, dan Viewer.</p>
+
+          <h3>Layout</h3>
+          <p>Halaman Personal Notes menggunakan dua panel: panel kiri (daftar catatan, folder, search) dan panel kanan (editor Markdown). Di layar kecil, panel kiri menjadi drawer overlay yang bisa ditoggle.</p>
+
+          <h3>Membuat Catatan Baru</h3>
+          <p>Klik tombol <strong>New Note</strong> di kanan atas. Editor akan terbuka — isi judul dan konten. Catatan disimpan otomatis (autosave 800ms setelah berhenti mengetik).</p>
+
+          <h3>Editor Markdown</h3>
+          <p>Konten catatan mendukung Markdown. Gunakan toolbar formatting untuk bold, italic, dan heading (H1–H3), atau gunakan shortcut keyboard <strong>Ctrl+B</strong> (bold) dan <strong>Ctrl+I</strong> (italic). Toggle antara mode Edit dan mode Preview menggunakan tombol di toolbar atas.</p>
+
+          <h3>Pin, Warna, dan Tag</h3>
+          <ul>
+            <li><strong>Pin:</strong> Catatan yang di-pin muncul di section Pinned di atas daftar. Klik tombol "Pin" di bottom toolbar.</li>
+            <li><strong>Warna:</strong> Pilih salah satu dari 7 warna pastel di bottom toolbar untuk memberi warna pada catatan. Warna ditampilkan sebagai titik berwarna di panel kiri.</li>
+            <li><strong>Tag:</strong> Ketik tag di input "Add tag…" dan tekan Enter atau koma. Tag bisa dihapus dengan tombol × di setiap chip.</li>
+          </ul>
+
+          <h3>Folder</h3>
+          <p>Klik <strong>New Folder</strong> untuk membuat folder baru. Pindahkan catatan ke folder menggunakan dropdown "Pindah ke folder" di bottom toolbar. Folder bisa di-rename (klik ikon pensil) atau dihapus (klik ×) — menghapus folder akan memindahkan semua catatan di dalamnya ke All Notes.</p>
+
+          <h3>Export &amp; Import</h3>
+          <ul>
+            <li><strong>Export .md:</strong> Tombol "Export .md" di toolbar editor — download catatan aktif sebagai file Markdown.</li>
+            <li><strong>Export Notes:</strong> Tombol di header — export semua catatan ke JSON (backup lengkap) atau Markdown gabungan.</li>
+            <li><strong>Import:</strong> Import file JSON hasil export sebelumnya. Catatan dengan ID yang sama akan di-skip.</li>
+            <li><strong>Upload .md:</strong> Upload file .md atau .txt dari komputer — langsung menjadi catatan baru.</li>
+          </ul>
+
+          <h3>Berbagi Catatan (Phase 25)</h3>
+          <p>Owner catatan bisa membagikan catatan ke member lain dengan klik tombol <strong>Share</strong> di toolbar editor. Modal share memungkinkan:</p>
+          <ul>
+            <li>Pilih satu atau beberapa member dari dropdown</li>
+            <li>Set permission: <strong>Hanya lihat</strong> (read-only) atau <strong>Bisa edit</strong> (dapat menyimpan perubahan)</li>
+            <li>Lihat daftar siapa saja yang sudah punya akses, lengkap dengan badge permission</li>
+            <li>Cabut akses dari user tertentu dengan tombol × di daftar akses</li>
+            <li>Ubah permission untuk semua shared user sekaligus via radio button</li>
+          </ul>
+          <div class="guide-tip">
+            <i data-lucide="info" aria-hidden="true"></i>
+            <p>Tombol Share hanya muncul untuk owner catatan. Catatan yang dibagikan dengan permission <em>Hanya lihat</em> akan menampilkan banner info dan textarea menjadi read-only.</p>
+          </div>
+
+          <h3>Catatan yang Dibagikan ke Kamu</h3>
+          <p>Catatan dari user lain yang dibagikan kepadamu muncul di section <strong>"Dibagikan ke Saya"</strong> di panel kiri. Setiap catatan shared ditandai dengan:</p>
+          <ul>
+            <li>Badge biru "Shared" di samping judul</li>
+            <li>Label "Dari: [nama owner]" di bawah timestamp</li>
+          </ul>
+          <p>Catatan milikmu yang sudah dibagikan ke orang lain ditandai dengan ikon share di panel kiri.</p>
+
+          <h3>Riwayat Aktivitas (Audit Log)</h3>
+          <p>Owner catatan bisa melihat semua aktivitas yang pernah terjadi pada catatan tersebut. Klik tab <strong>Riwayat</strong> di toolbar editor (hanya muncul untuk owner). Audit log ditampilkan sebagai timeline vertikal dengan:</p>
+          <ul>
+            <li>Avatar/inisial user yang melakukan aksi</li>
+            <li>Deskripsi aksi yang terjadi (membuat, mengedit, berbagi, dll.)</li>
+            <li>Waktu relatif (misal: "3 menit lalu")</li>
+            <li>Detail tambahan jika ada (nama folder tujuan, tag yang ditambah, dsb.)</li>
+          </ul>
+          <p>Aksi yang dicatat: membuat, mengedit, menghapus, pin/unpin, ubah warna, tambah/hapus tag, pindah folder, export, share, cabut akses, ubah permission, dan view/edit oleh shared user.</p>
+
+          <div class="guide-tip">
+            <i data-lucide="lightbulb" aria-hidden="true"></i>
+            <p>Aksi dari user lain (non-owner) yang melihat atau mengedit catatan kamu juga tercatat di Riwayat, sehingga kamu bisa tahu kapan dan oleh siapa catatan kamu diakses.</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Footer -->
       <div class="card" style="margin-bottom: var(--space-8);">
         <div class="card__body" style="text-align:center; color:var(--color-text-muted); font-size:var(--text-sm);">
-          <p>TRACKLY v1.0.0 &mdash; Track Everything, Deliver Anything</p>
+          <p>TRACKLY v1.6.0 &mdash; Track Everything, Deliver Anything</p>
           <p>Need more help? Contact your system administrator or refer to the README in the project repository.</p>
         </div>
       </div>
