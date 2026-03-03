@@ -1198,6 +1198,13 @@ Tasks:
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
 ║                                                                 ║
+║  v1.3.3 [2026-03-03]  Hotfix: meetings, discussions,          ║
+║                         notifications tidak ikut ter-export/    ║
+║                         import di JSON backup. Fixed array      ║
+║                         `stores` di handleExportData() dan      ║
+║                         handleImportData() (settings.js) agar   ║
+║                         menyertakan ketiga store tersebut.      ║
+║                                                                 ║
 ║  v1.4.0 [2026-03-02]  Phase 23 — Notification Center:        ║
 ║                         New `notifications` IndexedDB store     ║
 ║                         (DB v5); bell icon + unread badge in    ║

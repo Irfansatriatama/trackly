@@ -450,7 +450,7 @@ async function handleExportData() {
   const btn = document.getElementById('btnExportData');
   btn.disabled = true;
   try {
-    const stores = ['users','projects','tasks','sprints','clients','assets','maintenance','invoices','activity_log','settings'];
+    const stores = ['users','projects','tasks','sprints','clients','assets','maintenance','invoices','activity_log','settings','meetings','discussions','notifications'];
     const exportData = { _meta: { version:'v1.3.1', exportedAt: nowISO(), app:'TRACKLY' } };
     for (const store of stores) {
       try { exportData[store] = await getAll(store); }
@@ -484,7 +484,7 @@ async function handleImportData(e) {
   try {
     const text = await file.text();
     const data = JSON.parse(text);
-    const stores = ['users','projects','tasks','sprints','clients','assets','maintenance','invoices','activity_log','settings'];
+    const stores = ['users','projects','tasks','sprints','clients','assets','maintenance','invoices','activity_log','settings','meetings','discussions','notifications'];
     let imported = 0;
     for (const store of stores) {
       const records = data[store];
