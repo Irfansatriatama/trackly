@@ -325,3 +325,17 @@
     max-height: calc(100vh - var(--topbar-height));
   }
 }
+
+/* ─── Icon alignment fix (v1.6.2) ─────────────────────────────────────────── */
+
+.notif-item__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notif-item__icon svg {
+  width: 16px;
+  height: 16px;
+}

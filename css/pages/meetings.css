@@ -245,19 +245,24 @@
 
 .meeting-card__meta {
   display: flex;
+  align-items: center;
   gap: var(--space-3);
   flex-wrap: wrap;
   margin-top: var(--space-1);
+}
+
+.meeting-card__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   color: var(--color-text-muted);
   font-size: var(--text-sm);
 }
 
-.meeting-card__meta i {
+.meeting-card__meta-item svg {
   width: 14px;
   height: 14px;
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 2px;
+  flex-shrink: 0;
 }
 
 .meeting-card__badges {
@@ -345,12 +350,18 @@
   margin-top: var(--space-1);
 }
 
-.meeting-detail-meta i {
+.meeting-detail-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.meeting-detail-meta-item svg {
   width: 14px;
   height: 14px;
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 2px;
+  flex-shrink: 0;
 }
 
 .meeting-detail-grid {
@@ -376,10 +387,11 @@
   margin-bottom: var(--space-4);
 }
 
-.section-title i {
+.section-title svg {
   width: 18px;
   height: 18px;
   color: var(--color-primary);
+  flex-shrink: 0;
 }
 
 /* ─── Agenda Checklist ───────────────────────────────────────────────────── */

@@ -326,11 +326,11 @@ function buildMeetingCardHTML(meeting) {
           <div class="meeting-card__info">
             <a href="#/meetings/${meeting.id}" class="meeting-card__title">${sanitize(meeting.title)}</a>
             <div class="meeting-card__meta">
-              <span class="text-muted text-sm">
+              <span class="meeting-card__meta-item">
                 <i data-lucide="clock" aria-hidden="true"></i>
-                ${meeting.start_time || '--'} – ${meeting.end_time || '--'}
+                <span>${meeting.start_time || '--'} – ${meeting.end_time || '--'}</span>
               </span>
-              ${meeting.location ? `<span class="text-muted text-sm"><i data-lucide="map-pin" aria-hidden="true"></i> ${sanitize(meeting.location)}</span>` : ''}
+              ${meeting.location ? `<span class="meeting-card__meta-item"><i data-lucide="map-pin" aria-hidden="true"></i> <span>${sanitize(meeting.location)}</span></span>` : ''}
             </div>
           </div>
           <div class="meeting-card__badges">
@@ -346,7 +346,7 @@ function buildMeetingCardHTML(meeting) {
             <div class="avatar-group">${attendeeAvatars}${extraAttendees}</div>
             <span class="text-sm text-muted">${(meeting.attendee_ids || []).length} attendee${(meeting.attendee_ids || []).length !== 1 ? 's' : ''}</span>
           </div>
-          ${agendaCount > 0 ? `<span class="text-sm text-muted"><i data-lucide="list-checks" aria-hidden="true"></i> ${doneCnt}/${agendaCount} agenda</span>` : ''}
+          ${agendaCount > 0 ? `<span class="meeting-card__meta-item"><i data-lucide="list-checks" aria-hidden="true"></i><span>${doneCnt}/${agendaCount} agenda</span></span>` : ''}
           <div class="meeting-card__actions">
             <a href="#/meetings/${meeting.id}" class="btn btn--ghost btn--sm" aria-label="View meeting">
               <i data-lucide="eye" aria-hidden="true"></i> View
@@ -847,10 +847,11 @@ function buildDetailPageHTML(meeting, users, projects) {
             </div>
             <h1 class="page-header__title">${sanitize(meeting.title)}</h1>
             <div class="meeting-detail-meta text-muted text-sm">
-              <i data-lucide="calendar" aria-hidden="true"></i>
-              ${formatDate(meeting.date)}
-              ${meeting.start_time ? ` &bull; ${meeting.start_time} – ${meeting.end_time || '...'}` : ''}
-              ${meeting.location ? ` &bull; <i data-lucide="map-pin" aria-hidden="true" style="display:inline-block;width:14px;height:14px"></i> ${sanitize(meeting.location)}` : ''}
+              <span class="meeting-detail-meta-item">
+                <i data-lucide="calendar" aria-hidden="true"></i>
+                <span>${formatDate(meeting.date)}${meeting.start_time ? ` &bull; ${meeting.start_time} – ${meeting.end_time || '...'}` : ''}</span>
+              </span>
+              ${meeting.location ? `<span class="meeting-detail-meta-item"><i data-lucide="map-pin" aria-hidden="true"></i><span>${sanitize(meeting.location)}</span></span>` : ''}
             </div>
           </div>
         </div>

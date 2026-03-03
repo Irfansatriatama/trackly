@@ -190,7 +190,8 @@
   font-weight: 500;
   white-space: nowrap;
 }
-.asset-category-badge i { width: 12px; height: 12px; }
+.asset-category-badge i,
+.asset-category-badge svg { width: 12px; height: 12px; flex-shrink: 0; }
 
 .asset-category-badge--hardware  { background: var(--color-info-alpha);      color: var(--color-info); }
 .asset-category-badge--software  { background: var(--color-primary-alpha);    color: var(--color-primary); }
@@ -369,4 +370,22 @@
   line-height: 1.6;
   margin: 0;
   white-space: pre-wrap;
+}
+
+/* ─── Icon alignment fix (v1.6.2) ─────────────────────────────────────────── */
+
+.asset-category-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  flex-shrink: 0;
+}
+
+.asset-category-icon svg {
+  width: 15px;
+  height: 15px;
 }

@@ -3803,3 +3803,59 @@ a:focus-visible {
 .filter-modal-grid .form-group {
   margin: 0;
 }
+
+/* ============================================================
+   ICON ALIGNMENT — Global Fix (v1.6.2)
+   Ensures icon + text pairs are vertically aligned throughout
+   ============================================================ */
+
+/* Lucide icon fallback: ensure SVGs from [data-lucide] behave as inline-block */
+[data-lucide] {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* .card__title — icon + heading in card headers */
+.card__title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.card__title svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+/* .icon-text — utility class for any inline icon + text pair */
+.icon-text {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.icon-text svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* Project card SVG alignment fixes */
+.project-card__client svg,
+.project-card__client i {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.project-card__dates svg,
+.project-card__dates i {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}

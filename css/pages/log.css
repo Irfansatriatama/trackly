@@ -94,8 +94,11 @@
   color: var(--color-primary);
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  margin-top: 1px;
+  margin-top: 0;
+  width: 20px;
+  height: 20px;
 }
 
 .log-entry__action-icon svg {

@@ -32,7 +32,7 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.6.1` |
+| **Current Version** | `v1.6.2` |
 | **Current Phase** | Phase 25 — Notes Sharing & Collaboration Audit |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
@@ -1255,6 +1255,30 @@ Tasks:
 **Date**: 2025-03-03  
 **Type**: UX Improvement (Hotfix)
 
+---
+
+**Version**: `v1.6.2`  
+**Date**: 2026-03-04  
+**Type**: UX Fix (Icon Alignment)
+
+### UX Fix: Icon Alignment & Positioning (Sistematis)
+
+Diperbaiki masalah icon yang tidak rata secara vertikal dengan teks di samping icon, yang memengaruhi hampir semua halaman aplikasi. Root cause: banyak container icon+teks tidak menggunakan flex container yang proper.
+
+**File yang diubah:**
+- `css/layout.css` — `.page-header__title` ditambah `display:flex; align-items:center; gap`
+- `css/components.css` — `.card__title` flex layout; `.icon-text` utility class baru; `[data-lucide]` fallback; svg rules untuk project card
+- `css/pages/meetings.css` — `.meeting-card__meta` + `.meeting-card__meta-item` baru; `.meeting-detail-meta-item` baru; `.section-title svg`
+- `js/modules/meetings.js` — HTML diperbarui untuk clock/location/agenda count menggunakan `.meeting-card__meta-item`; meeting detail meta menggunakan `.meeting-detail-meta-item`
+- `css/pages/sprint.css` — `.sprint-planning__pane-header svg` sizing; `.sprint-planning__header-label`; `.sprint-card__meta-item` diperbarui ke 13px
+- `js/modules/sprint.js` — inline style dihapus dari pane header icons
+- `css/pages/board.css` — `.board-task-card__meta-pill svg` dan `.board-task-card__due svg` sizing ditambahkan
+- `css/pages/log.css` — `.log-entry__action-icon` ditambah `justify-content:center`, `width/height`, hapus `margin-top:1px`
+- `css/pages/discussion.css` — `.dsc-type-badge svg`, `.dsc-btn-reply-toggle`, meta helper classes
+- `css/pages/notifications.css` — `.notif-item__icon` flex+svg
+- `css/pages/maintenance.css` — `.mnt-detail__label` flex+svg
+- `css/pages/assets.css` — `.asset-category-badge svg`, `.asset-category-icon`
+
 ### UX Improvement: Filter Modal System
 
 Refactored filter UI across 9 pages from inline dropdown bars to a unified modal-based system.
@@ -1315,6 +1339,23 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ║  [x] Phase 25 — Notes Sharing & Collaboration Audit v1.6.0     ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
+║                                                                 ║
+║  v1.6.2 [2026-03-04]  UX Fix: Icon Alignment & Positioning   ║
+║    - Diperbaiki secara sistematis di seluruh halaman            ║
+║      menggunakan CSS flex container yang konsisten              ║
+║    - layout.css: .page-header__title → display:flex            ║
+║    - components.css: .card__title, .icon-text (utility),       ║
+║      [data-lucide] fallback, project card svg rules             ║
+║    - meetings.css+js: .meeting-card__meta-item,                 ║
+║      .meeting-detail-meta-item, .section-title svg              ║
+║    - sprint.css: pane-header svg sizing,                        ║
+║      sprint-planning__header-label                              ║
+║    - board.css: meta-pill + due svg sizing                      ║
+║    - log.css: log-entry__action-icon justify-content, w/h      ║
+║    - discussion.css: dsc-type-badge svg, reply-toggle flex     ║
+║    - notifications.css: .notif-item__icon                       ║
+║    - maintenance.css: .mnt-detail__label                        ║
+║    - assets.css: category-badge svg + .asset-category-icon     ║
 ║                                                                 ║
 ║  v1.6.0 [2026-03-03]  Phase 25 — Notes Sharing & Audit:      ║
 ║    - Share notes ke member lain (view/edit permission)         ║

@@ -273,12 +273,24 @@
   color: var(--color-text-muted);
 }
 
+.board-task-card__meta-pill svg {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+}
+
 .board-task-card__due {
   display: inline-flex;
   align-items: center;
   gap: 3px;
   font-size: 10px;
   white-space: nowrap;
+}
+
+.board-task-card__due svg {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
 }
 
 /* xs badge variant */

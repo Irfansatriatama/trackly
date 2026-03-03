@@ -114,9 +114,11 @@
   white-space: nowrap;
 }
 
-.dsc-type-badge i {
+.dsc-type-badge i,
+.dsc-type-badge svg {
   width: 13px;
   height: 13px;
+  flex-shrink: 0;
 }
 
 /* ─── Post Content ──────────────────────────────────────────────────────────── */
@@ -377,4 +379,34 @@
   .dsc-post-actions {
     opacity: 1;
   }
+}
+
+/* ─── Icon alignment fix (v1.6.2) ─────────────────────────────────────────── */
+
+.discussion-post__meta-item,
+.discussion-post__author,
+.discussion-reply__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.discussion-post__meta-item svg,
+.discussion-post__author svg,
+.discussion-reply__meta svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.dsc-btn-reply-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.dsc-btn-reply-toggle svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }

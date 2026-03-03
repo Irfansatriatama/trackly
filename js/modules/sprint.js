@@ -203,7 +203,7 @@ function _renderPlanningView() {
     <div class="sprint-planning">
       <div class="sprint-planning__pane">
         <div class="sprint-planning__pane-header">
-          <i data-lucide="list" aria-hidden="true" style="width:16px;height:16px;color:var(--color-text-muted);"></i>
+          <i data-lucide="list" aria-hidden="true"></i>
           <span class="sprint-planning__pane-title">Backlog (unassigned)</span>
           <span class="sprint-planning__pane-count">${filteredBacklog.length}</span>
         </div>
@@ -217,7 +217,7 @@ function _renderPlanningView() {
       </div>
       <div class="sprint-planning__pane">
         <div class="sprint-planning__pane-header">
-          <i data-lucide="zap" aria-hidden="true" style="width:16px;height:16px;color:var(--color-primary);"></i>
+          <i data-lucide="zap" aria-hidden="true"></i>
           <span class="sprint-planning__pane-title">${sanitize(selectedSprint.name)}</span>
           <span class="sprint-planning__pane-count">${sprintTasks.length}</span>
         </div>
