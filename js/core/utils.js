@@ -43,6 +43,7 @@ export const ID_PREFIX = {
   NOTIFICATION: 'NTF',
   NOTE:        'NOTE',
   NOTE_FOLDER: 'NFLD',
+  NAUD:        'NAUD',
 };
 
 /**

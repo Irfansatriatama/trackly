@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.5.1` |
-| **Current Phase** | Phase 24 — Personal Notes |
+| **Current Version** | `v1.6.0` |
+| **Current Phase** | Phase 25 — Notes Sharing & Collaboration Audit |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -600,28 +600,31 @@ Real-time in-app notification system that automatically informs relevant team me
 
 ---
 
-### 5.20 Personal Notes (Phase 24)
+### 5.20 Personal Notes (Phase 24–25)
 
-Private note-taking module per user. Inspired by Obsidian/Notion — simple, personal, not collaborative.
+Private note-taking module per user. Inspired by Obsidian/Notion — simple, personal, with optional sharing.
 
-**Data Model — `notes` store (IndexedDB v6):**
+**Data Model — `notes` store (IndexedDB v7):**
 
 | Field | Type | Notes |
 |---|---|---|
 | `id` | String | Auto-generated (`NOTE-XXXX`) |
 | `user_id` | Ref | User ID pemilik note |
+| `owner_id` | Ref | Sama dengan `user_id` — field eksplisit untuk clarity |
 | `title` | String | Judul note (nullable — fallback ke 30 char pertama content) |
 | `content` | Text | Plain text dengan Markdown support |
 | `folder_id` | Ref | ID folder (nullable = All Notes) |
 | `pinned` | Boolean | `true` = tampil di atas list |
 | `color` | String | Hex color pastel (null = white) |
 | `tags` | Array | Tag string bebas |
+| `shared_with` | Array | Array of user_id yang punya akses. Default: `[]` |
+| `share_permission` | String | `'view'` atau `'edit'`. Default: `'view'` |
 | `created_at` | Timestamp | ISO string |
 | `updated_at` | Timestamp | ISO string |
 
 **Folders** disimpan di `localStorage` key `notes_folders_{userId}` (bukan IndexedDB).
 
-**Features:**
+**Features (Phase 24):**
 - Two-column layout: panel kiri (search, pinned, folders, all notes) + panel kanan (editor)
 - **Markdown editor** dengan toggle Edit/Preview — bold, italic, code, headings, lists, blockquote, links, hr
 - **Auto-save** debounce 800ms dengan indikator "Saved"
@@ -632,9 +635,17 @@ Private note-taking module per user. Inspired by Obsidian/Notion — simple, per
 - **Export per note**: tombol "Export .md" di toolbar → download file `.md`
 - **Export semua**: JSON (bisa diimport kembali) atau Markdown gabungan
 - **Import**: JSON dari hasil export — merge by ID (tidak menimpa yang sudah ada)
-- **Settings backup**: store `notes` ikut ter-backup/restore saat export/import penuh dari Settings
 - **Responsif**: panel kiri collapse jadi drawer overlay di layar ≤ 768px
-- Visible untuk semua role — ini catatan personal, bukan fitur kolaborasi
+
+**Features (Phase 25 — Notes Sharing & Collaboration Audit):**
+- **Share Note**: owner bisa membagikan note ke member lain via modal — pilih user, set permission (view/edit)
+- **Permission levels**: `view` = textarea readonly + banner info; `edit` = bisa edit + autosave
+- **Shared with me**: notes dari orang lain muncul di section "Dibagikan ke Saya" di panel kiri
+- **Visual indicators**: badge "Shared" + label "Dari: [nama]" untuk received notes; icon share-2 untuk notes yang sudah dibagikan
+- **Access control**: tombol Delete, Pin, Share, Tag, Color, Move Folder HANYA tampil untuk owner
+- **Audit log**: setiap aksi pada note dicatat di store `note_audit`
+- **Riwayat tab**: owner bisa melihat audit trail per-note sebagai timeline vertikal
+- **Shared user audit**: aksi edit/view oleh non-owner dicatat sebagai `note_edited_shared` / `note_viewed_shared`
 
 ---
 
@@ -699,7 +710,8 @@ Object Stores:
 ├── meetings        (keyPath: id)    — indexes: date                 ← new in Phase 19
 ├── discussions     (keyPath: id)    — indexes: project_id           ← new in Phase 20
 ├── notifications   (keyPath: id)    — indexes: user_id, read, created_at  ← new in Phase 23
-├── notes           (keyPath: id)    — indexes: user_id, folder_id, created_at, updated_at, pinned  ← new in Phase 24
+├── notes           (keyPath: id)    — indexes: user_id, folder_id, created_at, updated_at, pinned, shared_with (multiEntry)  ← Phase 24–25
+├── note_audit      (keyPath: id)    — indexes: note_id, user_id, action, created_at  ← new in Phase 25
 ```
 
 > **Note:** No new stores in Phase 21. DB bumped to version `4` to trigger `onupgradeneeded` for any migration logic needed by future phases.
@@ -1215,6 +1227,30 @@ Tasks:
 
 ---
 
+### Phase 25 — Notes Sharing & Collaboration Audit
+
+**Version:** `v1.6.0`
+**Deliverable**: Owner bisa membagikan note ke member lain (view/edit), semua aktivitas note tercatat di audit log yang bisa dilihat owner.
+
+- [x] Bump DB version ke `7` di `db.js`, tambah index `shared_with` (multiEntry) pada store `notes`, tambah store `note_audit` (keyPath: `id`, indexes: `note_id`, `user_id`, `action`, `created_at`)
+- [x] Tambah prefix `NAUD` ke `ID_PREFIX` di `utils.js`
+- [x] Update `loadNotes()` di `notes.js` — load own notes + shared notes, deduplicate, normalisasi field baru pada existing notes
+- [x] Buat fungsi `getNoteAccess(note, userId)` — returns `'owner'` | `'edit'` | `'view'` | `null`
+- [x] Buat fungsi `logNoteAudit(noteId, action, detail)` di `notes.js`
+- [x] Tambahkan `logNoteAudit()` ke semua fungsi relevan: createNewNote, persistCurrentNote, deleteActiveNote, togglePin, setNoteColor, addTag, removeTag, moveNoteToFolder, exportNoteAsMd, selectNote
+- [x] Tambahkan tombol Share di `renderEditorToolbar()` — hanya untuk owner
+- [x] Buat fungsi `openShareModal(note, userId)` — modal share dengan member picker, permission radio, daftar akses + revoke
+- [x] Buat fungsi `shareNote()` dan `unshareNote()`
+- [x] Update `renderNoteListItem()` — badge "Shared", label "Dari: [nama]", icon share-2
+- [x] Update `renderEditor()` — tab Riwayat (audit mode), readonly banner untuk view-only, disable textarea/toolbar untuk view permission
+- [x] Buat fungsi `renderAuditLog(note)` dan `loadAuditPanel(note)`
+- [x] Tambahkan section "Dibagikan ke Saya" di panel kiri
+- [x] Tambahkan semua class CSS baru ke `css/pages/notes.css` (prefix `notes-share__` dan `notes-audit__`)
+- [x] Bump `sw.js` cache version ke `v1.6.0`
+- [x] Update README.md — section 5.20, section 7 (data models), section 9 (phases), section 10 (dev log), version `v1.6.0`
+
+---
+
 > This section is updated at the start and end of every phase.
 
 ```
@@ -1222,7 +1258,7 @@ Tasks:
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  Current Version   : v1.5.0                                     ║
-║  Current Phase     : Phase 24 — Personal Notes                 ║
+║  Current Phase     : Phase 25 — Notes Sharing & Audit          ║
 ║  Phase Status      : DONE                                       ║
 ║  Next Phase        : Phase 25 — (TBD)                          ║
 ╠══════════════════════════════════════════════════════════════════╣
@@ -1252,9 +1288,17 @@ Tasks:
 ║  [x] Phase 22 — Bugfix                             v1.3.2      ║
 ║  [x] Phase 23 — Notification Center                v1.4.0      ║
 ║  [x] Phase 24 — Personal Notes                     v1.5.0      ║
+║  [x] Phase 25 — Notes Sharing & Collaboration Audit v1.6.0     ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
 ║                                                                 ║
+║  v1.6.0 [2026-03-03]  Phase 25 — Notes Sharing & Audit:      ║
+║    - Share notes ke member lain (view/edit permission)         ║
+║    - Audit log per-note (store note_audit, store NAUD-XXXX)    ║
+║    - Tab Riwayat di editor, timeline audit log                 ║
+║    - Visual indicators untuk shared notes di panel kiri        ║
+║    - Access control: owner-only actions (delete, pin, share)   ║
+║    - DB bumped to v7, sw.js cache v1.6.0                       ║
 ║  v1.5.1 [2026-03-03]  Bugfix & Enhancement: Personal Notes   ║
 ║                         — back button folder navigation;        ║
 ║                         close active note button; upload .md   ║

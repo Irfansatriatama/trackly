@@ -6,7 +6,7 @@
  */
 
 const DB_NAME = 'trackly_db';
-const DB_VERSION = 6;
+const DB_VERSION = 7;
 
 /** @type {IDBDatabase|null} */
 let _db = null;
@@ -29,6 +29,7 @@ const STORES = {
   settings:     { keyPath: 'key', indexes: [] },
   notifications: { keyPath: 'id', indexes: ['user_id', 'read', 'created_at'] },
   notes:         { keyPath: 'id', indexes: ['user_id', 'folder_id', 'created_at', 'updated_at', 'pinned'] },
+  note_audit:    { keyPath: 'id', indexes: ['note_id', 'user_id', 'action', 'created_at'] },
 };
 
 /**
@@ -43,13 +44,21 @@ export function openDB() {
 
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
+      const transaction = event.target.transaction;
 
       for (const [storeName, config] of Object.entries(STORES)) {
+        let store;
         if (!db.objectStoreNames.contains(storeName)) {
-          const store = db.createObjectStore(storeName, { keyPath: config.keyPath });
+          store = db.createObjectStore(storeName, { keyPath: config.keyPath });
           for (const index of config.indexes) {
             store.createIndex(index, index, { unique: false });
           }
+        } else {
+          store = transaction.objectStore(storeName);
+        }
+        // Add shared_with multiEntry index on notes store if missing
+        if (storeName === 'notes' && !store.indexNames.contains('shared_with')) {
+          store.createIndex('shared_with', 'shared_with', { multiEntry: true });
         }
       }
     };
