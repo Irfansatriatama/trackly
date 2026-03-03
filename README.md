@@ -32,7 +32,7 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.6.2` |
+| **Current Version** | `v1.6.3` |
 | **Current Phase** | Phase 25 — Notes Sharing & Collaboration Audit |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
@@ -1339,6 +1339,20 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ║  [x] Phase 25 — Notes Sharing & Collaboration Audit v1.6.0     ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
+║                                                                 ║
+║  v1.6.3 [2026-03-04]  UX Enhancement: Dashboard              ║
+║    - Live clock (day, date, HH:MM:SS) with setInterval in     ║
+║      dashboard-welcome area; interval cleared on re-render     ║
+║    - Activity timeline redesign: vertical timeline with color  ║
+║      dots per action type; default 5 items + Show more toggle  ║
+║    - Task Status donut chart (pure SVG, 6 statuses with        ║
+║      legend) + Task Priority horizontal bar chart (active      ║
+║      tasks only); no external chart library                    ║
+║    - dashboard.js: _startClock/_stopClock, _renderDonutChart,  ║
+║      _renderBarChart, timeline buildTimelineItems helper       ║
+║    - css/pages/dashboard.css: fully written with all new       ║
+║      component styles (.dashboard-clock, .activity-timeline-*, ║
+║      .dashboard-charts-row, .dashboard-chart-*)                ║
 ║                                                                 ║
 ║  v1.6.2 [2026-03-04]  UX Fix: Icon Alignment & Positioning   ║
 ║    - Diperbaiki secara sistematis di seluruh halaman            ║

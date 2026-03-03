@@ -1,1 +1,243 @@
-/** TRACKLY — dashboard.css | Page-specific styles — populated in the corresponding development phase. */
+/** TRACKLY — dashboard.css | Dashboard page styles */
+
+/* ─── Welcome / Greeting ──────────────────────────────────────────────────────── */
+
+.dashboard-welcome {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+}
+
+/* ─── Improvement 1: Live Clock ───────────────────────────────────────────────── */
+
+.dashboard-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  letter-spacing: 0.4px;
+  margin-top: var(--space-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-clock svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* ─── Stats Grid ─────────────────────────────────────────────────────────────── */
+
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+@media (max-width: 900px) {
+  .dashboard-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .dashboard-stats-grid { grid-template-columns: 1fr; }
+}
+
+/* ─── Improvement 3: Charts Row ───────────────────────────────────────────────── */
+
+.dashboard-charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  margin-top: var(--space-6);
+}
+
+@media (max-width: 768px) {
+  .dashboard-charts-row { grid-template-columns: 1fr; }
+}
+
+.dashboard-chart-card {
+  min-height: 200px;
+}
+
+.dashboard-chart-card .card__body {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.dashboard-chart__donut-wrap {
+  flex-shrink: 0;
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.dashboard-chart__donut-wrap svg {
+  width: 120px;
+  height: 120px;
+}
+
+.dashboard-chart__donut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.dashboard-chart__donut-total {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  display: block;
+  line-height: 1;
+}
+
+.dashboard-chart__donut-label {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  display: block;
+  margin-top: 2px;
+}
+
+.dashboard-chart__legend {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.dashboard-chart__legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text);
+}
+
+.dashboard-chart__legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dashboard-chart__legend-count {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.dashboard-chart__bar-wrap {
+  flex: 1;
+  width: 100%;
+}
+
+.dashboard-chart__bar-wrap svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.dashboard-chart__empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  padding: var(--space-6);
+}
+
+/* ─── Improvement 2: Activity Timeline ───────────────────────────────────────── */
+
+.activity-timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-timeline-item {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.activity-timeline-item__connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 28px;
+}
+
+.activity-timeline-item__dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.activity-timeline-item__dot svg {
+  width: 13px;
+  height: 13px;
+}
+
+.activity-timeline-item__line {
+  width: 2px;
+  flex: 1;
+  background: var(--color-border);
+  margin-top: var(--space-1);
+  min-height: 12px;
+}
+
+.activity-timeline-item__body {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: var(--space-2);
+}
+
+.activity-timeline-item__text {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.activity-timeline-item__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: 2px;
+}
+
+.activity-timeline-item__time {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.activity-timeline-show-more {
+  margin-top: var(--space-3);
+  text-align: center;
+}
+
+/* ─── Main grid ──────────────────────────────────────────────────────────────── */
+
+.dashboard-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+}
+
+@media (max-width: 768px) {
+  .dashboard-main-grid { grid-template-columns: 1fr; }
+}
