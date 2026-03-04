@@ -32,7 +32,7 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.7.3` |
+| **Current Version** | `v1.7.4` |
 | **Current Phase** | Phase 26 — Maintenance Board View & Report PDF Revamp |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
@@ -1305,7 +1305,7 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v1.7.3                                     ║
+║  Current Version   : v1.7.4                                     ║
 ║  Current Phase     : Phase 26 — Maintenance Board View         ║
 ║  Phase Status      : DONE                                       ║
 ║  Next Phase        : Phase 27 — (TBD)                          ║
@@ -1341,6 +1341,14 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
 ║                                                                 ║
+║  v1.7.4 [2026-03-04]  Bug Fix Phase 26 Fix 4: Maintenance Report —      ║
+║    page header tampil identik dengan tab lain (z-index & layout fix);  ║
+║    judul "Maintenance Report" dan subtitle nama project tidak lagi      ║
+║    tertutup sticky subnav; tombol Export CSV / Export Excel /           ║
+║    Generate PDF fully visible dan bisa diklik; hapus !important         ║
+║    berlebihan dari page-header & page-header__actions; CSS di           ║
+║    maintenance-report.css disederhanakan sesuai spec Fix 4              ║
+║                                                                         ║
 ║  v1.7.3 [2026-03-04]  Bug Fix Phase 26 Fix 3: Maintenance Report —      ║
 ║    judul tidak lagi tertutup sticky subnav (padding-top & z-index fix), ║
 ║    tombol Export CSV / Excel / Generate PDF kembali bisa diklik;        ║

@@ -435,35 +435,37 @@
   display: none; /* visible only in @media print */
 }
 
-/* ─── BUG 1 + BUG 6: maintenance-report-page wrapper ─────────────────────── */
+/* ─── Phase 26 Fix 4: page-container & page-header layout fix ────────────── */
 /* Scoped to this page only — does not affect maintenance.js */
-/* Bug 1 Fix: add padding-top equal to subnav height (~44px) so page-header
-   is not hidden behind the sticky subnav (position:sticky; top:64px; z-index:10) */
+
+/* Subnav is position:sticky; top:64px; z-index:10 — it stays in normal flow
+   until it sticks, then overlaps content below. page-container needs no extra
+   padding-top because subnav is OUTSIDE page-container in the DOM. The overlap
+   happens because page-header inside page-container shares the same stacking
+   context. Fix: give page-header z-index:11 so it renders above the subnav. */
 .maintenance-report-page .page-container {
   padding-top: 0;
 }
 
-/* Ensure page-header is always visible and not hidden/overlapped */
-/* Bug 2 Fix: position:relative + z-index:11 ensures page-header is above
-   the sticky subnav (z-index:10) so buttons are clickable */
+/* page-header must stack above sticky subnav (z-index:10) so title and
+   action buttons are fully visible and clickable at all times */
 .maintenance-report-page .page-header {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
   position: relative;
   z-index: 11;
-  margin-top: 0;
   padding: var(--space-4) var(--space-6);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-card);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: 0;
 }
 
 .maintenance-report-page .page-header__actions {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
   position: relative;
   z-index: 11;
+  display: flex;
   align-items: center;
   gap: var(--space-3);
   flex-shrink: 0;
