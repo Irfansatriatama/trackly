@@ -32,7 +32,7 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.7.0` |
+| **Current Version** | `v1.7.1` |
 | **Current Phase** | Phase 26 — Maintenance Board View & Report PDF Revamp |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
@@ -1305,7 +1305,7 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v1.5.0                                     ║
+║  Current Version   : v1.7.1                                     ║
 ║  Current Phase     : Phase 26 — Maintenance Board View         ║
 ║  Phase Status      : DONE                                       ║
 ║  Next Phase        : Phase 27 — (TBD)                          ║
@@ -1337,9 +1337,14 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ║  [x] Phase 23 — Notification Center                v1.4.0      ║
 ║  [x] Phase 24 — Personal Notes                     v1.5.0      ║
 ║  [x] Phase 25 — Notes Sharing & Collaboration Audit v1.6.0     ║
-║  [x] Phase 26 — Maintenance Board View & Report Revamp v1.7.0 ║
+║  [x] Phase 26 — Maintenance Board View & Report Revamp v1.7.1 ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
+║                                                                 ║
+║  v1.7.1 [2026-03-04]  Bug Fix Phase 26 Fix 1: Maintenance Report —
+║    page header tampil kembali, subnav disamakan dengan maintenance,
+║    tab aktif Maintenance, filter bar diganti searchbar + modal filter,
+║    tombol Preview dihapus, overlay subnav diatasi                   ║
 ║                                                                 ║
 ║  v1.7.0 [2026-03-04]  Phase 26: Maintenance Board View          ║
 ║    (Kanban drag & drop, pipeline baru 6+2 status, permission   ║

@@ -434,3 +434,81 @@
 .rpt-print-header {
   display: none; /* visible only in @media print */
 }
+
+/* ─── BUG 6: maintenance-report-page wrapper ──────────────────────────────── */
+/* Scoped to this page only — does not affect maintenance.js */
+.maintenance-report-page .page-container {
+  padding-top: var(--space-4);
+}
+
+/* ─── Filter bar (new searchbar + button layout) ──────────────────────────── */
+.rpt-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  flex-wrap: nowrap;
+}
+
+/* Override the old card-style filter bar */
+.maintenance-report-page .rpt-filter-bar {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+/* ─── Report info bar ─────────────────────────────────────────────────────── */
+.rpt-info-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-5);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.rpt-info-bar__left { flex: 1; }
+.rpt-info-bar__right { flex-shrink: 0; }
+
+/* ─── Print styles ────────────────────────────────────────────────────────── */
+@media print {
+  .rpt-print-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .rpt-company-logo {
+    max-height: 48px;
+    max-width: 160px;
+    object-fit: contain;
+    margin-bottom: 6px;
+  }
+
+  .rpt-company-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .rpt-print-meta {
+    text-align: right;
+    font-size: 12px;
+    color: #475569;
+    line-height: 1.6;
+  }
+
+  .no-print { display: none !important; }
+
+  .rpt-filter-bar,
+  .page-header__actions { display: none !important; }
+
+  .rpt-row-alt { background: #f8fafc !important; }
+}

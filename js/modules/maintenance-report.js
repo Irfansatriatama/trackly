@@ -1,18 +1,20 @@
 /**
  * TRACKLY — maintenance-report.js
- * Phase 13: Maintenance Report & Invoice (PDF)
- * Phase 21: Added Export Excel (.xlsx via SheetJS), Export CSV,
- *   new fields: severity, due_date, assigned_date, ordered_by, pic_client.
- * Phase 26: Revamp — PDF via window.print() showing 9-column tabel, filter by
- *   status (multi-select) + date range (Assign Date), Preview button.
- *   Updated status pipeline to match Phase 26 statuses.
- *   Excel/CSV columns aligned with new 9-column spec.
+ * Phase 13 → Phase 21 → Phase 26 → Phase 26 Fix 1
+ * Fix 1 changes:
+ *   BUG 1 — subnav moved outside .page-container; page-header margin removed
+ *   BUG 2 — subnav tabs identical to maintenance.js (Discussion + Log added)
+ *   BUG 3 — tab Maintenance has is-active (not maintenance-report)
+ *   BUG 4 — filter bar replaced with searchbar + filter modal
+ *   BUG 5 — Preview button removed
+ *   BUG 6 — .maintenance-report-page wrapper class added
  * Access: PM/Admin only.
  */
 
 import { getAll, getById } from '../core/db.js';
 import { nowISO, sanitize, debug } from '../core/utils.js';
 import { showToast } from '../components/toast.js';
+import { openModal, closeModal } from '../components/modal.js';
 import { getSession } from '../core/auth.js';
 
 // ─── Module State ─────────────────────────────────────────────────────────────
@@ -26,7 +28,9 @@ let _settings        = {};
 let _dateFrom        = '';
 let _dateTo          = '';
 let _filteredTickets = [];
-let _filterStatuses  = []; // array of selected statuses (empty = all)
+let _filterStatuses  = [];
+let _searchQuery     = '';
+let _searchDebounce  = null;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -47,11 +51,21 @@ const TICKET_STATUS_OPTIONS = [
   { value: 'completed',         label: 'Completed' },
   { value: 'canceled',          label: 'Canceled' },
   { value: 'on_hold',           label: 'On Hold' },
-  // Legacy statuses — display as-is
   { value: 'open',              label: 'Open' },
   { value: 'resolved',          label: 'Resolved' },
   { value: 'closed',            label: 'Closed' },
   { value: 'rejected',          label: 'Rejected' },
+];
+
+const FILTER_STATUS_OPTIONS = [
+  { value: 'backlog',           label: 'Backlog' },
+  { value: 'in_progress',       label: 'In Progress' },
+  { value: 'awaiting_approval', label: 'Awaiting Approval' },
+  { value: 'on_check',          label: 'On Check' },
+  { value: 'need_revision',     label: 'Need Revision' },
+  { value: 'completed',         label: 'Completed' },
+  { value: 'canceled',          label: 'Canceled' },
+  { value: 'on_hold',           label: 'On Hold' },
 ];
 
 const TICKET_PRIORITY_OPTIONS = [
@@ -127,6 +141,7 @@ export async function render(params = {}) {
     _dateFrom = from.toISOString().substring(0, 10);
     _dateTo   = now.toISOString().substring(0, 10);
     _filterStatuses = [];
+    _searchQuery = '';
 
     _applyFilters();
     renderReportPage();
@@ -143,14 +158,26 @@ export async function render(params = {}) {
 function _applyFilters() {
   const from = _dateFrom ? new Date(_dateFrom + 'T00:00:00') : null;
   const to   = _dateTo   ? new Date(_dateTo   + 'T23:59:59') : null;
+  const q    = _searchQuery.trim().toLowerCase();
 
   _filteredTickets = _tickets.filter(t => {
-    // Date filter on assigned_date (Assign Date), fallback to created_at
-    const d = new Date(t.assigned_date || t.created_at);
-    if (from && d < from) return false;
-    if (to   && d > to)   return false;
-    // Status filter
+    // Search: Ticket ID or Task Title (case-insensitive)
+    if (q) {
+      const idMatch    = (t.id    || '').toLowerCase().includes(q);
+      const titleMatch = (t.title || '').toLowerCase().includes(q);
+      if (!idMatch && !titleMatch) return false;
+    }
+
+    // Date filter: only apply if ticket has assigned_date; null/empty tickets always pass
+    if (t.assigned_date) {
+      const d = new Date(t.assigned_date);
+      if (from && d < from) return false;
+      if (to   && d > to)   return false;
+    }
+
+    // Status filter: empty = all pass
     if (_filterStatuses.length > 0 && !_filterStatuses.includes(t.status)) return false;
+
     return true;
   });
 }
@@ -161,65 +188,51 @@ function renderReportPage() {
   const content = document.getElementById('main-content');
   if (!content) return;
 
-  const activeFilterDesc = _filterStatuses.length > 0
-    ? `Status: ${_filterStatuses.map(s=>_getLabelFor(TICKET_STATUS_OPTIONS,s)).join(', ')}`
-    : 'All Statuses';
+  // Badge count: count active non-default filters
+  const filterCount = _filterStatuses.length + (_dateFrom || _dateTo ? 1 : 0);
 
+  // BUG 1: subnav OUTSIDE .page-container
+  // BUG 6: wrapper div with .maintenance-report-page for CSS scoping
   content.innerHTML = `
-    <div class="page-container page-enter">
+    <div class="maintenance-report-page">
       ${_buildSubnav()}
 
-      <div class="page-header" style="margin-top:var(--space-6);">
-        <div class="page-header__info">
-          <h1 class="page-header__title">Maintenance Report</h1>
-          <p class="page-header__subtitle">${sanitize(_project.name)}</p>
-        </div>
-        <div class="page-header__actions">
-          <button class="btn btn--outline" id="btnExportCsv">
-            <i data-lucide="file-spreadsheet" aria-hidden="true"></i> Export CSV
-          </button>
-          <button class="btn btn--outline" id="btnExportExcel">
-            <i data-lucide="table" aria-hidden="true"></i> Export Excel
-          </button>
-          <button class="btn btn--primary" id="btnExportPdf">
-            <i data-lucide="printer" aria-hidden="true"></i> Generate PDF
-          </button>
-        </div>
-      </div>
-
-      <!-- Filter Panel -->
-      <div class="rpt-filter-bar" id="rptFilterBar">
-        <div class="rpt-filter-group">
-          <label class="form-label">Assign Date From</label>
-          <input type="date" class="form-input" id="rptDateFrom" value="${_dateFrom}" />
-        </div>
-        <div class="rpt-filter-group">
-          <label class="form-label">Assign Date To</label>
-          <input type="date" class="form-input" id="rptDateTo" value="${_dateTo}" />
-        </div>
-        <div class="rpt-filter-group" style="flex:2;min-width:200px;">
-          <label class="form-label">Filter by Status</label>
-          <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);padding:6px 10px;max-height:100px;overflow-y:auto;background:var(--color-card);">
-            <label style="display:flex;align-items:center;gap:6px;padding:2px 0;cursor:pointer;font-size:13px;">
-              <input type="checkbox" id="rptStatusAll" ${_filterStatuses.length===0?'checked':''} style="accent-color:var(--color-primary);" />
-              <span>All Statuses</span>
-            </label>
-            ${TICKET_STATUS_OPTIONS.filter(s=>!['open','resolved','closed','rejected'].includes(s.value)).map(s=>`
-              <label style="display:flex;align-items:center;gap:6px;padding:2px 0;cursor:pointer;font-size:13px;">
-                <input type="checkbox" name="rptStatus" value="${s.value}" ${_filterStatuses.includes(s.value)?'checked':''} style="accent-color:var(--color-primary);" />
-                <span>${s.label}</span>
-              </label>`).join('')}
+      <div class="page-container page-enter">
+        <div class="page-header">
+          <div class="page-header__info">
+            <h1 class="page-header__title">Maintenance Report</h1>
+            <p class="page-header__subtitle">${sanitize(_project.name)}</p>
+          </div>
+          <div class="page-header__actions">
+            <button class="btn btn--outline" id="btnExportCsv">
+              <i data-lucide="file-spreadsheet" aria-hidden="true"></i> Export CSV
+            </button>
+            <button class="btn btn--outline" id="btnExportExcel">
+              <i data-lucide="table" aria-hidden="true"></i> Export Excel
+            </button>
+            <button class="btn btn--primary" id="btnExportPdf">
+              <i data-lucide="printer" aria-hidden="true"></i> Generate PDF
+            </button>
           </div>
         </div>
-        <div style="display:flex;align-items:flex-end;">
-          <button class="btn btn--outline" id="btnApplyFilter">
-            <i data-lucide="eye" aria-hidden="true"></i> Preview
-          </button>
-        </div>
-      </div>
 
-      <!-- Report Content (for screen preview and print) -->
-      <div id="rptMainContent">${_renderReportTable()}</div>
+        <!-- BUG 4: Searchbar + Filter modal button -->
+        <div class="rpt-filter-bar" id="rptFilterBar">
+          <div class="projects-search" style="flex:1;">
+            <i data-lucide="search" class="projects-search__icon" aria-hidden="true"></i>
+            <input type="text" class="form-input projects-search__input" id="rptSearchInput"
+              placeholder="Search tiket..." value="${sanitize(_searchQuery)}" autocomplete="off" />
+          </div>
+          <div class="filter-btn-wrap">
+            <button class="btn btn--secondary" id="btnOpenRptFilter">
+              <i data-lucide="settings-2" aria-hidden="true"></i> Filter${filterCount > 0 ? ` · ${filterCount}` : ''}
+            </button>
+          </div>
+        </div>
+
+        <!-- Report Content -->
+        <div id="rptMainContent">${_renderReportTable()}</div>
+      </div>
     </div>`;
 
   if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -227,39 +240,108 @@ function renderReportPage() {
 }
 
 function _bindEvents() {
-  document.getElementById('rptStatusAll')?.addEventListener('change', e => {
-    if (e.target.checked) {
-      document.querySelectorAll('input[name="rptStatus"]').forEach(cb => cb.checked = false);
-    }
-  });
-  document.querySelectorAll('input[name="rptStatus"]').forEach(cb => {
-    cb.addEventListener('change', () => {
-      const anyChecked = document.querySelectorAll('input[name="rptStatus"]:checked').length > 0;
-      const allCb = document.getElementById('rptStatusAll');
-      if (allCb) allCb.checked = !anyChecked;
-    });
+  // BUG 4A: real-time search with 300ms debounce
+  document.getElementById('rptSearchInput')?.addEventListener('input', e => {
+    clearTimeout(_searchDebounce);
+    _searchDebounce = setTimeout(() => {
+      _searchQuery = e.target.value;
+      _applyFilters();
+      const el = document.getElementById('rptMainContent');
+      if (el) {
+        el.innerHTML = _renderReportTable();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+    }, 300);
   });
 
-  document.getElementById('btnApplyFilter')?.addEventListener('click', () => {
-    _dateFrom = document.getElementById('rptDateFrom')?.value || _dateFrom;
-    _dateTo   = document.getElementById('rptDateTo')?.value   || _dateTo;
-    const allCb = document.getElementById('rptStatusAll');
-    if (allCb?.checked) {
-      _filterStatuses = [];
-    } else {
-      _filterStatuses = Array.from(document.querySelectorAll('input[name="rptStatus"]:checked')).map(cb => cb.value);
-    }
-    _applyFilters();
-    const el = document.getElementById('rptMainContent');
-    if (el) {
-      el.innerHTML = _renderReportTable();
-      if (typeof lucide !== 'undefined') lucide.createIcons();
-    }
-  });
+  // BUG 4B: filter modal button
+  document.getElementById('btnOpenRptFilter')?.addEventListener('click', _openFilterModal);
 
   document.getElementById('btnExportPdf')?.addEventListener('click', _handleExportPdf);
   document.getElementById('btnExportExcel')?.addEventListener('click', _handleExportExcel);
   document.getElementById('btnExportCsv')?.addEventListener('click', _handleExportCsv);
+}
+
+// ─── Filter Modal ─────────────────────────────────────────────────────────────
+
+function _openFilterModal() {
+  const statusCheckboxes = FILTER_STATUS_OPTIONS.map(s => `
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:4px 0;">
+      <input type="checkbox" name="modalRptStatus" value="${s.value}"
+        ${_filterStatuses.includes(s.value) ? 'checked' : ''}
+        style="accent-color:var(--color-primary);width:15px;height:15px;flex-shrink:0;" />
+      <span>${s.label}</span>
+    </label>`).join('');
+
+  const body = `
+    <div style="display:flex;flex-direction:column;gap:var(--space-5);">
+      <div>
+        <div style="font-weight:600;font-size:13px;margin-bottom:var(--space-3);color:var(--color-text);">Assign Date</div>
+        <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;">
+          <div style="flex:1;min-width:130px;">
+            <label class="form-label">Dari</label>
+            <input type="date" class="form-input" id="modalRptDateFrom" value="${_dateFrom}" />
+          </div>
+          <div style="flex:1;min-width:130px;">
+            <label class="form-label">Sampai</label>
+            <input type="date" class="form-input" id="modalRptDateTo" value="${_dateTo}" />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2);">
+          <div style="font-weight:600;font-size:13px;color:var(--color-text);">Status</div>
+          <div style="display:flex;gap:var(--space-3);">
+            <button type="button" class="btn btn--ghost btn--sm" id="btnSelectAllStatus" style="font-size:12px;padding:2px 8px;">Pilih Semua</button>
+            <button type="button" class="btn btn--ghost btn--sm" id="btnClearAllStatus" style="font-size:12px;padding:2px 8px;">Hapus Semua</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+          ${statusCheckboxes}
+        </div>
+      </div>
+    </div>`;
+
+  const footer = `
+    <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+      <button type="button" class="btn btn--outline" id="btnResetRptFilter">Reset Filter</button>
+      <button type="button" class="btn btn--primary" id="btnApplyRptFilter">Terapkan</button>
+    </div>`;
+
+  openModal({ title: 'Filter Report', body, footer, size: 'md' });
+
+  // Bind modal inner buttons after render
+  setTimeout(() => {
+    document.getElementById('btnSelectAllStatus')?.addEventListener('click', () => {
+      document.querySelectorAll('input[name="modalRptStatus"]').forEach(cb => { cb.checked = true; });
+    });
+    document.getElementById('btnClearAllStatus')?.addEventListener('click', () => {
+      document.querySelectorAll('input[name="modalRptStatus"]').forEach(cb => { cb.checked = false; });
+    });
+
+    document.getElementById('btnApplyRptFilter')?.addEventListener('click', () => {
+      _dateFrom = document.getElementById('modalRptDateFrom')?.value || '';
+      _dateTo   = document.getElementById('modalRptDateTo')?.value   || '';
+      _filterStatuses = Array.from(document.querySelectorAll('input[name="modalRptStatus"]:checked'))
+        .map(cb => cb.value);
+      closeModal();
+      _applyFilters();
+      renderReportPage();
+    });
+
+    document.getElementById('btnResetRptFilter')?.addEventListener('click', () => {
+      const now = new Date();
+      const from = new Date(now);
+      from.setDate(from.getDate() - 30);
+      _dateFrom = from.toISOString().substring(0, 10);
+      _dateTo   = now.toISOString().substring(0, 10);
+      _filterStatuses = [];
+      closeModal();
+      _applyFilters();
+      renderReportPage();
+    });
+  }, 50);
 }
 
 // ─── REPORT TABLE ─────────────────────────────────────────────────────────────
@@ -282,7 +364,6 @@ function _renderReportTable() {
   const companyLogo = _settings['company_logo'] || '';
 
   return `
-    <!-- Print Header (hidden on screen, shown on print) -->
     <div class="rpt-print-header">
       <div>
         ${companyLogo ? `<img src="${companyLogo}" class="rpt-company-logo" alt="Company Logo" />` : ''}
@@ -297,7 +378,6 @@ function _renderReportTable() {
       </div>
     </div>
 
-    <!-- Screen Info Bar (hidden on print) -->
     <div class="rpt-info-bar no-print">
       <div class="rpt-info-bar__left">
         <strong>${sanitize(_project.name)}</strong> — Maintenance Report
@@ -306,7 +386,6 @@ function _renderReportTable() {
       <div class="rpt-info-bar__right text-muted text-sm">${tickets.length} ticket${tickets.length!==1?'s':''}</div>
     </div>
 
-    <!-- 9-Column Report Table -->
     <div class="rpt-table-wrap">
       <table class="rpt-table rpt-report-table">
         <thead>
@@ -429,9 +508,12 @@ function _handleExportPdf() {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+// BUG 2 + 3: subnav identical to maintenance.js; is-active on Maintenance tab
 function _buildSubnav() {
   const id = sanitize(_projectId);
+  const session = getSession();
   const showMaint = _project && ['running', 'maintenance'].includes(_project.phase);
+  const showLog = session && ['admin', 'pm'].includes(session.role);
   return `
     <div class="project-subnav">
       <a class="project-subnav__link" href="#/projects/${id}"><i data-lucide="layout-dashboard" aria-hidden="true"></i> Overview</a>
@@ -439,9 +521,11 @@ function _buildSubnav() {
       <a class="project-subnav__link" href="#/projects/${id}/backlog"><i data-lucide="list" aria-hidden="true"></i> Backlog</a>
       <a class="project-subnav__link" href="#/projects/${id}/sprint"><i data-lucide="zap" aria-hidden="true"></i> Sprint</a>
       <a class="project-subnav__link" href="#/projects/${id}/gantt"><i data-lucide="gantt-chart" aria-hidden="true"></i> Gantt</a>
-      ${showMaint ? `<a class="project-subnav__link" href="#/projects/${id}/maintenance"><i data-lucide="wrench" aria-hidden="true"></i> Maintenance</a>` : ''}
-      <a class="project-subnav__link is-active" href="#/projects/${id}/maintenance-report"><i data-lucide="file-text" aria-hidden="true"></i> Report</a>
+      <a class="project-subnav__link" href="#/projects/${id}/discussion"><i data-lucide="message-circle" aria-hidden="true"></i> Discussion</a>
+      ${showMaint ? `<a class="project-subnav__link is-active" href="#/projects/${id}/maintenance"><i data-lucide="wrench" aria-hidden="true"></i> Maintenance</a>` : ''}
+      <a class="project-subnav__link" href="#/projects/${id}/maintenance-report"><i data-lucide="file-text" aria-hidden="true"></i> Report</a>
       <a class="project-subnav__link" href="#/projects/${id}/reports"><i data-lucide="bar-chart-2" aria-hidden="true"></i> Reports</a>
+      ${showLog ? `<a class="project-subnav__link" href="#/projects/${id}/log"><i data-lucide="activity" aria-hidden="true"></i> Log</a>` : ''}
     </div>`;
 }
 
