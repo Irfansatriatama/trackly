@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.6.5` |
-| **Current Phase** | Phase 25 — Notes Sharing & Collaboration Audit |
+| **Current Version** | `v1.7.0` |
+| **Current Phase** | Phase 26 — Maintenance Board View & Report PDF Revamp |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -1306,9 +1306,9 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  Current Version   : v1.5.0                                     ║
-║  Current Phase     : Phase 25 — Notes Sharing & Audit          ║
+║  Current Phase     : Phase 26 — Maintenance Board View         ║
 ║  Phase Status      : DONE                                       ║
-║  Next Phase        : Phase 25 — (TBD)                          ║
+║  Next Phase        : Phase 27 — (TBD)                          ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -1337,8 +1337,15 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ║  [x] Phase 23 — Notification Center                v1.4.0      ║
 ║  [x] Phase 24 — Personal Notes                     v1.5.0      ║
 ║  [x] Phase 25 — Notes Sharing & Collaboration Audit v1.6.0     ║
+║  [x] Phase 26 — Maintenance Board View & Report Revamp v1.7.0 ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
+║                                                                 ║
+║  v1.7.0 [2026-03-04]  Phase 26: Maintenance Board View          ║
+║    (Kanban drag & drop, pipeline baru 6+2 status, permission   ║
+║    per role, filter bar); Report PDF revamp (tabel 9 kolom,     ║
+║    window.print); Form revamp (Reported By = PM/Admin,         ║
+║    PIC Client = Viewer dropdown, PIC Dev = Developer only)      ║
 ║                                                                 ║
 ║  v1.6.5 [2026-03-04]  UX Fix: Banner Badge Contrast,          ║
 ║    Dashboard Show More & Subnav Layout Consistency             ║

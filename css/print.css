@@ -173,3 +173,95 @@
   /* ─── Card/box reset ────────────────────────────────────────────────────── */
   .card { box-shadow: none !important; border: 1pt solid #ccc !important; }
 }
+
+/* ─── Phase 26: Maintenance Report Table (9-col) ────────────────────────── */
+@media print {
+  .rpt-report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+  }
+
+  .rpt-report-table thead {
+    display: table-header-group;
+  }
+
+  .rpt-report-table th {
+    background: #1e40af !important;
+    color: #fff !important;
+    padding: 6pt 5pt;
+    text-align: left;
+    font-weight: 700;
+    font-size: 9pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .rpt-report-table td {
+    padding: 5pt 5pt;
+    border-bottom: 0.5pt solid #e2e8f0;
+    font-size: 9pt;
+    vertical-align: top;
+  }
+
+  .rpt-report-table tr.rpt-row-alt td {
+    background: #f8fafc !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .rpt-report-table tr { page-break-inside: avoid; }
+
+  /* info bar hidden on print */
+  .rpt-info-bar { display: none !important; }
+
+  /* filter panel hidden on print */
+  .rpt-filter-bar { display: none !important; }
+}
+
+/* ─── Screen styles for new report table ───────────────────────────────── */
+.rpt-report-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.rpt-report-table thead {
+  display: table-header-group;
+}
+
+.rpt-report-table th {
+  background: var(--color-primary);
+  color: #fff;
+  padding: var(--space-3) var(--space-3);
+  text-align: left;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rpt-report-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+  vertical-align: middle;
+}
+
+.rpt-report-table tr.rpt-row-alt td {
+  background: var(--color-surface);
+}
+
+.rpt-report-table tr:hover td {
+  background: rgba(37,99,235,0.03);
+}
+
+.rpt-info-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
+}
