@@ -32,7 +32,7 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.7.1` |
+| **Current Version** | `v1.7.2` |
 | **Current Phase** | Phase 26 — Maintenance Board View & Report PDF Revamp |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
@@ -1305,7 +1305,7 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v1.7.1                                     ║
+║  Current Version   : v1.7.2                                     ║
 ║  Current Phase     : Phase 26 — Maintenance Board View         ║
 ║  Phase Status      : DONE                                       ║
 ║  Next Phase        : Phase 27 — (TBD)                          ║
@@ -1341,6 +1341,14 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
 ║                                                                 ║
+║  v1.7.2 [2026-03-04]  Bug Fix Phase 26 Fix 2: Maintenance Report —      ║
+║    page header tampil kembali, subnav disamakan dengan maintenance      ║
+║    (tab aktif Maintenance), tab "Maintenance Report" dihapus dari       ║
+║    subnav (akses tetap via tombol Generate Report), tombol Export CSV / ║
+║    Excel / PDF kembali tampil dan berfungsi (IDs: btnExportCSV,         ║
+║    btnExportExcel, btnGeneratePDF); rpt-content-body padding added;     ║
+║    maintenance-report.css page-header always visible with !important    ║
+║                                                                         ║
 ║  v1.7.1 [2026-03-04]  Bug Fix Phase 26 Fix 1: Maintenance Report —
 ║    page header tampil kembali, subnav disamakan dengan maintenance,
 ║    tab aktif Maintenance, filter bar diganti searchbar + modal filter,

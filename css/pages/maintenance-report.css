@@ -435,10 +435,35 @@
   display: none; /* visible only in @media print */
 }
 
-/* ─── BUG 6: maintenance-report-page wrapper ──────────────────────────────── */
+/* ─── BUG 1 + BUG 6: maintenance-report-page wrapper ─────────────────────── */
 /* Scoped to this page only — does not affect maintenance.js */
 .maintenance-report-page .page-container {
-  padding-top: var(--space-4);
+  padding-top: 0;
+}
+
+/* Ensure page-header is always visible and not hidden/overlapped */
+.maintenance-report-page .page-header {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  margin-top: 0;
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-card);
+}
+
+.maintenance-report-page .page-header__actions {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+/* ─── rpt content body ───────────────────────────────────────────────────── */
+.rpt-content-body {
+  padding: var(--space-5) var(--space-6) var(--space-6);
 }
 
 /* ─── Filter bar (new searchbar + button layout) ──────────────────────────── */
