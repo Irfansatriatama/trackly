@@ -198,7 +198,7 @@ function renderReportPage() {
     <div class="maintenance-report-page">
       ${_buildSubnav()}
 
-      <div class="page-container page-enter" style="padding:0;">
+      <div class="page-container page-enter">
         <div class="page-header">
           <div class="page-header__info">
             <h1 class="page-header__title">Maintenance Report</h1>

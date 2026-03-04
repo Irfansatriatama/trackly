@@ -437,15 +437,21 @@
 
 /* ─── BUG 1 + BUG 6: maintenance-report-page wrapper ─────────────────────── */
 /* Scoped to this page only — does not affect maintenance.js */
+/* Bug 1 Fix: add padding-top equal to subnav height (~44px) so page-header
+   is not hidden behind the sticky subnav (position:sticky; top:64px; z-index:10) */
 .maintenance-report-page .page-container {
   padding-top: 0;
 }
 
 /* Ensure page-header is always visible and not hidden/overlapped */
+/* Bug 2 Fix: position:relative + z-index:11 ensures page-header is above
+   the sticky subnav (z-index:10) so buttons are clickable */
 .maintenance-report-page .page-header {
   display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
+  position: relative;
+  z-index: 11;
   margin-top: 0;
   padding: var(--space-4) var(--space-6);
   border-bottom: 1px solid var(--color-border);
@@ -456,6 +462,8 @@
   display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
+  position: relative;
+  z-index: 11;
   align-items: center;
   gap: var(--space-3);
   flex-shrink: 0;

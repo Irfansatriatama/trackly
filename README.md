@@ -32,7 +32,7 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.7.2` |
+| **Current Version** | `v1.7.3` |
 | **Current Phase** | Phase 26 — Maintenance Board View & Report PDF Revamp |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
@@ -1305,7 +1305,7 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v1.7.2                                     ║
+║  Current Version   : v1.7.3                                     ║
 ║  Current Phase     : Phase 26 — Maintenance Board View         ║
 ║  Phase Status      : DONE                                       ║
 ║  Next Phase        : Phase 27 — (TBD)                          ║
@@ -1341,6 +1341,13 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
 ║                                                                 ║
+║  v1.7.3 [2026-03-04]  Bug Fix Phase 26 Fix 3: Maintenance Report —      ║
+║    judul tidak lagi tertutup sticky subnav (padding-top & z-index fix), ║
+║    tombol Export CSV / Excel / Generate PDF kembali bisa diklik;        ║
+║    hapus inline style="padding:0" dari page-container, tambah           ║
+║    position:relative + z-index:11 pada page-header & page-header__      ║
+║    actions di maintenance-report.css                                    ║
+║                                                                         ║
 ║  v1.7.2 [2026-03-04]  Bug Fix Phase 26 Fix 2: Maintenance Report —      ║
 ║    page header tampil kembali, subnav disamakan dengan maintenance      ║
 ║    (tab aktif Maintenance), tab "Maintenance Report" dihapus dari       ║
