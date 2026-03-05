@@ -36,7 +36,9 @@
 }
 
 @media (max-width: 768px) {
-  .rpt-stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .rpt-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .rpt-stat-card {
@@ -163,8 +165,13 @@
   vertical-align: middle;
 }
 
-.rpt-table tbody tr:last-child td { border-bottom: none; }
-.rpt-table tbody tr:hover { background: var(--color-surface); }
+.rpt-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.rpt-table tbody tr:hover {
+  background: var(--color-surface);
+}
 
 /* ─── Invoice Controls (screen-only) ─────────────────────────────────────── */
 .inv-controls {
@@ -217,7 +224,11 @@
   gap: 24px;
 }
 
-.inv-header__left { display: flex; flex-direction: column; gap: 6px; }
+.inv-header__left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
 .inv-logo {
   max-height: 56px;
@@ -238,7 +249,9 @@
   line-height: 1.5;
 }
 
-.inv-header__right { text-align: right; }
+.inv-header__right {
+  text-align: right;
+}
 
 .inv-title {
   font-size: 32px;
@@ -348,8 +361,13 @@
   vertical-align: top;
 }
 
-.inv-item-row:last-child td { border-bottom: none; }
-.inv-item-row:hover { background: #f8fafc; }
+.inv-item-row:last-child td {
+  border-bottom: none;
+}
+
+.inv-item-row:hover {
+  background: #f8fafc;
+}
 
 .inv-item-id {
   font-family: 'JetBrains Mono', monospace;
@@ -432,61 +450,18 @@
 
 /* ─── Print-only header ───────────────────────────────────────────────────── */
 .rpt-print-header {
-  display: none; /* visible only in @media print */
+  display: none;
+  /* visible only in @media print */
 }
 
-/* ─── Phase 26 Fix 4: page-container & page-header layout fix ────────────── */
-/* Scoped to this page only — does not affect maintenance.js */
-
-/* Subnav is position:sticky; top:64px; z-index:10 — it stays in normal flow
-   until it sticks, then overlaps content below. page-container needs no extra
-   padding-top because subnav is OUTSIDE page-container in the DOM. The overlap
-   happens because page-header inside page-container shares the same stacking
-   context. Fix: give page-header z-index:11 so it renders above the subnav. */
-.maintenance-report-page .page-container {
-  padding-top: 0;
-}
-
-/* page-header must stack above sticky subnav (z-index:10) so title and
-   action buttons are fully visible and clickable at all times */
-.maintenance-report-page .page-header {
-  position: relative;
-  z-index: 11;
-  padding: var(--space-4) var(--space-6);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-card);
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: 0;
-}
-
-.maintenance-report-page .page-header__actions {
-  position: relative;
-  z-index: 11;
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-shrink: 0;
-}
-
-/* ─── rpt content body ───────────────────────────────────────────────────── */
-.rpt-content-body {
-  padding: var(--space-5) var(--space-6) var(--space-6);
-}
-
-/* ─── Filter bar (new searchbar + button layout) ──────────────────────────── */
-.rpt-filter-bar {
+/* ─── Filter bar (searchbar + button layout) ──────────────────────────────── */
+/* Reset filter bar to plain layout inside project-tab-body */
+.project-detail-page .rpt-filter-bar {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   margin-bottom: var(--space-5);
   flex-wrap: nowrap;
-}
-
-/* Override the old card-style filter bar */
-.maintenance-report-page .rpt-filter-bar {
   background: transparent;
   border: none;
   box-shadow: none;
@@ -506,8 +481,13 @@
   font-size: var(--text-sm);
 }
 
-.rpt-info-bar__left { flex: 1; }
-.rpt-info-bar__right { flex-shrink: 0; }
+.rpt-info-bar__left {
+  flex: 1;
+}
+
+.rpt-info-bar__right {
+  flex-shrink: 0;
+}
 
 /* ─── Print styles ────────────────────────────────────────────────────────── */
 @media print {
@@ -540,10 +520,16 @@
     line-height: 1.6;
   }
 
-  .no-print { display: none !important; }
+  .no-print {
+    display: none !important;
+  }
 
   .rpt-filter-bar,
-  .page-header__actions { display: none !important; }
+  .page-header__actions {
+    display: none !important;
+  }
 
-  .rpt-row-alt { background: #f8fafc !important; }
+  .rpt-row-alt {
+    background: #f8fafc !important;
+  }
 }

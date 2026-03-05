@@ -1,21 +1,18 @@
 /**
  * TRACKLY — maintenance-report.js
- * Phase 13 → Phase 21 → Phase 26 → Phase 26 Fix 1
- * Fix 1 changes:
- *   BUG 1 — subnav moved outside .page-container; page-header margin removed
- *   BUG 2 — subnav tabs identical to maintenance.js (Discussion + Log added)
- *   BUG 3 — tab Maintenance has is-active (not maintenance-report)
- *   BUG 4 — filter bar replaced with searchbar + filter modal
- *   BUG 5 — Preview button removed
- *   BUG 6 — .maintenance-report-page wrapper class added
+ * Phase 13 → Phase 21 → Phase 26 → Phase 26 Fix 5
+ * Fix 5: Aligned layout with standard project tab pattern.
+ *   Uses buildProjectBanner() + project-detail-page + project-tab-body
+ *   so subnav no longer covers page-header or export buttons.
  * Access: PM/Admin only.
  */
 
 import { getAll, getById } from '../core/db.js';
-import { nowISO, sanitize, debug } from '../core/utils.js';
+import { nowISO, sanitize, debug, buildProjectBanner } from '../core/utils.js';
 import { showToast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { getSession } from '../core/auth.js';
+import { renderBadge } from '../components/badge.js';
 
 // ─── Module State ─────────────────────────────────────────────────────────────
 
@@ -188,57 +185,57 @@ function renderReportPage() {
   const content = document.getElementById('main-content');
   if (!content) return;
 
+  const session = getSession();
+  const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
+  const banner = buildProjectBanner(_project, 'maintenance', { renderBadge, isAdminOrPM });
+
   // Badge count: count active non-default filters
   const filterCount = _filterStatuses.length + (_dateFrom || _dateTo ? 1 : 0);
 
-  // BUG 1: subnav OUTSIDE .page-container; page-header always visible
-  // BUG 3: button IDs updated to spec; no conditional rendering
-  // BUG 6: wrapper div with .maintenance-report-page for CSS scoping
   content.innerHTML = `
-    <div class="maintenance-report-page">
-      ${_buildSubnav()}
-
-      <div class="page-container page-enter">
-        <div class="page-header">
-          <div class="page-header__info">
-            <h1 class="page-header__title">Maintenance Report</h1>
-            <p class="page-header__subtitle">${sanitize(_project.name)}</p>
+    <div class="page-container page-enter project-detail-page">
+      ${banner}
+      <div class="page-header">
+        <div class="page-header__info">
+          <h1 class="page-header__title">Maintenance Report</h1>
+          <p class="page-header__subtitle">${sanitize(_project.name)}</p>
+        </div>
+        <div class="page-header__actions">
+          <button class="btn btn--outline" id="btnExportCSV">
+            <i data-lucide="file-spreadsheet" aria-hidden="true"></i> Export CSV
+          </button>
+          <button class="btn btn--outline" id="btnExportExcel">
+            <i data-lucide="table" aria-hidden="true"></i> Export Excel
+          </button>
+          <button class="btn btn--primary" id="btnGeneratePDF">
+            <i data-lucide="printer" aria-hidden="true"></i> Generate PDF
+          </button>
+        </div>
+      </div>
+      <div class="project-tab-body">
+        <!-- Searchbar + Filter modal button -->
+        <div class="rpt-filter-bar" id="rptFilterBar">
+          <div class="projects-search" style="flex:1;">
+            <i data-lucide="search" class="projects-search__icon" aria-hidden="true"></i>
+            <input type="text" class="form-input projects-search__input" id="rptSearchInput"
+              placeholder="Search tiket..." value="${sanitize(_searchQuery)}" autocomplete="off" />
           </div>
-          <div class="page-header__actions">
-            <button class="btn btn--outline" id="btnExportCSV">
-              <i data-lucide="file-spreadsheet" aria-hidden="true"></i> Export CSV
-            </button>
-            <button class="btn btn--outline" id="btnExportExcel">
-              <i data-lucide="table" aria-hidden="true"></i> Export Excel
-            </button>
-            <button class="btn btn--primary" id="btnGeneratePDF">
-              <i data-lucide="printer" aria-hidden="true"></i> Generate PDF
+          <div class="filter-btn-wrap">
+            <button class="btn btn--secondary" id="btnOpenRptFilter">
+              <i data-lucide="settings-2" aria-hidden="true"></i> Filter${filterCount > 0 ? ` · ${filterCount}` : ''}
             </button>
           </div>
         </div>
 
-        <div class="rpt-content-body">
-          <!-- Searchbar + Filter modal button -->
-          <div class="rpt-filter-bar" id="rptFilterBar">
-            <div class="projects-search" style="flex:1;">
-              <i data-lucide="search" class="projects-search__icon" aria-hidden="true"></i>
-              <input type="text" class="form-input projects-search__input" id="rptSearchInput"
-                placeholder="Search tiket..." value="${sanitize(_searchQuery)}" autocomplete="off" />
-            </div>
-            <div class="filter-btn-wrap">
-              <button class="btn btn--secondary" id="btnOpenRptFilter">
-                <i data-lucide="settings-2" aria-hidden="true"></i> Filter${filterCount > 0 ? ` · ${filterCount}` : ''}
-              </button>
-            </div>
-          </div>
-
-          <!-- Report Content -->
-          <div id="rptMainContent">${_renderReportTable()}</div>
-        </div>
+        <!-- Report Content -->
+        <div id="rptMainContent">${_renderReportTable()}</div>
       </div>
     </div>`;
 
   if (typeof lucide !== 'undefined') lucide.createIcons();
+  document.getElementById('btnBannerEditProject')?.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('trackly:editProject', { detail: { projectId: _project.id } }));
+  });
   _bindEvents();
 }
 
@@ -510,27 +507,6 @@ function _handleExportPdf() {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-// BUG 2 + 4: subnav identical to maintenance.js; is-active on Maintenance tab;
-//            tab "Maintenance Report" removed from subnav
-function _buildSubnav() {
-  const id = sanitize(_projectId);
-  const session = getSession();
-  const showMaint = _project && ['running', 'maintenance'].includes(_project.phase);
-  const showLog = session && ['admin', 'pm'].includes(session.role);
-  return `
-    <div class="project-subnav">
-      <a class="project-subnav__link" href="#/projects/${id}"><i data-lucide="layout-dashboard" aria-hidden="true"></i> Overview</a>
-      <a class="project-subnav__link" href="#/projects/${id}/board"><i data-lucide="kanban" aria-hidden="true"></i> Board</a>
-      <a class="project-subnav__link" href="#/projects/${id}/backlog"><i data-lucide="list" aria-hidden="true"></i> Backlog</a>
-      <a class="project-subnav__link" href="#/projects/${id}/sprint"><i data-lucide="zap" aria-hidden="true"></i> Sprint</a>
-      <a class="project-subnav__link" href="#/projects/${id}/gantt"><i data-lucide="gantt-chart" aria-hidden="true"></i> Gantt</a>
-      <a class="project-subnav__link" href="#/projects/${id}/discussion"><i data-lucide="message-circle" aria-hidden="true"></i> Discussion</a>
-      ${showMaint ? `<a class="project-subnav__link is-active" href="#/projects/${id}/maintenance"><i data-lucide="wrench" aria-hidden="true"></i> Maintenance</a>` : ''}
-      <a class="project-subnav__link" href="#/projects/${id}/reports"><i data-lucide="bar-chart-2" aria-hidden="true"></i> Reports</a>
-      ${showLog ? `<a class="project-subnav__link" href="#/projects/${id}/log"><i data-lucide="activity" aria-hidden="true"></i> Log</a>` : ''}
-    </div>`;
-}
 
 function _getLabelFor(options, value) {
   return options.find(o => o.value === value)?.label || value || '—';
