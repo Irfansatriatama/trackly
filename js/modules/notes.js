@@ -278,9 +278,7 @@ function renderEditorToolbar(note, userId) {
   const noteMode = _state.editMode;
   const access = getNoteAccess(note, userId);
   const isOwner = access === 'owner';
-  const editActive = noteMode === 'edit' ? 'is-active' : '';
-  const previewActive = noteMode === 'preview' ? 'is-active' : '';
-  const ownerLabel = isOwner ? '' : `<span class="notes-share__owner-label">Dari: ${sanitize(note._ownerName || note.owner_id || '')}</span>`; // Added ownerLabel definition
+  const ownerLabel = isOwner ? '' : `<span class="notes-share__owner-label">Dari: ${sanitize(note._ownerName || note.owner_id || '')}</span>`;
   return `
     <div class="notes-editor-toolbar">
         <div class="notes-top-toolbar__left">
@@ -289,6 +287,8 @@ function renderEditorToolbar(note, userId) {
           <button class="notes-toolbar-btn ${noteMode === 'audit' ? 'is-active' : ''}" id="btnModeAudit" title="Audit log"><i data-lucide="history" style="width:13px;height:13px"></i> History</button>
         </div>
         <div class="notes-top-toolbar__right">
+          <button class="btn btn--outline btn--sm" id="btnFullscreenNote" style="height:28px" title="Toggle Fullscreen"><i data-lucide="maximize" style="width:13px;height:13px"></i></button>
+          <button class="btn btn--outline btn--sm" id="btnCopyNote" style="height:28px" title="Copy Markdown"><i data-lucide="copy" style="width:13px;height:13px"></i> Copy</button>
           ${_state.isReadOnly ? '' : `<button class="btn btn--outline btn--sm" id="btnShareNote" style="height:28px" title="Share with team"><i data-lucide="share-2" style="width:13px;height:13px"></i> Share</button>`}
           <button class="btn btn--outline btn--sm" id="btnExportNote" style="height:28px" title="Download markdown"><i data-lucide="download" style="width:13px;height:13px"></i> Export</button>
           ${ownerLabel}
@@ -303,6 +303,10 @@ function renderBottomToolbar(note, userId) {
   const isOwner = access === 'owner';
   const tags = note.tags || [];
   const currentColor = note.color || '#ffffff';
+
+  const wordCount = note.content ? note.content.trim().split(/\\s+/).filter(w => w.length > 0).length : 0;
+  const charCount = note.content ? note.content.length : 0;
+
   const colorSwatches = NOTE_COLORS.map((c) => `<button class="notes-color-swatch ${c.hex === currentColor ? 'is-selected' : ''}" style="background:${c.hex};border-color:${c.hex === '#ffffff' ? '#e5e7eb' : c.hex}" data-color="${c.hex}" title="${c.label}" aria-label="${c.label}"></button>`).join('');
   const tagChips = tags.map((tag) => `<span class="notes-tag-chip"><i data-lucide="tag" style="width:10px;height:10px;flex-shrink:0"></i>${sanitize(tag)}${isOwner && !_state.isReadOnly ? `<button class="notes-tag-chip__remove" data-tag="${sanitize(tag)}" aria-label="Remove tag ${sanitize(tag)}">×</button>` : ''}</span>`).join('');
   const folderOptions = [`<option value="">— Tanpa Folder (All Notes)</option>`, ..._state.folders.map((f) => `<option value="${f.id}" ${note.folder_id === f.id ? 'selected' : ''}>${sanitize(f.name)}</option>`)].join('');
@@ -316,6 +320,9 @@ function renderBottomToolbar(note, userId) {
         ${tagChips}
         ${isOwner && !_state.isReadOnly ? `<input type="text" class="notes-tag-input" id="noteTagInput" placeholder="Add tag…" aria-label="Add tag">` : ''}
       </div>
+      <div class="notes-word-count" id="notesWordCount" title="Word & Character count" style="font-size:11px;color:var(--color-text-tertiary);margin-right:8px;font-family:var(--font-mono, monospace);">
+        ${wordCount} words, ${charCount} chars
+      </div>
       ${isOwner && !_state.isReadOnly ? `<div class="notes-color-picker" title="Note color">${colorSwatches}</div>` : ''}
       ${isOwner && !_state.isReadOnly ? `<div class="notes-move-folder-wrap" title="Pindah ke folder"><i data-lucide="folder-input" style="width:13px;height:13px;color:var(--color-text-tertiary);flex-shrink:0"></i>${moveToFolderControl}</div>` : ''}
       ${pinBtn}${deleteBtn}
@@ -328,10 +335,16 @@ function renderFormattingToolbar() {
     <div class="notes-format-toolbar" id="notesFormatToolbar">
       <button class="notes-format-toolbar__btn" data-fmt="bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
       <button class="notes-format-toolbar__btn notes-format-toolbar__btn--italic" data-fmt="italic" title="Italic (Ctrl+I)"><em>I</em></button>
+      <button class="notes-format-toolbar__btn" data-fmt="strikethrough" title="Strikethrough (Ctrl+Shift+X)"><del>S</del></button>
       <div class="notes-format-toolbar__sep"></div>
       <button class="notes-format-toolbar__btn" data-fmt="h1" title="Heading 1">H1</button>
       <button class="notes-format-toolbar__btn" data-fmt="h2" title="Heading 2">H2</button>
       <button class="notes-format-toolbar__btn" data-fmt="h3" title="Heading 3">H3</button>
+      <div class="notes-format-toolbar__sep"></div>
+      <button class="notes-format-toolbar__btn" data-fmt="ul" title="Unordered List"><i data-lucide="list" style="width:14px;height:14px"></i></button>
+      <button class="notes-format-toolbar__btn" data-fmt="ol" title="Ordered List"><i data-lucide="list-ordered" style="width:14px;height:14px"></i></button>
+      <div class="notes-format-toolbar__sep"></div>
+      <button class="notes-format-toolbar__btn" data-fmt="timestamp" title="Insert Date/Time"><i data-lucide="clock" style="width:14px;height:14px"></i></button>
     </div>
   `;
 }
@@ -636,6 +649,11 @@ function wireEvents(userId) {
     else if (e.target.closest('#btnExportNote')) exportNoteAsMd(userId);
     else if (e.target.closest('#btnShareNote')) { const note = _state.notes.find((n) => n.id === _state.activeNoteId); if (note) openShareModal(note, userId); }
     else if (e.target.closest('#btnCloseNote')) { _state.activeNoteId = null; refreshAll(userId); }
+    else if (e.target.closest('#btnFullscreenNote')) { document.getElementById('notesPanelRight').classList.toggle('notes-is-fullscreen'); }
+    else if (e.target.closest('#btnCopyNote')) {
+      const note = _state.notes.find((n) => n.id === _state.activeNoteId);
+      if (note) navigator.clipboard.writeText(note.content).then(() => showToast('Markdown Copied!', 'success'));
+    }
     else if (e.target.closest('[data-fmt]')) applyFormatting(e.target.closest('[data-fmt]').getAttribute('data-fmt'), userId);
     else if (e.target.closest('[data-color]')) setNoteColor(userId, e.target.closest('[data-color]').getAttribute('data-color'));
     else if (e.target.closest('.notes-tag-chip__remove')) removeTag(userId, e.target.closest('.notes-tag-chip__remove').getAttribute('data-tag'));
@@ -646,10 +664,24 @@ function wireEvents(userId) {
     if ((e.ctrlKey || e.metaKey) && e.target.id === 'noteContentTextarea') {
       if (e.key === 'b' || e.key === 'B') { e.preventDefault(); applyFormatting('bold', userId); }
       if (e.key === 'i' || e.key === 'I') { e.preventDefault(); applyFormatting('italic', userId); }
+      if (e.shiftKey && (e.key === 'x' || e.key === 'X')) { e.preventDefault(); applyFormatting('strikethrough', userId); }
     }
     if (e.target.id === 'noteTagInput' && (e.key === 'Enter' || e.key === ',')) { e.preventDefault(); const val = e.target.value.trim().replace(/,/g, ''); if (val) addTag(userId, val); }
   });
-  document.getElementById('notesPanelRight')?.addEventListener('input', (e) => { if (e.target.id === 'noteTitleInput' || e.target.id === 'noteContentTextarea') triggerAutosave(userId); });
+  document.getElementById('notesPanelRight')?.addEventListener('input', (e) => {
+    if (e.target.id === 'noteTitleInput' || e.target.id === 'noteContentTextarea') {
+      triggerAutosave(userId);
+      if (e.target.id === 'noteContentTextarea') {
+        const wcEl = document.getElementById('notesWordCount');
+        if (wcEl) {
+          const content = e.target.value;
+          const words = content.trim().split(/\\s+/).filter(w => w.length > 0).length;
+          const chars = content.length;
+          wcEl.textContent = words + ' words, ' + chars + ' chars';
+        }
+      }
+    }
+  });
 
   document.getElementById('btnExportNotes')?.addEventListener('click', () => openExportModal(userId));
   document.getElementById('btnImportNotes')?.addEventListener('click', () => openImportModal(userId));
@@ -664,7 +696,7 @@ function wireEvents(userId) {
     reader.onload = async (ev) => {
       try {
         const content = ev.target.result;
-        const titleFromFile = file.name.replace(/\.(md|txt)$/i, '');
+        const titleFromFile = file.name.replace(/\\.(md|txt)$/i, '');
         const allNotes = await getAll('notes');
         const id = generateSequentialId(ID_PREFIX.NOTE, allNotes);
         const now = nowISO();
@@ -799,7 +831,7 @@ async function deleteActiveNote(userId) {
   if (!note || getNoteAccess(note, userId) !== 'owner') return;
   showConfirm({
     title: 'Hapus Catatan',
-    message: `Yakin ingin menghapus catatan "${getNoteTitle(note)}"? Tindakan ini tidak dapat dibatalkan.`,
+    message: `Yakin ingin menghapus catatan "${getNoteTitle(note)}" ? Tindakan ini tidak dapat dibatalkan.`,
     confirmLabel: 'Hapus', confirmVariant: 'danger',
     onConfirm: async () => {
       await logNoteAudit(note.id, 'note_deleted');
@@ -835,9 +867,14 @@ function applyFormatting(fmt, userId) {
   if (!textarea) return;
   const start = textarea.selectionStart, end = textarea.selectionEnd, value = textarea.value;
   const selectedText = value.slice(start, end);
-  if (fmt === 'bold' || fmt === 'italic') {
-    const marker = fmt === 'bold' ? '**' : '*';
-    const placeholder = fmt === 'bold' ? 'teks bold' : 'teks italic';
+
+  if (fmt === 'timestamp') {
+    const dt = new Date().toLocaleString('id-ID'); // Get local date string
+    textarea.value = value.slice(0, start) + dt + value.slice(end);
+    textarea.selectionStart = start + dt.length; textarea.selectionEnd = start + dt.length;
+  } else if (fmt === 'bold' || fmt === 'italic' || fmt === 'strikethrough') {
+    const marker = fmt === 'bold' ? '**' : fmt === 'italic' ? '*' : '~~';
+    const placeholder = fmt === 'bold' ? 'teks bold' : fmt === 'italic' ? 'teks italic' : 'dicoret';
     if (selectedText) {
       if (selectedText.startsWith(marker) && selectedText.endsWith(marker)) {
         const inner = selectedText.slice(marker.length, -marker.length);
@@ -853,13 +890,13 @@ function applyFormatting(fmt, userId) {
       textarea.value = value.slice(0, start) + insert + value.slice(end);
       textarea.selectionStart = start + marker.length; textarea.selectionEnd = start + marker.length + placeholder.length;
     }
-  } else if (['h1', 'h2', 'h3'].includes(fmt)) {
-    const prefix = fmt === 'h1' ? '# ' : fmt === 'h2' ? '## ' : '### ';
+  } else if (['h1', 'h2', 'h3', 'ul', 'ol'].includes(fmt)) {
+    const prefix = fmt === 'h1' ? '# ' : fmt === 'h2' ? '## ' : fmt === 'h3' ? '### ' : fmt === 'ul' ? '- ' : '1. ';
     const lineStart = value.lastIndexOf('\n', start - 1) + 1;
     const lineEnd = value.indexOf('\n', start);
     const lineEndActual = lineEnd === -1 ? value.length : lineEnd;
     const lineContent = value.slice(lineStart, lineEndActual);
-    const stripped = lineContent.replace(/^#{1,3} /, '');
+    const stripped = lineContent.replace(/^(#{1,3}\s+|- \s+|\d+\.\s+)/, '');
     const newLine = lineContent.startsWith(prefix) ? stripped : prefix + stripped;
     textarea.value = value.slice(0, lineStart) + newLine + value.slice(lineEndActual);
     const cursorPos = lineStart + newLine.length;
@@ -867,6 +904,15 @@ function applyFormatting(fmt, userId) {
   }
   textarea.focus();
   triggerAutosave(userId);
+
+  // Custom update of word count after formatting
+  const wcEl = document.getElementById('notesWordCount');
+  if (wcEl) {
+    const content = textarea.value;
+    const words = content.trim().split(/\s+/).filter(w => w.length > 0).length;
+    const chars = content.length;
+    wcEl.textContent = `${words} words, ${chars} chars`;
+  }
 }
 
 // ============================================================
@@ -925,7 +971,7 @@ async function deleteFolder(userId, folderId) {
   const folder = _state.folders.find((f) => f.id === folderId); if (!folder) return;
   showConfirm({
     title: 'Hapus Folder',
-    message: `Yakin ingin menghapus folder "${folder.name}"? Semua catatan di dalamnya akan dipindah ke All Notes.`,
+    message: `Yakin ingin menghapus folder "${folder.name}" ? Semua catatan di dalamnya akan dipindah ke All Notes.`,
     confirmLabel: 'Hapus', confirmVariant: 'danger',
     onConfirm: async () => {
       const notesInFolder = _state.notes.filter((n) => n.folder_id === folderId);

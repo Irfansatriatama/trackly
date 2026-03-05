@@ -29,26 +29,26 @@ let _calendarDate = null; // Date object (first day of displayed period)
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const MEETING_TYPES = {
-  internal:      'Internal',
+  internal: 'Internal',
   client_meeting: 'Client Meeting',
   sprint_review: 'Sprint Review',
   retrospective: 'Retrospective',
-  other:         'Other',
+  other: 'Other',
 };
 
 const MEETING_STATUSES = {
   scheduled: { label: 'Scheduled', color: 'info' },
-  ongoing:   { label: 'Ongoing',   color: 'warning' },
-  done:      { label: 'Done',      color: 'success' },
+  ongoing: { label: 'Ongoing', color: 'warning' },
+  done: { label: 'Done', color: 'success' },
   cancelled: { label: 'Cancelled', color: 'danger' },
 };
 
 const MEETING_TYPE_COLORS = {
-  internal:      '#2563EB',
-  client_meeting:'#7C3AED',
+  internal: '#2563EB',
+  client_meeting: '#7C3AED',
   sprint_review: '#16A34A',
   retrospective: '#D97706',
-  other:         '#64748B',
+  other: '#64748B',
 };
 
 // ─── Role Guard Helper ────────────────────────────────────────────────────────
@@ -64,25 +64,21 @@ export async function render(params = {}) {
   const content = document.getElementById('main-content');
   if (!content) return;
 
-  if (!requireAdminPm()) {
-    content.innerHTML = `
-      <div class="page-container page-enter">
-        <div class="empty-state">
-          <i data-lucide="lock" class="empty-state__icon" aria-hidden="true"></i>
-          <p class="empty-state__title">Access Restricted</p>
-          <p class="empty-state__text">Meetings are only visible to Admin and PM users.</p>
-        </div>
-      </div>`;
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-    return;
-  }
-
   try {
-    [_meetings, _users, _projects] = await Promise.all([
-      getAll('meetings'),
-      getAll('users'),
-      getAll('projects'),
-    ]);
+    const session = getSession();
+    const isManager = requireAdminPm();
+
+    let allMeetings = await getAll('meetings');
+    if (!isManager) {
+      allMeetings = allMeetings.filter(m =>
+        m.created_by === session.userId ||
+        (m.attendee_ids && m.attendee_ids.includes(session.userId))
+      );
+    }
+    _meetings = allMeetings;
+
+    const [u, p] = await Promise.all([getAll('users'), getAll('projects')]);
+    _users = u; _projects = p;
 
     const today = new Date();
     if (!_selectedDate) _selectedDate = toDateStr(today);
@@ -119,10 +115,10 @@ function buildCalendarPageHTML() {
               <i data-lucide="columns" aria-hidden="true"></i> Week
             </button>
           </div>
-          <button class="btn btn--primary" id="newMeetingBtn">
+          ${requireAdminPm() ? `<button class="btn btn--primary" id="newMeetingBtn">
             <i data-lucide="plus" aria-hidden="true"></i>
             New Meeting
-          </button>
+          </button>` : ''}
         </div>
       </div>
 
@@ -155,7 +151,7 @@ function buildMonthCalendarHTML() {
   const monthName = new Date(year, month, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
 
   // Days of week header
-  const dayHeaders = ['Su','Mo','Tu','We','Th','Fr','Sa'].map(d =>
+  const dayHeaders = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d =>
     `<div class="mini-cal__day-header">${d}</div>`
   ).join('');
 
@@ -182,7 +178,7 @@ function buildMonthCalendarHTML() {
   const todayStr = toDateStr(new Date());
 
   for (let day = 1; day <= daysInMonth; day++) {
-    const dateStr = `${year}-${String(month + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const isSelected = dateStr === _selectedDate;
     const isToday = dateStr === todayStr;
     const hasMeetings = meetingDays.has(day);
@@ -351,12 +347,14 @@ function buildMeetingCardHTML(meeting) {
             <a href="#/meetings/${meeting.id}" class="btn btn--ghost btn--sm" aria-label="View meeting">
               <i data-lucide="eye" aria-hidden="true"></i> View
             </a>
+            ${requireAdminPm() ? `
             <button class="btn btn--ghost btn--sm btn--edit-meeting" data-id="${meeting.id}" aria-label="Edit meeting">
               <i data-lucide="edit-2" aria-hidden="true"></i>
             </button>
             <button class="btn btn--ghost btn--sm btn--danger btn--delete-meeting" data-id="${meeting.id}" aria-label="Delete meeting">
               <i data-lucide="trash-2" aria-hidden="true"></i>
             </button>
+            ` : ''}
           </div>
         </div>
       </div>
@@ -411,7 +409,7 @@ function bindCalendarEvents() {
       _selectedDate = cell.dataset.date;
       refreshCalendarPage();
     });
-    cell.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _selectedDate = cell.dataset.date; refreshCalendarPage(); }});
+    cell.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _selectedDate = cell.dataset.date; refreshCalendarPage(); } });
   });
 
   // Edit meeting buttons
@@ -499,16 +497,16 @@ async function openMeetingModal(meetingId = null) {
             <label class="form-label" for="mtgType">Type</label>
             <select id="mtgType" class="form-select">
               ${Object.entries(MEETING_TYPES).map(([val, lbl]) =>
-                `<option value="${val}" ${meeting?.type === val ? 'selected' : ''}>${lbl}</option>`
-              ).join('')}
+    `<option value="${val}" ${meeting?.type === val ? 'selected' : ''}>${lbl}</option>`
+  ).join('')}
             </select>
           </div>
           <div class="form-group">
             <label class="form-label" for="mtgStatus">Status</label>
             <select id="mtgStatus" class="form-select">
               ${Object.entries(MEETING_STATUSES).map(([val, { label }]) =>
-                `<option value="${val}" ${(meeting?.status || 'scheduled') === val ? 'selected' : ''}>${label}</option>`
-              ).join('')}
+    `<option value="${val}" ${(meeting?.status || 'scheduled') === val ? 'selected' : ''}>${label}</option>`
+  ).join('')}
             </select>
           </div>
         </div>
@@ -726,13 +724,10 @@ export async function renderDetail(params = {}) {
   const content = document.getElementById('main-content');
   if (!content) return;
 
-  if (!requireAdminPm()) {
-    content.innerHTML = `<div class="page-container page-enter"><div class="empty-state"><i data-lucide="lock" class="empty-state__icon"></i><p class="empty-state__title">Access Restricted</p></div></div>`;
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-    return;
-  }
-
   try {
+    const session = getSession();
+    const isManager = requireAdminPm();
+
     const [meeting, users, projects, tasks] = await Promise.all([
       getById('meetings', params.id),
       getAll('users'),
@@ -742,8 +737,10 @@ export async function renderDetail(params = {}) {
     _users = users;
     _projects = projects;
 
-    if (!meeting) {
-      content.innerHTML = `<div class="page-container page-enter"><div class="empty-state"><i data-lucide="calendar-off" class="empty-state__icon"></i><p class="empty-state__title">Meeting not found</p><a href="#/meetings" class="btn btn--primary" style="margin-top:1rem">Back to Meetings</a></div></div>`;
+    const isAttendee = meeting?.attendee_ids?.includes(session?.userId) || meeting?.created_by === session?.userId;
+
+    if (!meeting || (!isManager && !isAttendee)) {
+      content.innerHTML = `<div class="page-container page-enter"><div class="empty-state"><i data-lucide="calendar-off" class="empty-state__icon"></i><p class="empty-state__title">Meeting not found</p><p class="empty-state__text">Or you do not have permission to view this meeting.</p><a href="#/meetings" class="btn btn--primary" style="margin-top:1rem">Back to Meetings</a></div></div>`;
       if (typeof lucide !== 'undefined') lucide.createIcons();
       return;
     }
@@ -783,7 +780,7 @@ function buildDetailPageHTML(meeting, users, projects) {
     ? `<p class="text-muted text-sm">No agenda items added.</p>`
     : (meeting.agenda_items || []).sort((a, b) => a.order - b.order).map(item => `
         <div class="agenda-check-item" data-agenda-id="${item.id}">
-          <input type="checkbox" class="agenda-checkbox" id="agenda-${item.id}" ${item.done ? 'checked' : ''} aria-label="${sanitize(item.text)}">
+          <input type="checkbox" class="agenda-checkbox" id="agenda-${item.id}" ${item.done ? 'checked' : ''} ${!requireAdminPm() ? 'disabled' : ''} aria-label="${sanitize(item.text)}">
           <label for="agenda-${item.id}" class="${item.done ? 'agenda-check-item__text--done' : ''}">${sanitize(item.text)}</label>
         </div>`).join('');
 
@@ -797,18 +794,18 @@ function buildDetailPageHTML(meeting, users, projects) {
       <button class="btn btn--ghost btn--sm" data-att-index="${i}" id="downloadAtt-${i}">
         <i data-lucide="download" aria-hidden="true"></i> Download
       </button>
-      <button class="btn btn--ghost btn--sm btn--danger" data-att-index="${i}" id="deleteAtt-${i}" aria-label="Delete attachment">
+      ${requireAdminPm() ? `<button class="btn btn--ghost btn--sm btn--danger" data-att-index="${i}" id="deleteAtt-${i}" aria-label="Delete attachment">
         <i data-lucide="trash-2" aria-hidden="true"></i>
-      </button>
+      </button>` : ''}
     </div>`).join('');
 
   // Action Items
   const actionItemsHTML = (meeting.action_items || []).length === 0
     ? `<p class="text-muted text-sm">No action items yet.</p>`
     : (meeting.action_items || []).map((ai, idx) => {
-        const assignee = users.find(u => u.id === ai.assignee_id);
-        const converted = !!ai.task_id;
-        return `
+      const assignee = users.find(u => u.id === ai.assignee_id);
+      const converted = !!ai.task_id;
+      return `
           <div class="action-item-row ${converted ? 'action-item-row--converted' : ''}" data-ai-index="${idx}">
             <div class="action-item-row__info">
               <span class="action-item-row__text">${sanitize(ai.text)}</span>
@@ -819,17 +816,17 @@ function buildDetailPageHTML(meeting, users, projects) {
             </div>
             <div class="action-item-row__actions">
               ${converted
-                ? `<span class="badge badge--success"><i data-lucide="check-circle-2"></i> Task Created</span>`
-                : `<button class="btn btn--sm btn--primary btn--create-task" data-ai-index="${idx}">
+          ? `<span class="badge badge--success"><i data-lucide="check-circle-2"></i> Task Created</span>`
+          : (requireAdminPm() ? `<button class="btn btn--sm btn--primary btn--create-task" data-ai-index="${idx}">
                     <i data-lucide="plus-circle" aria-hidden="true"></i> Create Task
-                   </button>`
-              }
-              <button class="btn btn--ghost btn--sm btn--danger btn--delete-ai" data-ai-index="${idx}" aria-label="Delete action item">
+                   </button>` : `<span class="badge badge--ghost">Action Item</span>`)
+        }
+              ${requireAdminPm() ? `<button class="btn btn--ghost btn--sm btn--danger btn--delete-ai" data-ai-index="${idx}" aria-label="Delete action item">
                 <i data-lucide="trash-2" aria-hidden="true"></i>
-              </button>
+              </button>` : ''}
             </div>
           </div>`;
-      }).join('');
+    }).join('');
 
   const doneCnt = (meeting.agenda_items || []).filter(a => a.done).length;
   const totalAgenda = (meeting.agenda_items || []).length;
@@ -856,15 +853,15 @@ function buildDetailPageHTML(meeting, users, projects) {
           </div>
         </div>
         <div class="page-header__actions">
-          ${nextStatusLabel ? `<button class="btn btn--primary" id="advanceStatusBtn" data-next="${nextStatus}">
+          ${requireAdminPm() && nextStatusLabel ? `<button class="btn btn--primary" id="advanceStatusBtn" data-next="${nextStatus}">
             <i data-lucide="arrow-right-circle" aria-hidden="true"></i> Mark as ${nextStatusLabel}
           </button>` : ''}
-          ${meeting.status !== 'cancelled' ? `<button class="btn btn--ghost btn--danger" id="cancelMeetingBtn">
+          ${requireAdminPm() && meeting.status !== 'cancelled' ? `<button class="btn btn--ghost btn--danger" id="cancelMeetingBtn">
             <i data-lucide="x-circle" aria-hidden="true"></i> Cancel
           </button>` : ''}
-          <button class="btn btn--ghost" id="editMeetingBtn">
+          ${requireAdminPm() ? `<button class="btn btn--ghost" id="editMeetingBtn">
             <i data-lucide="edit-2" aria-hidden="true"></i> Edit
-          </button>
+          </button>` : ''}
         </div>
       </div>
 
@@ -878,7 +875,7 @@ function buildDetailPageHTML(meeting, users, projects) {
             <div class="agenda-progress" style="margin-left:auto">
               <span class="text-sm text-muted">${doneCnt}/${totalAgenda} agenda items done</span>
               <div class="progress-bar progress-bar--sm">
-                <div class="progress-bar__fill" style="width:${totalAgenda > 0 ? Math.round(doneCnt/totalAgenda*100) : 0}%"></div>
+                <div class="progress-bar__fill" style="width:${totalAgenda > 0 ? Math.round(doneCnt / totalAgenda * 100) : 0}%"></div>
               </div>
             </div>` : ''}
         </div>
@@ -903,15 +900,16 @@ function buildDetailPageHTML(meeting, users, projects) {
             <div class="card__body">
               <h2 class="section-title"><i data-lucide="file-text" aria-hidden="true"></i> Notulensi</h2>
 
-              <div class="notulensi-mode-tabs" role="tablist">
+              ${requireAdminPm() ? `<div class="notulensi-mode-tabs" role="tablist">
                 <button class="btn btn--sm btn--ghost notulensi-tab is-active" data-mode="text" role="tab" aria-selected="true">
                   <i data-lucide="edit-3" aria-hidden="true"></i> Text Editor
                 </button>
                 <button class="btn btn--sm btn--ghost notulensi-tab" data-mode="file" role="tab" aria-selected="false">
                   <i data-lucide="paperclip" aria-hidden="true"></i> File Attachment
                 </button>
-              </div>
+              </div>` : ''}
 
+              ${requireAdminPm() ? `
               <!-- Mode 1: Markdown Editor -->
               <div id="notulensi-text-panel" class="notulensi-panel">
                 <div class="notulensi-editor-bar">
@@ -945,6 +943,18 @@ function buildDetailPageHTML(meeting, users, projects) {
                   <span class="text-muted text-sm">PDF, DOCX, images supported</span>
                 </div>
               </div>
+              ` : `
+              <div class="notulensi-panel">
+                <div class="notulensi-preview markdown-body" style="padding:1rem;background:var(--color-surface-secondary, #f9fafb);border-radius:var(--radius-md, 6px);min-height:200px;border:1px solid var(--color-border, #e5e7eb)">
+                  ${notulensi.content ? renderMarkdown(notulensi.content) : '<p class="text-muted text-sm">No notes provided for this meeting.</p>'}
+                </div>
+                ${notulensi.attachments?.length ? `
+                <div style="margin-top:1.5rem;border-top:1px solid var(--color-border, #e5e7eb);padding-top:1rem">
+                  <h4 class="text-sm" style="font-weight:600;margin-bottom:0.75rem">Attachments</h4>
+                  <div class="attachments-list" style="display:flex;flex-direction:column;gap:0.5rem">${attachmentsHTML}</div>
+                </div>` : ''}
+              </div>
+              `}
             </div>
           </div>
 
@@ -953,9 +963,9 @@ function buildDetailPageHTML(meeting, users, projects) {
             <div class="card__body">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-3)">
                 <h2 class="section-title" style="margin:0"><i data-lucide="check-circle-2" aria-hidden="true"></i> Action Items</h2>
-                <button class="btn btn--primary btn--sm" id="addActionItemBtn">
+                ${requireAdminPm() ? `<button class="btn btn--primary btn--sm" id="addActionItemBtn">
                   <i data-lucide="plus" aria-hidden="true"></i> Add Item
-                </button>
+                </button>` : ''}
               </div>
               <div id="actionItemsList">${actionItemsHTML}</div>
             </div>
@@ -1286,9 +1296,9 @@ function openCreateTaskFromActionItem(meeting, aiIndex, users, projects, allTask
 
   const projectOptions = (meeting.project_ids || []).length > 0
     ? meeting.project_ids.map(pid => {
-        const p = projects.find(x => x.id === pid);
-        return p ? `<option value="${p.id}">${sanitize(p.name)}</option>` : '';
-      }).join('')
+      const p = projects.find(x => x.id === pid);
+      return p ? `<option value="${p.id}">${sanitize(p.name)}</option>` : '';
+    }).join('')
     : projects.map(p => `<option value="${p.id}">${sanitize(p.name)}</option>`).join('');
 
   const assigneeOptions = users.map(u =>

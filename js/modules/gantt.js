@@ -322,8 +322,13 @@ function _appendBar(container, task, rowIdx, min, dayW) {
 }
 
 function _priorityColor(p) {
-  const map = { low: '#93C5FD', medium: '#2563EB', high: '#D97706', critical: '#DC2626' };
-  return map[p] || '#2563EB';
+  const map = {
+    low: 'linear-gradient(135deg, #60A5FA, #3B82F6)',
+    medium: 'linear-gradient(135deg, #3B82F6, #1D4ED8)',
+    high: 'linear-gradient(135deg, #F59E0B, #D97706)',
+    critical: 'linear-gradient(135deg, #EF4444, #B91C1C)'
+  };
+  return map[p] || 'linear-gradient(135deg, #3B82F6, #1D4ED8)';
 }
 
 function _buildLabels(rows, totalH) {
@@ -478,7 +483,11 @@ function _drawTodayLine(ctx, min, dayW, totalH) {
 // ─── Drag & Resize ────────────────────────────────────────────────────────────
 
 function _bindDrag(barsEl, min, dayW) {
-  barsEl.addEventListener('mousedown', e => {
+  if (barsEl._dragHandler) {
+    barsEl.removeEventListener('mousedown', barsEl._dragHandler);
+  }
+
+  barsEl._dragHandler = e => {
     const bar = e.target.closest('.gantt-bar');
     if (!bar) return;
 
@@ -501,29 +510,59 @@ function _bindDrag(barsEl, min, dayW) {
 
     bar.classList.add('is-dragging');
     e.preventDefault();
-  });
+    document.addEventListener('mousemove', _handleDragMove);
+    document.addEventListener('mouseup', _handleDragEnd);
+  };
 
-  document.addEventListener('mousemove', _handleDragMove);
-  document.addEventListener('mouseup', _handleDragEnd);
+  barsEl.addEventListener('mousedown', barsEl._dragHandler);
 }
 
 function _handleDragMove(e) {
   if (!_drag) return;
   const delta = e.clientX - _drag.startX;
+  let deltaDays = Math.round(delta / _drag.dayW);
 
   if (_drag.type === 'move') {
-    _drag.bar.style.left = Math.max(0, _drag.origLeft + delta) + 'px';
+    // Prevent dragging before the start of the grid visually (left < 0)
+    const maxNegativeDays = Math.floor(_drag.origLeft / _drag.dayW);
+    if (deltaDays < -maxNegativeDays) {
+      deltaDays = -maxNegativeDays;
+    }
+    _drag.bar.style.transform = `translateX(${deltaDays * _drag.dayW}px)`;
   } else {
-    const newW = Math.max(_drag.dayW, _drag.origWidth + delta);
-    _drag.bar.style.width = newW + 'px';
+    // Prevent resizing to width < dayW, and prevent due_date < start_date
+    const MS = 86400000;
+    if (_drag.task.start_date && _drag.task.due_date) {
+      const origSpan = Math.round((new Date(_drag.task.due_date) - new Date(_drag.task.start_date)) / MS) + 1;
+      // Minimum span is 1 day
+      if (origSpan + deltaDays < 1) {
+        deltaDays = 1 - origSpan;
+      }
+    }
+    const newW = _drag.origWidth + (deltaDays * _drag.dayW);
+    _drag.bar.style.width = Math.max(_drag.dayW, newW) + 'px';
   }
 }
 
 async function _handleDragEnd(e) {
+  document.removeEventListener('mousemove', _handleDragMove);
+  document.removeEventListener('mouseup', _handleDragEnd);
+
   if (!_drag) return;
 
   const delta = e.clientX - _drag.startX;
-  const deltaDays = Math.round(delta / _drag.dayW);
+  let deltaDays = Math.round(delta / _drag.dayW);
+
+  if (_drag.type === 'move') {
+    const maxNegativeDays = Math.floor(_drag.origLeft / _drag.dayW);
+    if (deltaDays < -maxNegativeDays) deltaDays = -maxNegativeDays;
+  } else {
+    const MS = 86400000;
+    if (_drag.task.start_date && _drag.task.due_date) {
+      const origSpan = Math.round((new Date(_drag.task.due_date) - new Date(_drag.task.start_date)) / MS) + 1;
+      if (origSpan + deltaDays < 1) deltaDays = 1 - origSpan;
+    }
+  }
 
   if (deltaDays !== 0) {
     const task = _drag.task;
@@ -556,6 +595,7 @@ async function _handleDragEnd(e) {
     }
   }
 
+  _drag.bar.style.transform = '';
   _drag.bar.classList.remove('is-dragging');
   _drag = null;
   _drawGantt();

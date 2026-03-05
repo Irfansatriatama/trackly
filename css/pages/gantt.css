@@ -62,7 +62,8 @@
   width: 260px;
   min-width: 260px;
   flex-shrink: 0;
-  border-right: 2px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.04);
   background: var(--color-surface);
   overflow: hidden;
   z-index: 2;
@@ -175,10 +176,21 @@
   color: #fff;
 }
 
-.gantt-label__badge--low      { background: #93C5FD; }
-.gantt-label__badge--medium   { background: var(--color-primary); }
-.gantt-label__badge--high     { background: var(--color-warning); }
-.gantt-label__badge--critical { background: var(--color-danger); }
+.gantt-label__badge--low {
+  background: #93C5FD;
+}
+
+.gantt-label__badge--medium {
+  background: var(--color-primary);
+}
+
+.gantt-label__badge--high {
+  background: var(--color-warning);
+}
+
+.gantt-label__badge--critical {
+  background: var(--color-danger);
+}
 
 /* ── Timeline Area ───────────────────────────────────────────────────────── */
 .gantt-timeline-wrap {
@@ -231,16 +243,18 @@
   cursor: grab;
   user-select: none;
   pointer-events: all;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-  transition: transform 0.08s, box-shadow 0.08s, opacity 0.08s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s, filter 0.2s;
   overflow: hidden;
   min-width: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .gantt-bar:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.3);
   z-index: 10;
+  filter: brightness(1.05);
 }
 
 .gantt-bar.is-done {
@@ -249,10 +263,12 @@
 
 .gantt-bar.is-dragging {
   cursor: grabbing;
-  opacity: 0.85;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  opacity: 0.95;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.25);
   z-index: 100;
-  transform: translateY(-2px);
+  transform: translateY(-3px) scale(1.01) !important;
+  transition: none;
+  /* remove transition when dragging to feel responsive */
 }
 
 .gantt-bar__label {

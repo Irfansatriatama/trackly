@@ -416,6 +416,7 @@ function _renderReportTable() {
             <th style="width:40px;text-align:center;">No</th>
             <th style="width:110px;">Ticket No</th>
             <th>Task Title</th>
+            ${_includeSubProjects ? '<th>Project</th>' : ''}
             <th style="width:120px;">PIC Pemohon</th>
             <th style="width:130px;">Status</th>
             <th style="width:120px;">Assign Date</th>
@@ -428,10 +429,12 @@ function _renderReportTable() {
           ${tickets.map((t, idx) => {
     const picClientUser = _members.find(m => m.id === t.pic_client);
     const picClientName = picClientUser ? picClientUser.full_name : (t.pic_client || '—');
+    const proj = _allProjects.find(p => p.id === t.project_id);
     return `<tr class="${idx % 2 === 1 ? 'rpt-row-alt' : ''}">
               <td style="text-align:center;">${idx + 1}</td>
               <td class="text-mono" style="font-size:12px;">${sanitize(t.ticket_number || t.id || '')}</td>
               <td>${sanitize(t.title || '')}</td>
+              ${_includeSubProjects ? `<td>${sanitize(proj?.name || '')}</td>` : ''}
               <td>${sanitize(picClientName)}</td>
               <td>${sanitize(_getLabelFor(TICKET_STATUS_OPTIONS, t.status))}</td>
               <td class="text-nowrap">${t.assigned_date ? formatDateID(t.assigned_date) : '—'}</td>
@@ -451,9 +454,11 @@ function _buildExportRows() {
   return _filteredTickets.map((t, idx) => {
     const picClientUser = _members.find(m => m.id === t.pic_client);
     const picClientName = picClientUser ? picClientUser.full_name : (t.pic_client || '');
+    const proj = _allProjects.find(p => p.id === t.project_id);
     return {
       'No': idx + 1,
       'Ticket No': t.ticket_number || t.id || '',
+      'Project': proj?.name || '',
       'Task Title': t.title || '',
       'PIC Pemohon': picClientName,
       'Status': _getLabelFor(TICKET_STATUS_OPTIONS, t.status),
@@ -483,8 +488,8 @@ function _doExportExcel() {
     if (rows.length === 0) { showToast('No tickets to export.', 'warning'); return; }
     const ws = XLSX.utils.json_to_sheet(rows);
     ws['!cols'] = [
-      { wch: 5 }, { wch: 12 }, { wch: 40 }, { wch: 20 }, { wch: 18 },
-      { wch: 18 }, { wch: 18 }, { wch: 12 }, { wch: 10 },
+      { wch: 5 }, { wch: 15 }, { wch: 25 }, { wch: 40 }, { wch: 20 },
+      { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 12 }, { wch: 10 },
     ];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Maintenance Report');
