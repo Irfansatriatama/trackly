@@ -83,7 +83,7 @@ export async function render(params = {}) {
     const sess = getSession();
     _isReadOnly = sess && ['viewer', 'client'].includes(sess.role);
 
-    _renderBoardPage();
+    await _renderBoardPage();
   } catch (err) {
     debug('Board render error:', err);
     document.getElementById('main-content').innerHTML = `<div class="page-container page-enter"><div class="empty-state"><i data-lucide="alert-circle" class="empty-state__icon"></i><p class="empty-state__title">Failed to load board</p><p class="empty-state__text">${sanitize(String(err.message))}</p></div></div>`;
@@ -134,14 +134,14 @@ function _getFilteredTasks() {
 
 // ─── Page Render ──────────────────────────────────────────────────────────────
 
-function _renderBoardPage() {
+async function _renderBoardPage() {
   const content = document.getElementById('main-content');
   if (!content) return;
 
   const session = getSession();
   const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
   const _isReadOnly = session && ['viewer', 'client'].includes(session.role);
-  const banner = buildProjectBanner(_project, 'board', { renderBadge, isAdminOrPM });
+  const banner = await buildProjectBanner(_project, 'board', { renderBadge, isAdminOrPM });
 
   content.innerHTML = `
     <div class="page-container page-enter board-page project-detail-page">

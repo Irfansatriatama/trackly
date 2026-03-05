@@ -16,65 +16,68 @@ import { renderBadge } from '../components/badge.js';
 
 // ─── Module State ─────────────────────────────────────────────────────────────
 
-let _projectId       = null;
-let _project         = null;
-let _client          = null;
-let _tickets         = [];
-let _members         = [];
-let _settings        = {};
-let _dateFrom        = '';
-let _dateTo          = '';
+let _projectId = null;
+let _project = null;
+let _allProjects = [];
+let _client = null;
+let _allTickets = [];
+let _tickets = [];
+let _members = [];
+let _settings = {};
+let _dateFrom = '';
+let _dateTo = '';
 let _filteredTickets = [];
-let _filterStatuses  = [];
-let _searchQuery     = '';
-let _searchDebounce  = null;
+let _filterStatuses = [];
+let _includeSubProjects = false;
+let _searchQuery = '';
+let _searchDebounce = null;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const TICKET_TYPE_OPTIONS = [
-  { value: 'bug',          label: 'Bug' },
-  { value: 'adjustment',   label: 'Adjustment' },
-  { value: 'enhancement',  label: 'Enhancement' },
+  { value: 'bug', label: 'Bug' },
+  { value: 'adjustment', label: 'Adjustment' },
+  { value: 'enhancement', label: 'Enhancement' },
   { value: 'user_request', label: 'User Request' },
-  { value: 'incident',     label: 'Incident' },
+  { value: 'incident', label: 'Incident' },
 ];
 
 const TICKET_STATUS_OPTIONS = [
-  { value: 'backlog',           label: 'Backlog' },
-  { value: 'in_progress',       label: 'In Progress' },
+  { value: 'backlog', label: 'Backlog' },
+  { value: 'in_progress', label: 'In Progress' },
   { value: 'awaiting_approval', label: 'Awaiting Approval' },
-  { value: 'on_check',          label: 'On Check' },
-  { value: 'need_revision',     label: 'Need Revision' },
-  { value: 'completed',         label: 'Completed' },
-  { value: 'canceled',          label: 'Canceled' },
-  { value: 'on_hold',           label: 'On Hold' },
-  { value: 'open',              label: 'Open' },
-  { value: 'resolved',          label: 'Resolved' },
-  { value: 'closed',            label: 'Closed' },
-  { value: 'rejected',          label: 'Rejected' },
+  { value: 'on_check', label: 'On Check' },
+  { value: 'need_revision', label: 'Need Revision' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'canceled', label: 'Canceled' },
+  { value: 'on_hold', label: 'On Hold' },
+  { value: 'open', label: 'Open' },
+  { value: 'resolved', label: 'Resolved' },
+  { value: 'closed', label: 'Closed' },
+  { value: 'rejected', label: 'Rejected' },
 ];
 
 const FILTER_STATUS_OPTIONS = [
-  { value: 'backlog',           label: 'Backlog' },
-  { value: 'in_progress',       label: 'In Progress' },
+  { value: 'backlog', label: 'Backlog' },
+  { value: 'in_progress', label: 'In Progress' },
   { value: 'awaiting_approval', label: 'Awaiting Approval' },
-  { value: 'on_check',          label: 'On Check' },
-  { value: 'need_revision',     label: 'Need Revision' },
-  { value: 'completed',         label: 'Completed' },
-  { value: 'canceled',          label: 'Canceled' },
-  { value: 'on_hold',           label: 'On Hold' },
+  { value: 'on_check', label: 'On Check' },
+  { value: 'need_revision', label: 'Need Revision' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'canceled', label: 'Canceled' },
+  { value: 'on_hold', label: 'On Hold' },
 ];
 
 const TICKET_PRIORITY_OPTIONS = [
-  { value: 'low',      label: 'Low' },
-  { value: 'medium',   label: 'Medium' },
-  { value: 'high',     label: 'High' },
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
   { value: 'critical', label: 'Critical' },
 ];
 
 // ─── Indonesian Date Format ───────────────────────────────────────────────────
 
-const ID_MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const ID_MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
 function formatDateID(dateStr) {
   if (!dateStr) return '—';
@@ -108,22 +111,25 @@ export async function render(params = {}) {
   if (!_projectId) { window.location.hash = '#/projects'; return; }
 
   try {
-    const [project, allTickets, members, allSettings] = await Promise.all([
+    const [project, allProjects, allTickets, members, allSettings] = await Promise.all([
       getById('projects', _projectId),
+      getAll('projects'),
       getAll('maintenance'),
       getAll('users'),
       getAll('settings'),
     ]);
 
     _project = project;
-    _tickets = allTickets.filter(t => t.project_id === _projectId);
+    _allProjects = allProjects;
+    _allTickets = allTickets;
+    _tickets = _allTickets.filter(t => t.project_id === _projectId);
     _members = members;
     _settings = {};
     for (const s of allSettings) _settings[s.key] = s.value;
 
     _client = null;
     if (_project?.client_id) {
-      try { _client = await getById('clients', _project.client_id); } catch (_) {}
+      try { _client = await getById('clients', _project.client_id); } catch (_) { }
     }
 
     if (!_project) {
@@ -136,12 +142,13 @@ export async function render(params = {}) {
     const from = new Date(now);
     from.setDate(from.getDate() - 30);
     _dateFrom = from.toISOString().substring(0, 10);
-    _dateTo   = now.toISOString().substring(0, 10);
+    _dateTo = now.toISOString().substring(0, 10);
     _filterStatuses = [];
     _searchQuery = '';
+    _includeSubProjects = false;
 
     _applyFilters();
-    renderReportPage();
+    await renderReportPage();
 
   } catch (err) {
     debug('Maintenance report render error:', err);
@@ -154,13 +161,20 @@ export async function render(params = {}) {
 
 function _applyFilters() {
   const from = _dateFrom ? new Date(_dateFrom + 'T00:00:00') : null;
-  const to   = _dateTo   ? new Date(_dateTo   + 'T23:59:59') : null;
-  const q    = _searchQuery.trim().toLowerCase();
+  const to = _dateTo ? new Date(_dateTo + 'T23:59:59') : null;
+  const q = _searchQuery.trim().toLowerCase();
+
+  let targetProjectIds = [_projectId];
+  if (_includeSubProjects) {
+    const children = _allProjects.filter(p => p.parent_id === _projectId).map(p => p.id);
+    targetProjectIds = targetProjectIds.concat(children);
+  }
+  _tickets = _allTickets.filter(t => targetProjectIds.includes(t.project_id));
 
   _filteredTickets = _tickets.filter(t => {
     // Search: Ticket ID or Task Title (case-insensitive)
     if (q) {
-      const idMatch    = (t.id    || '').toLowerCase().includes(q);
+      const idMatch = (t.id || '').toLowerCase().includes(q);
       const titleMatch = (t.title || '').toLowerCase().includes(q);
       if (!idMatch && !titleMatch) return false;
     }
@@ -169,7 +183,7 @@ function _applyFilters() {
     if (t.assigned_date) {
       const d = new Date(t.assigned_date);
       if (from && d < from) return false;
-      if (to   && d > to)   return false;
+      if (to && d > to) return false;
     }
 
     // Status filter: empty = all pass
@@ -181,13 +195,13 @@ function _applyFilters() {
 
 // ─── Page Render ─────────────────────────────────────────────────────────────
 
-function renderReportPage() {
+async function renderReportPage() {
   const content = document.getElementById('main-content');
   if (!content) return;
 
   const session = getSession();
   const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
-  const banner = buildProjectBanner(_project, 'maintenance', { renderBadge, isAdminOrPM });
+  const banner = await buildProjectBanner(_project, 'maintenance', { renderBadge, isAdminOrPM });
 
   // Badge count: count active non-default filters
   const filterCount = _filterStatuses.length + (_dateFrom || _dateTo ? 1 : 0);
@@ -276,6 +290,13 @@ function _openFilterModal() {
   const body = `
     <div style="display:flex;flex-direction:column;gap:var(--space-5);">
       <div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:var(--space-4);padding:8px;background:var(--bg-surface);border:1px solid var(--border-color);border-radius:var(--radius-sm);">
+          <input type="checkbox" id="modalRptIncludeSub" ${_includeSubProjects ? 'checked' : ''} style="accent-color:var(--color-primary);width:16px;height:16px;" />
+          <span style="font-weight:600;">Include Sub-Projects Data</span>
+        </label>
+      </div>
+
+      <div>
         <div style="font-weight:600;font-size:13px;margin-bottom:var(--space-3);color:var(--color-text);">Assign Date</div>
         <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;">
           <div style="flex:1;min-width:130px;">
@@ -320,26 +341,28 @@ function _openFilterModal() {
       document.querySelectorAll('input[name="modalRptStatus"]').forEach(cb => { cb.checked = false; });
     });
 
-    document.getElementById('btnApplyRptFilter')?.addEventListener('click', () => {
+    document.getElementById('btnApplyRptFilter')?.addEventListener('click', async () => {
+      _includeSubProjects = document.getElementById('modalRptIncludeSub')?.checked || false;
       _dateFrom = document.getElementById('modalRptDateFrom')?.value || '';
-      _dateTo   = document.getElementById('modalRptDateTo')?.value   || '';
+      _dateTo = document.getElementById('modalRptDateTo')?.value || '';
       _filterStatuses = Array.from(document.querySelectorAll('input[name="modalRptStatus"]:checked'))
         .map(cb => cb.value);
       closeModal();
       _applyFilters();
-      renderReportPage();
+      await renderReportPage();
     });
 
-    document.getElementById('btnResetRptFilter')?.addEventListener('click', () => {
+    document.getElementById('btnResetRptFilter')?.addEventListener('click', async () => {
+      _includeSubProjects = false;
       const now = new Date();
       const from = new Date(now);
       from.setDate(from.getDate() - 30);
       _dateFrom = from.toISOString().substring(0, 10);
-      _dateTo   = now.toISOString().substring(0, 10);
+      _dateTo = now.toISOString().substring(0, 10);
       _filterStatuses = [];
       closeModal();
       _applyFilters();
-      renderReportPage();
+      await renderReportPage();
     });
   }, 50);
 }
@@ -349,7 +372,7 @@ function _openFilterModal() {
 function _renderReportTable() {
   const tickets = _filteredTickets;
   const activeFilterDesc = _filterStatuses.length > 0
-    ? `Status: ${_filterStatuses.map(s=>_getLabelFor(TICKET_STATUS_OPTIONS,s)).join(', ')}`
+    ? `Status: ${_filterStatuses.map(s => _getLabelFor(TICKET_STATUS_OPTIONS, s)).join(', ')}`
     : 'All Statuses';
 
   if (tickets.length === 0) {
@@ -383,7 +406,7 @@ function _renderReportTable() {
         <strong>${sanitize(_project.name)}</strong> — Maintenance Report
         <span class="text-muted" style="margin-left:8px;">${sanitize(activeFilterDesc)} · Assign Date: ${formatDateID(_dateFrom)} – ${formatDateID(_dateTo)}</span>
       </div>
-      <div class="rpt-info-bar__right text-muted text-sm">${tickets.length} ticket${tickets.length!==1?'s':''}</div>
+      <div class="rpt-info-bar__right text-muted text-sm">${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}</div>
     </div>
 
     <div class="rpt-table-wrap">
@@ -403,20 +426,20 @@ function _renderReportTable() {
         </thead>
         <tbody>
           ${tickets.map((t, idx) => {
-            const picClientUser = _members.find(m => m.id === t.pic_client);
-            const picClientName = picClientUser ? picClientUser.full_name : (t.pic_client || '—');
-            return `<tr class="${idx%2===1?'rpt-row-alt':''}">
-              <td style="text-align:center;">${idx+1}</td>
-              <td class="text-mono" style="font-size:12px;">${sanitize(t.id||'')}</td>
-              <td>${sanitize(t.title||'')}</td>
+    const picClientUser = _members.find(m => m.id === t.pic_client);
+    const picClientName = picClientUser ? picClientUser.full_name : (t.pic_client || '—');
+    return `<tr class="${idx % 2 === 1 ? 'rpt-row-alt' : ''}">
+              <td style="text-align:center;">${idx + 1}</td>
+              <td class="text-mono" style="font-size:12px;">${sanitize(t.id || '')}</td>
+              <td>${sanitize(t.title || '')}</td>
               <td>${sanitize(picClientName)}</td>
               <td>${sanitize(_getLabelFor(TICKET_STATUS_OPTIONS, t.status))}</td>
               <td class="text-nowrap">${t.assigned_date ? formatDateID(t.assigned_date) : '—'}</td>
               <td class="text-nowrap">${t.due_date ? formatDateID(t.due_date) : '—'}</td>
-              <td>${sanitize(_getLabelFor(TICKET_PRIORITY_OPTIONS, t.priority)||'—')}</td>
-              <td>${t.severity ? sanitize(_getLabelFor([{value:'major',label:'Major'},{value:'minor',label:'Minor'}], t.severity)) : '—'}</td>
+              <td>${sanitize(_getLabelFor(TICKET_PRIORITY_OPTIONS, t.priority) || '—')}</td>
+              <td>${t.severity ? sanitize(_getLabelFor([{ value: 'major', label: 'Major' }, { value: 'minor', label: 'Minor' }], t.severity)) : '—'}</td>
             </tr>`;
-          }).join('')}
+  }).join('')}
         </tbody>
       </table>
     </div>`;
@@ -429,15 +452,15 @@ function _buildExportRows() {
     const picClientUser = _members.find(m => m.id === t.pic_client);
     const picClientName = picClientUser ? picClientUser.full_name : (t.pic_client || '');
     return {
-      'No':           idx + 1,
-      'Ticket ID':    t.id || '',
-      'Task Title':   t.title || '',
-      'PIC Pemohon':  picClientName,
-      'Status':       _getLabelFor(TICKET_STATUS_OPTIONS, t.status),
-      'Assign Date':  t.assigned_date ? formatDateID(t.assigned_date) : '',
-      'Due Date':     t.due_date ? formatDateID(t.due_date) : '',
-      'Priority':     _getLabelFor(TICKET_PRIORITY_OPTIONS, t.priority),
-      'Severity':     t.severity ? _getLabelFor([{value:'major',label:'Major'},{value:'minor',label:'Minor'}], t.severity) : '',
+      'No': idx + 1,
+      'Ticket ID': t.id || '',
+      'Task Title': t.title || '',
+      'PIC Pemohon': picClientName,
+      'Status': _getLabelFor(TICKET_STATUS_OPTIONS, t.status),
+      'Assign Date': t.assigned_date ? formatDateID(t.assigned_date) : '',
+      'Due Date': t.due_date ? formatDateID(t.due_date) : '',
+      'Priority': _getLabelFor(TICKET_PRIORITY_OPTIONS, t.priority),
+      'Severity': t.severity ? _getLabelFor([{ value: 'major', label: 'Major' }, { value: 'minor', label: 'Minor' }], t.severity) : '',
     };
   });
 }
@@ -481,13 +504,13 @@ function _handleExportCsv() {
     const headers = Object.keys(rows[0]);
     const escape = val => {
       const str = String(val == null ? '' : val);
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) return '"' + str.replace(/"/g,'""') + '"';
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) return '"' + str.replace(/"/g, '""') + '"';
       return str;
     };
-    const csvContent = [headers.map(escape).join(','), ...rows.map(row=>headers.map(h=>escape(row[h])).join(','))].join('\n');
+    const csvContent = [headers.map(escape).join(','), ...rows.map(row => headers.map(h => escape(row[h])).join(','))].join('\n');
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
     a.href = url;
     const projectName = (_project?.name || 'project').replace(/[^a-z0-9]/gi, '_');
     a.download = `maintenance_report_${projectName}_${_dateFrom}_${_dateTo}.csv`;

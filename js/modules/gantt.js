@@ -12,12 +12,12 @@ import { getSession } from '../core/auth.js';
 import { openModal, closeModal } from '../components/modal.js';
 
 // ─── Module State ─────────────────────────────────────────────────────────────
-let _projectId  = null;
-let _project    = null;
-let _tasks      = [];
-let _sprints    = [];
-let _members    = [];
-let _zoom       = 'week';   // 'day' | 'week' | 'month'
+let _projectId = null;
+let _project = null;
+let _tasks = [];
+let _sprints = [];
+let _members = [];
+let _zoom = 'week';   // 'day' | 'week' | 'month'
 let _scrollLeft = 0;
 let _filterSprint = 'all';
 
@@ -25,9 +25,9 @@ let _filterSprint = 'all';
 let _drag = null;
 
 // Layout constants
-const ROW_H     = 40;
-const LABEL_W   = 260;
-const HEADER_H  = 48;
+const ROW_H = 40;
+const LABEL_W = 260;
+const HEADER_H = 48;
 
 // ─── Entry Point ─────────────────────────────────────────────────────────────
 
@@ -53,9 +53,9 @@ export async function render(params = {}) {
     ]);
 
     _project = project;
-    _tasks   = allTasks.filter(t => t.project_id === _projectId);
+    _tasks = allTasks.filter(t => t.project_id === _projectId);
     _sprints = allSprints.filter(s => s.project_id === _projectId)
-                         .sort((a, b) => (a.start_date || '') < (b.start_date || '') ? -1 : 1);
+      .sort((a, b) => (a.start_date || '') < (b.start_date || '') ? -1 : 1);
     _members = members;
 
     if (!_project) {
@@ -69,7 +69,7 @@ export async function render(params = {}) {
       return;
     }
 
-    _renderPage();
+    await _renderPage();
   } catch (err) {
     debug('Gantt render error:', err);
     main.innerHTML = `<div class="page-container page-enter">
@@ -83,10 +83,10 @@ export async function render(params = {}) {
 
 // ─── Page Shell ───────────────────────────────────────────────────────────────
 
-function _renderPage() {
+async function _renderPage() {
   const session = getSession();
   const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
-  const banner = buildProjectBanner(_project, 'gantt', { renderBadge, isAdminOrPM });
+  const banner = await buildProjectBanner(_project, 'gantt', { renderBadge, isAdminOrPM });
 
   const sprintOptions = _sprints.map(s =>
     `<option value="${sanitize(s.id)}">${sanitize(s.name)}</option>`
@@ -113,9 +113,9 @@ function _renderPage() {
     <div class="gantt-toolbar__group">
       <span class="gantt-toolbar__label">Zoom</span>
       <div class="btn-group">
-        <button class="btn btn--sm ${_zoom==='day'?'btn--primary':'btn--secondary'}" data-zoom="day">Day</button>
-        <button class="btn btn--sm ${_zoom==='week'?'btn--primary':'btn--secondary'}" data-zoom="week">Week</button>
-        <button class="btn btn--sm ${_zoom==='month'?'btn--primary':'btn--secondary'}" data-zoom="month">Month</button>
+        <button class="btn btn--sm ${_zoom === 'day' ? 'btn--primary' : 'btn--secondary'}" data-zoom="day">Day</button>
+        <button class="btn btn--sm ${_zoom === 'week' ? 'btn--primary' : 'btn--secondary'}" data-zoom="week">Week</button>
+        <button class="btn btn--sm ${_zoom === 'month' ? 'btn--primary' : 'btn--secondary'}" data-zoom="month">Month</button>
       </div>
     </div>
     <div class="gantt-toolbar__group">
@@ -238,12 +238,12 @@ function _buildRows(tasks) {
 // ─── Gantt Drawing ────────────────────────────────────────────────────────────
 
 function _drawGantt() {
-  const tasks  = _getVisibleTasks();
+  const tasks = _getVisibleTasks();
   const { min, max } = _getDateRange();
-  const dayW   = _dayWidth();
+  const dayW = _dayWidth();
   const totalDays = Math.ceil((max - min) / 86400000);
   const totalW = totalDays * dayW;
-  const rows   = _buildRows(tasks);
+  const rows = _buildRows(tasks);
   const totalH = HEADER_H + rows.length * ROW_H + 16;
 
   // ── Labels ──
@@ -253,9 +253,9 @@ function _drawGantt() {
   // ── Canvas ──
   const canvas = document.getElementById('gantt-canvas');
   const dpr = window.devicePixelRatio || 1;
-  canvas.width  = totalW * dpr;
+  canvas.width = totalW * dpr;
   canvas.height = totalH * dpr;
-  canvas.style.width  = totalW + 'px';
+  canvas.style.width = totalW + 'px';
   canvas.style.height = totalH + 'px';
 
   const ctx = canvas.getContext('2d');
@@ -266,7 +266,7 @@ function _drawGantt() {
   // ── Bars ──
   const barsEl = document.getElementById('gantt-bars');
   barsEl.style.height = totalH + 'px';
-  barsEl.style.width  = totalW + 'px';
+  barsEl.style.width = totalW + 'px';
   barsEl.innerHTML = '';
 
   rows.forEach((row, i) => {
@@ -290,13 +290,13 @@ function _drawGantt() {
 function _appendBar(container, task, rowIdx, min, dayW) {
   const minTs = min.getTime();
   const startDate = task.start_date ? new Date(task.start_date) : (task.due_date ? new Date(task.due_date) : null);
-  const endDate   = task.due_date   ? new Date(task.due_date)   : (task.start_date ? new Date(task.start_date) : null);
+  const endDate = task.due_date ? new Date(task.due_date) : (task.start_date ? new Date(task.start_date) : null);
   if (!startDate || !endDate) return;
 
-  const left   = Math.round((startDate.getTime() - minTs) / 86400000 * dayW);
-  const rawW   = Math.round((endDate.getTime() - startDate.getTime()) / 86400000 * dayW);
-  const width  = Math.max(rawW, dayW);
-  const top    = HEADER_H + rowIdx * ROW_H + Math.floor((ROW_H - 24) / 2);
+  const left = Math.round((startDate.getTime() - minTs) / 86400000 * dayW);
+  const rawW = Math.round((endDate.getTime() - startDate.getTime()) / 86400000 * dayW);
+  const width = Math.max(rawW, dayW);
+  const top = HEADER_H + rowIdx * ROW_H + Math.floor((ROW_H - 24) / 2);
   const isDone = task.status === 'done';
   const isOverdue = task.due_date && new Date(task.due_date) < new Date() && !isDone;
   const isMilestone = task.type === 'epic' && rawW <= 0;
@@ -334,7 +334,7 @@ function _buildLabels(rows, totalH) {
       html += `<div class="gantt-label gantt-label--sprint" style="top:${top}px;height:${ROW_H}px">
         <i data-lucide="zap" class="gantt-label__icon" aria-hidden="true"></i>
         <span class="gantt-label__name">${sanitize(row.sprint.name || 'Sprint')}</span>
-        ${row.sprint.start_date ? `<span class="gantt-label__dates">${formatDate(row.sprint.start_date,'short')} – ${formatDate(row.sprint.end_date,'short')}</span>` : ''}
+        ${row.sprint.start_date ? `<span class="gantt-label__dates">${formatDate(row.sprint.start_date, 'short')} – ${formatDate(row.sprint.end_date, 'short')}</span>` : ''}
       </div>`;
     } else {
       const t = row.task;
@@ -344,10 +344,10 @@ function _buildLabels(rows, totalH) {
       const isDone = t.status === 'done';
       const isOverdue = t.due_date && new Date(t.due_date) < new Date() && !isDone;
 
-      html += `<div class="gantt-label gantt-label--task ${isDone?'is-done':''} ${isOverdue?'is-overdue':''}" style="top:${top}px;height:${ROW_H}px" title="${sanitize(t.title)}">
+      html += `<div class="gantt-label gantt-label--task ${isDone ? 'is-done' : ''} ${isOverdue ? 'is-overdue' : ''}" style="top:${top}px;height:${ROW_H}px" title="${sanitize(t.title)}">
         <span class="gantt-label__avatar" style="background:${sanitize(avatarColor)}">${initials ? sanitize(initials) : '<i data-lucide="user" style="width:12px;height:12px"></i>'}</span>
         <span class="gantt-label__name">${sanitize(t.title)}</span>
-        <span class="gantt-label__badge gantt-label__badge--${sanitize(t.priority||'low')}">${sanitize((t.priority||'').charAt(0).toUpperCase())}</span>
+        <span class="gantt-label__badge gantt-label__badge--${sanitize(t.priority || 'low')}">${sanitize((t.priority || '').charAt(0).toUpperCase())}</span>
       </div>`;
     }
   });
@@ -390,7 +390,7 @@ function _drawGrid(ctx, min, max, dayW, totalDays, totalW, totalH, rows) {
 
     const isMinor = _zoom === 'month' ? !isMonthStart : (_zoom === 'week' ? !isWeekStart : false);
     ctx.strokeStyle = isMinor ? 'rgba(226,232,240,0.5)' : '#E2E8F0';
-    ctx.lineWidth   = isMinor ? 0.5 : 1;
+    ctx.lineWidth = isMinor ? 0.5 : 1;
     ctx.beginPath(); ctx.moveTo(x, HEADER_H); ctx.lineTo(x, totalH); ctx.stroke();
     cur.setDate(cur.getDate() + 1);
   }
@@ -483,7 +483,7 @@ function _bindDrag(barsEl, min, dayW) {
     if (!bar) return;
 
     const taskId = bar.dataset.taskId;
-    const task   = _tasks.find(t => t.id === taskId);
+    const task = _tasks.find(t => t.id === taskId);
     if (!task) return;
 
     const isResize = e.target.dataset.resize === 'true';
@@ -491,10 +491,10 @@ function _bindDrag(barsEl, min, dayW) {
       type: isResize ? 'resize' : 'move',
       taskId, task, bar,
       startX: e.clientX,
-      origLeft:  parseFloat(bar.style.left),
+      origLeft: parseFloat(bar.style.left),
       origWidth: parseFloat(bar.style.width),
       origStartDate: task.start_date,
-      origEndDate:   task.due_date,
+      origEndDate: task.due_date,
       dayW,
       accDelta: 0,
     };
@@ -504,7 +504,7 @@ function _bindDrag(barsEl, min, dayW) {
   });
 
   document.addEventListener('mousemove', _handleDragMove);
-  document.addEventListener('mouseup',   _handleDragEnd);
+  document.addEventListener('mouseup', _handleDragEnd);
 }
 
 function _handleDragMove(e) {
@@ -527,7 +527,7 @@ async function _handleDragEnd(e) {
 
   if (deltaDays !== 0) {
     const task = _drag.task;
-    const MS   = 86400000;
+    const MS = 86400000;
 
     if (_drag.type === 'move') {
       if (task.start_date) {
@@ -539,7 +539,7 @@ async function _handleDragEnd(e) {
     } else {
       if (task.due_date) {
         const newEnd = new Date(new Date(task.due_date).getTime() + deltaDays * MS);
-        const start  = task.start_date ? new Date(task.start_date) : null;
+        const start = task.start_date ? new Date(task.start_date) : null;
         if (!start || newEnd >= start) {
           task.due_date = newEnd.toISOString().slice(0, 10);
         }
@@ -583,11 +583,11 @@ function _exportPNG() {
   if (!canvas) { showToast('Nothing to export', 'warning'); return; }
 
   const dpr = window.devicePixelRatio || 1;
-  const cW  = canvas.width / dpr;
-  const cH  = canvas.height / dpr;
+  const cW = canvas.width / dpr;
+  const cH = canvas.height / dpr;
 
   const out = document.createElement('canvas');
-  out.width  = (LABEL_W + cW) * dpr;
+  out.width = (LABEL_W + cW) * dpr;
   out.height = cH * dpr;
 
   const ctx = out.getContext('2d');
@@ -630,8 +630,8 @@ function _exportPNG() {
 
   // Bars
   document.querySelectorAll('.gantt-bar').forEach(bar => {
-    const left  = parseFloat(bar.style.left) + LABEL_W;
-    const top   = parseFloat(bar.style.top);
+    const left = parseFloat(bar.style.left) + LABEL_W;
+    const top = parseFloat(bar.style.top);
     const width = parseFloat(bar.style.width);
     ctx.fillStyle = bar.style.background || '#2563EB';
     ctx.beginPath();
@@ -649,7 +649,7 @@ function _exportPNG() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `gantt-${(_project?.name || 'chart').replace(/\s+/g, '-')}-${new Date().toISOString().slice(0,10)}.png`;
+    a.download = `gantt-${(_project?.name || 'chart').replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}.png`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -662,7 +662,7 @@ function _exportPNG() {
 
 function _openGanttFilterModal() {
   const sprintOptions = _sprints.map(s =>
-    `<option value="${sanitize(s.id)}" ${_filterSprint===s.id?'selected':''}>${sanitize(s.name)}</option>`
+    `<option value="${sanitize(s.id)}" ${_filterSprint === s.id ? 'selected' : ''}>${sanitize(s.name)}</option>`
   ).join('');
 
   openModal({
@@ -671,8 +671,8 @@ function _openGanttFilterModal() {
     body: `<div class="form-group">
       <label class="form-label" for="fmGanttSprint">Sprint</label>
       <select class="form-select" id="fmGanttSprint">
-        <option value="all" ${_filterSprint==='all'?'selected':''}>All Sprints</option>
-        <option value="none" ${_filterSprint==='none'?'selected':''}>No Sprint</option>
+        <option value="all" ${_filterSprint === 'all' ? 'selected' : ''}>All Sprints</option>
+        <option value="none" ${_filterSprint === 'none' ? 'selected' : ''}>No Sprint</option>
         ${sprintOptions}
       </select>
     </div>`,

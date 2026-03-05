@@ -150,7 +150,7 @@ export async function render(params = {}) {
       _currentView = stored === 'list' ? 'list' : 'board';
     } catch { _currentView = 'board'; }
 
-    renderMaintenancePage();
+    await renderMaintenancePage();
   } catch (err) {
     debug('Maintenance render error:', err);
     document.getElementById('main-content').innerHTML = `<div class="page-container page-enter"><div class="empty-state"><i data-lucide="alert-circle" class="empty-state__icon"></i><p class="empty-state__title">Failed to load maintenance tickets</p><p class="empty-state__text">${sanitize(String(err.message))}</p></div></div>`;
@@ -164,14 +164,14 @@ function _saveViewPref(view) {
 
 // ─── Page Render ─────────────────────────────────────────────────────────────
 
-function renderMaintenancePage() {
+async function renderMaintenancePage() {
   const session = getSession();
   const canCreate = session && ['admin', 'pm'].includes(session.role);
   const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
   const content = document.getElementById('main-content');
   if (!content) return;
   const stats = _computeStats();
-  const banner = buildProjectBanner(_project, 'maintenance', { renderBadge, isAdminOrPM });
+  const banner = await buildProjectBanner(_project, 'maintenance', { renderBadge, isAdminOrPM });
 
   content.innerHTML = `
     <div class="page-container page-enter project-detail-page">

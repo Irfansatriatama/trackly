@@ -52,7 +52,7 @@ export async function render(params = {}) {
     if (!_planningSprintId && _sprints.length > 0) {
       _planningSprintId = active?.id || _sprints[0].id;
     }
-    _renderPage();
+    await _renderPage();
   } catch (err) {
     debug('Sprint render error:', err);
     document.getElementById('main-content').innerHTML = `<div class="page-container page-enter"><div class="empty-state"><i data-lucide="alert-circle" class="empty-state__icon"></i><p class="empty-state__title">Failed to load</p><p class="empty-state__text">${sanitize(String(err.message))}</p></div></div>`;
@@ -60,13 +60,13 @@ export async function render(params = {}) {
   }
 }
 
-function _renderPage() {
+async function _renderPage() {
   const content = document.getElementById('main-content');
   if (!content) return;
   const session = getSession();
   const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
   _isReadOnly = session && ['viewer', 'client'].includes(session.role);
-  const banner = buildProjectBanner(_project, 'sprint', { renderBadge, isAdminOrPM });
+  const banner = await buildProjectBanner(_project, 'sprint', { renderBadge, isAdminOrPM });
   const activeSprint = _sprints.find(s => s.status === 'active');
 
   content.innerHTML = `
@@ -596,10 +596,10 @@ function _bindPageEvents() {
   document.getElementById('btnNewSprint')?.addEventListener('click', () => _openSprintModal(null));
   document.getElementById('btnNewSprintEmpty')?.addEventListener('click', () => _openSprintModal(null));
   document.getElementById('btnNewSprintPlan')?.addEventListener('click', () => _openSprintModal(null));
-  document.getElementById('btnViewBoard')?.addEventListener('click', () => { _activeTab = 'board'; _renderPage(); });
+  document.getElementById('btnViewBoard')?.addEventListener('click', async () => { _activeTab = 'board'; await _renderPage(); });
   document.getElementById('btnCompleteSprint')?.addEventListener('click', e => _handleCompleteSprint(e.currentTarget.dataset.id));
   document.querySelectorAll('.sprint-tab').forEach(tab => {
-    tab.addEventListener('click', () => { _activeTab = tab.dataset.tab; _renderPage(); });
+    tab.addEventListener('click', async () => { _activeTab = tab.dataset.tab; await _renderPage(); });
   });
   const sprintList = document.querySelector('.sprint-list');
   if (sprintList) {
@@ -614,7 +614,7 @@ function _bindPageEvents() {
       if (btn.classList.contains('btn-plan-sprint')) { _planningSprintId = id; _activeTab = 'planning'; _renderPage(); }
     });
   }
-  document.getElementById('planningSprintSelect')?.addEventListener('change', e => { _planningSprintId = e.target.value; _renderPage(); });
+  document.getElementById('planningSprintSelect')?.addEventListener('change', async e => { _planningSprintId = e.target.value; await _renderPage(); });
   document.getElementById('planningSearch')?.addEventListener('input', e => { _planningSearch = e.target.value; _refreshPlanningPanes(); });
   document.getElementById('retroSprintSelect')?.addEventListener('change', e => {
     const sprint = _sprints.find(s => s.id === e.target.value);

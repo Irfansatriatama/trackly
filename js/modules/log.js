@@ -66,7 +66,7 @@ export async function render(params) {
     if (_projectId && project) {
       const session = getSession();
       const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
-      bannerHtml = buildProjectBanner(project, 'log', { renderBadge, isAdminOrPM });
+      bannerHtml = await buildProjectBanner(project, 'log', { renderBadge, isAdminOrPM });
     }
 
     _visibleCount = INITIAL_SHOW;

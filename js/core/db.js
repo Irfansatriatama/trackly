@@ -6,7 +6,7 @@
  */
 
 const DB_NAME = 'trackly_db';
-const DB_VERSION = 7;
+const DB_VERSION = 8;
 
 /** @type {IDBDatabase|null} */
 let _db = null;
@@ -15,21 +15,21 @@ let _db = null;
  * Object store definitions: name → { keyPath, indexes }
  */
 const STORES = {
-  users:        { keyPath: 'id', indexes: [] },
-  projects:     { keyPath: 'id', indexes: [] },
-  tasks:        { keyPath: 'id', indexes: ['project_id', 'sprint_id'] },
-  sprints:      { keyPath: 'id', indexes: ['project_id'] },
-  clients:      { keyPath: 'id', indexes: [] },
-  assets:       { keyPath: 'id', indexes: [] },
-  maintenance:  { keyPath: 'id', indexes: ['project_id', 'status'] },
-  invoices:     { keyPath: 'id', indexes: ['project_id'] },
+  users: { keyPath: 'id', indexes: [] },
+  projects: { keyPath: 'id', indexes: ['parent_id'] },
+  tasks: { keyPath: 'id', indexes: ['project_id', 'sprint_id'] },
+  sprints: { keyPath: 'id', indexes: ['project_id'] },
+  clients: { keyPath: 'id', indexes: [] },
+  assets: { keyPath: 'id', indexes: [] },
+  maintenance: { keyPath: 'id', indexes: ['project_id', 'status'] },
+  invoices: { keyPath: 'id', indexes: ['project_id'] },
   activity_log: { keyPath: 'id', indexes: ['project_id', 'user_id'] },
-  meetings:     { keyPath: 'id', indexes: ['date'] },
-  discussions:  { keyPath: 'id', indexes: ['project_id'] },
-  settings:     { keyPath: 'key', indexes: [] },
+  meetings: { keyPath: 'id', indexes: ['date'] },
+  discussions: { keyPath: 'id', indexes: ['project_id'] },
+  settings: { keyPath: 'key', indexes: [] },
   notifications: { keyPath: 'id', indexes: ['user_id', 'read', 'created_at'] },
-  notes:         { keyPath: 'id', indexes: ['user_id', 'folder_id', 'created_at', 'updated_at', 'pinned'] },
-  note_audit:    { keyPath: 'id', indexes: ['note_id', 'user_id', 'action', 'created_at'] },
+  notes: { keyPath: 'id', indexes: ['user_id', 'folder_id', 'created_at', 'updated_at', 'pinned'] },
+  note_audit: { keyPath: 'id', indexes: ['note_id', 'user_id', 'action', 'created_at'] },
 };
 
 /**
@@ -59,6 +59,10 @@ export function openDB() {
         // Add shared_with multiEntry index on notes store if missing
         if (storeName === 'notes' && !store.indexNames.contains('shared_with')) {
           store.createIndex('shared_with', 'shared_with', { multiEntry: true });
+        }
+        // Add parent_id index on projects store if missing
+        if (storeName === 'projects' && !store.indexNames.contains('parent_id')) {
+          store.createIndex('parent_id', 'parent_id', { unique: false });
         }
       }
     };

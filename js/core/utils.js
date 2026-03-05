@@ -29,21 +29,21 @@ export function debug(...args) {
  * Prefix constants for entity IDs.
  */
 export const ID_PREFIX = {
-  USER:        'USR',
-  PROJECT:     'PRJ',
-  TASK:        'TSK',
-  SPRINT:      'SPR',
-  CLIENT:      'CLT',
-  ASSET:       'AST',
+  USER: 'USR',
+  PROJECT: 'PRJ',
+  TASK: 'TSK',
+  SPRINT: 'SPR',
+  CLIENT: 'CLT',
+  ASSET: 'AST',
   MAINTENANCE: 'MNT',
-  INVOICE:     'INV',
-  ACTIVITY:    'ACT',
-  MEETING:     'MTG',
-  DISCUSSION:  'DSC',
+  INVOICE: 'INV',
+  ACTIVITY: 'ACT',
+  MEETING: 'MTG',
+  DISCUSSION: 'DSC',
   NOTIFICATION: 'NTF',
-  NOTE:        'NOTE',
+  NOTE: 'NOTE',
   NOTE_FOLDER: 'NFLD',
-  NAUD:        'NAUD',
+  NAUD: 'NAUD',
 };
 
 /**
@@ -93,31 +93,31 @@ export function formatDate(date, format = 'short') {
   if (isNaN(d.getTime())) return '—';
 
   // Support custom format patterns
-  const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const MONTHS_LONG  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
   const customPatterns = {
     'DD MMM YYYY': () => {
-      const dd   = String(d.getDate()).padStart(2, '0');
-      const mmm  = MONTHS_SHORT[d.getMonth()];
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mmm = MONTHS_SHORT[d.getMonth()];
       const yyyy = d.getFullYear();
       return `${dd} ${mmm} ${yyyy}`;
     },
     'MM/DD/YYYY': () => {
-      const mm   = String(d.getMonth() + 1).padStart(2, '0');
-      const dd   = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
       const yyyy = d.getFullYear();
       return `${mm}/${dd}/${yyyy}`;
     },
     'YYYY-MM-DD': () => {
-      const mm   = String(d.getMonth() + 1).padStart(2, '0');
-      const dd   = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
       const yyyy = d.getFullYear();
       return `${yyyy}-${mm}-${dd}`;
     },
     'DD/MM/YYYY': () => {
-      const mm   = String(d.getMonth() + 1).padStart(2, '0');
-      const dd   = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
       const yyyy = d.getFullYear();
       return `${dd}/${mm}/${yyyy}`;
     },
@@ -128,9 +128,9 @@ export function formatDate(date, format = 'short') {
   }
 
   const presets = {
-    short:    { year: 'numeric', month: 'short', day: 'numeric' },
-    long:     { year: 'numeric', month: 'long', day: 'numeric' },
-    time:     { hour: '2-digit', minute: '2-digit' },
+    short: { year: 'numeric', month: 'short', day: 'numeric' },
+    long: { year: 'numeric', month: 'long', day: 'numeric' },
+    time: { hour: '2-digit', minute: '2-digit' },
     datetime: { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' },
   };
 
@@ -153,10 +153,10 @@ export function formatRelativeDate(date) {
   const absDiff = Math.abs(diffMs);
 
   const MINUTE = 60 * 1000;
-  const HOUR   = 60 * MINUTE;
-  const DAY    = 24 * HOUR;
-  const WEEK   = 7 * DAY;
-  const MONTH  = 30 * DAY;
+  const HOUR = 60 * MINUTE;
+  const DAY = 24 * HOUR;
+  const WEEK = 7 * DAY;
+  const MONTH = 30 * DAY;
 
   let value, unit;
 
@@ -339,7 +339,7 @@ export async function logActivity({
     const allLogs = await getAll('activity_log');
     const id = generateSequentialId(ID_PREFIX.ACTIVITY, allLogs);
 
-    const actorId   = session?.userId || null;
+    const actorId = session?.userId || null;
     const actorName = session?.fullName || session?.username || 'Unknown';
 
     const entry = {
@@ -408,19 +408,19 @@ async function _generateNotifications({ add, getAll, actorId, actorName, project
 
   // Build message
   const actionVerbs = {
-    created:        'membuat',
-    updated:        'mengubah',
-    deleted:        'menghapus',
+    created: 'membuat',
+    updated: 'mengubah',
+    deleted: 'menghapus',
     status_changed: 'mengubah status',
-    commented:      'mengomentari',
-    assigned:       'mengassign',
-    resolved:       'menyelesaikan',
-    reopened:       'membuka kembali',
-    closed:         'menutup',
-    archived:       'mengarsipkan',
-    restored:       'memulihkan',
-    started:        'memulai',
-    completed:      'menyelesaikan',
+    commented: 'mengomentari',
+    assigned: 'mengassign',
+    resolved: 'menyelesaikan',
+    reopened: 'membuka kembali',
+    closed: 'menutup',
+    archived: 'mengarsipkan',
+    restored: 'memulihkan',
+    started: 'memulai',
+    completed: 'menyelesaikan',
   };
   const verb = actionVerbs[action] || action;
 
@@ -498,34 +498,48 @@ export function createElement(tag, attrs = {}, text = '') {
 // ─── Project Banner Builder ───────────────────────────────────────────────────
 // Shared helper so all project sub-pages render the same banner as Overview.
 // activeTab: 'board'|'backlog'|'sprint'|'gantt'|'discussion'|'maintenance'|'log'|'reports'
-export function buildProjectBanner(project, activeTab, options = {}) {
+export async function buildProjectBanner(project, activeTab, options = {}) {
   const { renderBadge: badge, isAdminOrPM } = options;
   if (!project || !badge) return '';
 
-  const STATUS_LABEL  = { planning:'Planning', active:'Active', maintenance:'Maintenance', on_hold:'On Hold', completed:'Completed', cancelled:'Cancelled' };
-  const PHASE_LABEL   = { development:'Development', uat:'UAT', deployment:'Deployment', running:'Running', maintenance:'Maintenance' };
-  const PRIORITY_LABEL = { low:'Low', medium:'Medium', high:'High', critical:'Critical' };
-  const STATUS_VARIANT = { planning:'info', active:'success', maintenance:'warning', on_hold:'neutral', completed:'success', cancelled:'danger' };
-  const PRIORITY_VARIANT = { low:'neutral', medium:'info', high:'warning', critical:'danger' };
+  let parentProject = null;
+  if (project.parent_id) {
+    try {
+      const { getById } = await import('./db.js');
+      parentProject = await getById('projects', project.parent_id);
+    } catch (err) {
+      if (localStorage.getItem('trackly_debug') === 'true') {
+        console.warn('[TRACKLY] Failed to fetch parent project for banner:', err);
+      }
+    }
+  }
 
-  const coverColor   = sanitize(project.cover_color || '#2563EB');
-  const isOverdue    = project.end_date && isPast(project.end_date) && !['completed','cancelled'].includes(project.status);
-  const showMaint    = ['running','maintenance'].includes(project.phase) || ['maintenance'].includes(project.status);
-  const id           = sanitize(project.id);
-  const adminOrPm    = isAdminOrPM;
+  const STATUS_LABEL = { planning: 'Planning', active: 'Active', maintenance: 'Maintenance', on_hold: 'On Hold', completed: 'Completed', cancelled: 'Cancelled' };
+  const PHASE_LABEL = { development: 'Development', uat: 'UAT', deployment: 'Deployment', running: 'Running', maintenance: 'Maintenance' };
+  const PRIORITY_LABEL = { low: 'Low', medium: 'Medium', high: 'High', critical: 'Critical' };
+  const STATUS_VARIANT = { planning: 'info', active: 'success', maintenance: 'warning', on_hold: 'neutral', completed: 'success', cancelled: 'danger' };
+  const PRIORITY_VARIANT = { low: 'neutral', medium: 'info', high: 'warning', critical: 'danger' };
+
+  const coverColor = sanitize(project.cover_color || '#2563EB');
+  const isOverdue = project.end_date && isPast(project.end_date) && !['completed', 'cancelled'].includes(project.status);
+  const showMaint = ['running', 'maintenance'].includes(project.phase) || ['maintenance'].includes(project.status);
+  const id = sanitize(project.id);
+  const adminOrPm = isAdminOrPM;
 
   // Local helper: badge with on-banner styling (white text, semi-solid bg)
   const bannerBadge = (label, variant) =>
     `<span class="badge badge--${variant} badge--on-banner">${label}</span>`;
 
-  const statusBadge   = bannerBadge(STATUS_LABEL[project.status]   || project.status,   STATUS_VARIANT[project.status]   || 'neutral');
-  const phaseBadge    = project.phase    ? bannerBadge(PHASE_LABEL[project.phase]         || project.phase,    'info')                                    : '';
-  const priorityBadge = project.priority ? bannerBadge(PRIORITY_LABEL[project.priority]   || project.priority, PRIORITY_VARIANT[project.priority] || 'neutral') : '';
-  const overdueBadge  = isOverdue ? bannerBadge('Overdue', 'danger') : '';
+  const statusBadge = bannerBadge(STATUS_LABEL[project.status] || project.status, STATUS_VARIANT[project.status] || 'neutral');
+  const phaseBadge = project.phase ? bannerBadge(PHASE_LABEL[project.phase] || project.phase, 'info') : '';
+  const priorityBadge = project.priority ? bannerBadge(PRIORITY_LABEL[project.priority] || project.priority, PRIORITY_VARIANT[project.priority] || 'neutral') : '';
+  const overdueBadge = isOverdue ? bannerBadge('Overdue', 'danger') : '';
 
   const tabLink = (tab, icon, label, tabId) =>
     '<a class="project-subnav__link' + (activeTab === tabId ? ' is-active' : '') + '" href="#/projects/' + id + (tabId === 'overview' ? '' : '/' + tabId) + '">' +
     '<i data-lucide="' + icon + '" aria-hidden="true"></i> ' + label + '</a>';
+
+  const projectNameDisplay = parentProject ? `${sanitize(parentProject.name)} / ${sanitize(project.name)}` : sanitize(project.name);
 
   return `
     <div class="project-detail-banner" style="background:${coverColor};">
@@ -535,14 +549,14 @@ export function buildProjectBanner(project, activeTab, options = {}) {
             <i data-lucide="folder" aria-hidden="true"></i> Projects
           </a>
           <i data-lucide="chevron-right" aria-hidden="true"></i>
-          <span>${sanitize(project.name)}</span>
+          <span>${projectNameDisplay}</span>
         </div>
         <div class="project-detail-banner__info">
           <div class="project-detail-banner__text">
             <div class="project-detail-banner__badges">
               ${statusBadge}${phaseBadge}${priorityBadge}${overdueBadge}
             </div>
-            <h1 class="project-detail-banner__title">${sanitize(project.name)}</h1>
+            <h1 class="project-detail-banner__title">${projectNameDisplay}</h1>
             <p class="project-detail-banner__code text-mono">${sanitize(project.code || project.id)}</p>
             ${project.description ? '<p class="project-detail-banner__desc">' + sanitize(project.description) + '</p>' : ''}
           </div>
@@ -555,14 +569,14 @@ export function buildProjectBanner(project, activeTab, options = {}) {
       </div>
     </div>
     <div class="project-subnav">
-      ${tabLink('overview',     'layout-dashboard', 'Overview',    'overview')}
-      ${tabLink('board',        'kanban',            'Board',       'board')}
-      ${tabLink('backlog',      'list',              'Backlog',     'backlog')}
-      ${tabLink('sprint',       'zap',               'Sprint',      'sprint')}
-      ${tabLink('gantt',        'gantt-chart',       'Gantt',       'gantt')}
-      ${tabLink('discussion',   'message-circle',    'Discussion',  'discussion')}
+      ${tabLink('overview', 'layout-dashboard', 'Overview', 'overview')}
+      ${tabLink('board', 'kanban', 'Board', 'board')}
+      ${tabLink('backlog', 'list', 'Backlog', 'backlog')}
+      ${tabLink('sprint', 'zap', 'Sprint', 'sprint')}
+      ${tabLink('gantt', 'gantt-chart', 'Gantt', 'gantt')}
+      ${tabLink('discussion', 'message-circle', 'Discussion', 'discussion')}
       ${showMaint ? tabLink('maintenance', 'wrench', 'Maintenance', 'maintenance') : ''}
-      ${tabLink('reports',      'bar-chart-2',       'Reports',     'reports')}
+      ${tabLink('reports', 'bar-chart-2', 'Reports', 'reports')}
       ${adminOrPm ? tabLink('log', 'clock', 'Log', 'log') : ''}
     </div>`;
 }

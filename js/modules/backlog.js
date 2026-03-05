@@ -78,7 +78,7 @@ export async function render(params = {}) {
     _computeAllTags();
     _filterStatus = ''; _filterPriority = ''; _filterType = ''; _filterAssignee = '';
     _searchQuery = ''; _selectedIds.clear(); _detailTaskId = null;
-    renderBacklogPage();
+    await renderBacklogPage();
   } catch (err) {
     debug('Backlog render error:', err);
     document.getElementById('main-content').innerHTML = `<div class="page-container page-enter"><div class="empty-state"><i data-lucide="alert-circle" class="empty-state__icon"></i><p class="empty-state__title">Failed to load backlog</p><p class="empty-state__text">${sanitize(String(err.message))}</p></div></div>`;
@@ -92,13 +92,13 @@ function _computeAllTags() {
   _allTags = [...tagSet].sort();
 }
 
-function renderBacklogPage() {
+async function renderBacklogPage() {
   const content = document.getElementById('main-content');
   if (!content) return;
   const session = getSession();
   const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
   _isReadOnly = session && ['viewer', 'client'].includes(session.role);
-  const banner = buildProjectBanner(_project, 'backlog', { renderBadge, isAdminOrPM });
+  const banner = await buildProjectBanner(_project, 'backlog', { renderBadge, isAdminOrPM });
 
   content.innerHTML = `
     <div class="page-container page-enter backlog-page project-detail-page">
@@ -294,7 +294,7 @@ function bindPageEvents() {
     const newField = e.target.value;
     if (newField === _sortField) { _sortDir = _sortDir === 'asc' ? 'desc' : 'asc'; }
     else { _sortField = newField; _sortDir = 'desc'; }
-    renderBacklogPage();
+    await renderBacklogPage();
   });
   const bc = document.getElementById('backlogContent');
   if (bc) { bc.addEventListener('click', handleListClick); bc.addEventListener('change', handleListChange); }

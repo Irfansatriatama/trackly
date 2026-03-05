@@ -28,27 +28,27 @@ const PAGE_SIZE = 20;
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const POST_TYPES = {
-  update:   { label: 'Update',   color: 'success',   icon: 'refresh-cw' },
-  question: { label: 'Question', color: 'info',       icon: 'help-circle' },
-  decision: { label: 'Decision', color: 'secondary',  icon: 'check-square' },
-  blocker:  { label: 'Blocker',  color: 'danger',     icon: 'alert-octagon' },
-  general:  { label: 'General',  color: 'neutral',    icon: 'message-circle' },
+  update: { label: 'Update', color: 'success', icon: 'refresh-cw' },
+  question: { label: 'Question', color: 'info', icon: 'help-circle' },
+  decision: { label: 'Decision', color: 'secondary', icon: 'check-square' },
+  blocker: { label: 'Blocker', color: 'danger', icon: 'alert-octagon' },
+  general: { label: 'General', color: 'neutral', icon: 'message-circle' },
 };
 
 const TYPE_CSS = {
-  update:   'var(--color-success)',
+  update: 'var(--color-success)',
   question: 'var(--color-info)',
   decision: 'var(--color-secondary)',
-  blocker:  'var(--color-danger)',
-  general:  'var(--color-text-muted)',
+  blocker: 'var(--color-danger)',
+  general: 'var(--color-text-muted)',
 };
 
 const TYPE_BG = {
-  update:   '#dcfce7',
+  update: '#dcfce7',
   question: '#e0f2fe',
   decision: '#ede9fe',
-  blocker:  '#fee2e2',
-  general:  '#f1f5f9',
+  blocker: '#fee2e2',
+  general: '#f1f5f9',
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -115,7 +115,7 @@ function renderAvatar(user, size = 32) {
     return `<img src="${sanitize(user.avatar)}" alt="${sanitize(user?.full_name || '')}" class="dsc-avatar" style="width:${size}px;height:${size}px;" />`;
   }
   const initials = getInitials(user?.full_name || '?');
-  const colors = ['#2563EB','#7C3AED','#16A34A','#D97706','#DC2626','#0891B2'];
+  const colors = ['#2563EB', '#7C3AED', '#16A34A', '#D97706', '#DC2626', '#0891B2'];
   const color = colors[(user?.full_name?.charCodeAt(0) || 0) % colors.length];
   return `<div class="dsc-avatar dsc-avatar--initials" style="width:${size}px;height:${size}px;background:${color};">${sanitize(initials)}</div>`;
 }
@@ -155,7 +155,7 @@ export async function render(params = {}) {
     _project = allProjects.find(p => p.id === _projectId) || null;
     _currentPage = 1;
 
-    content.innerHTML = _buildPageHTML();
+    content.innerHTML = await _buildPageHTML();
     _bindEvents();
     if (typeof lucide !== 'undefined') lucide.createIcons();
     document.getElementById('btnBannerEditProject')?.addEventListener('click', () => {
@@ -169,10 +169,10 @@ export async function render(params = {}) {
 
 // ─── Page HTML ────────────────────────────────────────────────────────────────
 
-function _buildPageHTML() {
+async function _buildPageHTML() {
   const session = getSession();
   const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
-  const banner = buildProjectBanner(_project, 'discussion', { renderBadge, isAdminOrPM });
+  const banner = await buildProjectBanner(_project, 'discussion', { renderBadge, isAdminOrPM });
   return `
     <div class="page-container page-enter project-detail-page">
       ${banner}

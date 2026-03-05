@@ -132,7 +132,36 @@ function renderProjectsContent() {
         ${_projects.length === 0 ? '<button class="btn btn--primary" id="btnNewProjectEmpty"><i data-lucide="folder-plus" aria-hidden="true"></i> New Project</button>' : ''}
       </div>`;
   }
-  return `<div class="projects-grid">${filtered.map(p => renderProjectCard(p)).join('')}</div>`;
+
+  const parentProjects = filtered.filter(p => !p.parent_id);
+  const childProjects = filtered.filter(p => p.parent_id);
+
+  let html = '';
+  const renderedIds = new Set();
+  const buildTree = (parents) => {
+    let treeHtml = '';
+    parents.forEach(p => {
+      treeHtml += renderProjectCard(p);
+      renderedIds.add(p.id);
+
+      const children = childProjects.filter(c => c.parent_id === p.id);
+      if (children.length > 0) {
+        treeHtml += `<div class="project-children" style="grid-column: 1 / -1; margin-left: var(--space-6); padding-left: var(--space-6); border-left: 2px dashed var(--border-color); display: grid; gap: var(--space-6); grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); margin-top: 0; margin-bottom: var(--space-4);">
+          ${buildTree(children)}
+        </div>`;
+      }
+    });
+    return treeHtml;
+  };
+
+  html += `<div class="projects-grid">` + buildTree(parentProjects) + `</div>`;
+
+  const orphans = childProjects.filter(c => !renderedIds.has(c.id));
+  if (orphans.length > 0) {
+    html += `<div class="projects-grid" style="margin-top: var(--space-6);">` + orphans.map(p => renderProjectCard(p)).join('') + `</div>`;
+  }
+
+  return html;
 }
 
 function renderProjectCard(p) {
@@ -426,13 +455,22 @@ function openProjectModal(project) {
         </div>
       </div>
 
-      <p class="form-section-title">Client &amp; Timeline</p>
-      <div class="form-group">
-        <label class="form-label" for="pClient">Client</label>
-        <select class="form-select" id="pClient">
-          <option value="">— No client —</option>
-          ${_clients.map(c => `<option value="${c.id}" ${project?.client_id === c.id ? 'selected' : ''}>${sanitize(c.company_name)}</option>`).join('')}
-        </select>
+      <p class="form-section-title">Client, Parent &amp; Timeline</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="pClient">Client</label>
+          <select class="form-select" id="pClient">
+            <option value="">— No client —</option>
+            ${_clients.map(c => `<option value="${c.id}" ${project?.client_id === c.id ? 'selected' : ''}>${sanitize(c.company_name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pParent">Parent Project</label>
+          <select class="form-select" id="pParent">
+            <option value="">— No parent (Top-level) —</option>
+            ${_projects.filter(p => p.id !== project?.id).map(p => `<option value="${p.id}" ${project?.parent_id === p.id ? 'selected' : ''}>${sanitize(p.name)}</option>`).join('')}
+          </select>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -551,6 +589,7 @@ async function handleSaveProject(existing, isEdit, getColor, getMembers) {
   const phase = document.getElementById('pPhase')?.value || null;
   const priority = document.getElementById('pPriority')?.value || 'medium';
   const client_id = document.getElementById('pClient')?.value || null;
+  const parent_id = document.getElementById('pParent')?.value || null;
   const start_date = document.getElementById('pStartDate')?.value || null;
   const end_date = document.getElementById('pEndDate')?.value || null;
   const actual_end_date = document.getElementById('pActualEndDate')?.value || null;
@@ -578,7 +617,7 @@ async function handleSaveProject(existing, isEdit, getColor, getMembers) {
     const projectData = {
       id: projectId,
       name, code, description, status, phase, priority,
-      client_id, start_date, end_date, actual_end_date,
+      client_id, parent_id, start_date, end_date, actual_end_date,
       budget, actual_cost, tags, cover_color, members,
       progress: existing?.progress || 0,
       created_by: existing?.created_by || session?.userId || null,
@@ -593,7 +632,7 @@ async function handleSaveProject(existing, isEdit, getColor, getMembers) {
       // Build changes diff
       const changes = [];
       if (existing) {
-        for (const field of ['name', 'status', 'phase', 'priority', 'start_date', 'end_date', 'budget', 'description']) {
+        for (const field of ['name', 'status', 'phase', 'priority', 'start_date', 'end_date', 'budget', 'description', 'parent_id']) {
           if (String(existing[field] || '') !== String(projectData[field] || '')) {
             changes.push({ field, old_value: existing[field], new_value: projectData[field] });
           }
@@ -699,6 +738,11 @@ async function renderProjectDetail(projectId) {
     const sessionUser = getSession();
     const isAdminOrPM = sessionUser && ['admin', 'pm'].includes(sessionUser.role);
 
+    let parentProject = null;
+    if (project.parent_id) {
+      parentProject = await getById('projects', project.parent_id);
+    }
+
     content.innerHTML = `
       <div class="page-container page-enter project-detail-page">
         <!-- Banner -->
@@ -709,6 +753,8 @@ async function renderProjectDetail(projectId) {
                 <i data-lucide="folder" aria-hidden="true"></i> Projects
               </a>
               <i data-lucide="chevron-right" aria-hidden="true"></i>
+              ${parentProject ? `<a href="#/projects/${parentProject.id}" class="project-breadcrumb-link" style="color:rgba(255,255,255,0.8);text-decoration:none;">${sanitize(parentProject.name)}</a>
+              <i data-lucide="chevron-right" aria-hidden="true"></i>` : ''}
               <span>${sanitize(project.name)}</span>
             </div>
             <div class="project-detail-banner__info">
