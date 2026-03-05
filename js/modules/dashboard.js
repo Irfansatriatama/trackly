@@ -12,17 +12,21 @@ import { renderBadge } from '../components/badge.js';
 let _clockInterval = null;
 
 function getStatusVariant(status) {
-  return { planning:'info', active:'success', maintenance:'warning', on_hold:'neutral',
-    completed:'success', cancelled:'danger', todo:'info', in_progress:'warning',
-    in_review:'secondary', done:'success', backlog:'neutral', open:'danger',
-    resolved:'success', closed:'neutral' }[status] || 'neutral';
+  return {
+    planning: 'info', active: 'success', maintenance: 'warning', on_hold: 'neutral',
+    completed: 'success', cancelled: 'danger', todo: 'info', in_progress: 'warning',
+    in_review: 'secondary', done: 'success', backlog: 'neutral', open: 'danger',
+    resolved: 'success', closed: 'neutral'
+  }[status] || 'neutral';
 }
 
 function getStatusLabel(status) {
-  const labels = { planning:'Planning', active:'Active', maintenance:'Maintenance',
-    on_hold:'On Hold', completed:'Completed', cancelled:'Cancelled', todo:'To Do',
-    in_progress:'In Progress', in_review:'In Review', done:'Done', backlog:'Backlog',
-    open:'Open', resolved:'Resolved', closed:'Closed' };
+  const labels = {
+    planning: 'Planning', active: 'Active', maintenance: 'Maintenance',
+    on_hold: 'On Hold', completed: 'Completed', cancelled: 'Cancelled', todo: 'To Do',
+    in_progress: 'In Progress', in_review: 'In Review', done: 'Done', backlog: 'Backlog',
+    open: 'Open', resolved: 'Resolved', closed: 'Closed'
+  };
   return labels[status] || status;
 }
 
@@ -41,8 +45,8 @@ function _startClock() {
 
   function _tick() {
     const now = new Date();
-    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const dayName = days[now.getDay()];
     const dd = String(now.getDate()).padStart(2, '0');
     const mmm = months[now.getMonth()];
@@ -175,19 +179,19 @@ export async function render(params = {}) {
         </div>
       </div>
       <div class="dashboard-stats-grid">
-        ${[1,2,3,4].map(()=>`<div class="skeleton" style="height:96px;border-radius:var(--radius-md);"></div>`).join('')}
+        ${[1, 2, 3, 4].map(() => `<div class="skeleton" style="height:96px;border-radius:var(--radius-md);"></div>`).join('')}
       </div>
     </div>`;
 
   try {
     const session = getSession();
     const [projects, tasks, members, maintenance, sprints, activityLogs] = await Promise.all([
-      getAll('projects').catch(()=>[]),
-      getAll('tasks').catch(()=>[]),
-      getAll('users').catch(()=>[]),
-      getAll('maintenance').catch(()=>[]),
-      getAll('sprints').catch(()=>[]),
-      getAll('activity_log').catch(()=>[]),
+      getAll('projects').catch(() => []),
+      getAll('tasks').catch(() => []),
+      getAll('users').catch(() => []),
+      getAll('maintenance').catch(() => []),
+      getAll('sprints').catch(() => []),
+      getAll('activity_log').catch(() => []),
     ]);
 
     const userId = session?.userId;
@@ -196,14 +200,14 @@ export async function render(params = {}) {
     const now = new Date();
     const activeProjects = projects.filter(p => p.status === 'active').length;
     const myTasks = tasks.filter(t => Array.isArray(t.assignees) ? t.assignees.includes(userId) : t.assignees === userId);
-    const overdueTasks = tasks.filter(t => t.due_date && new Date(t.due_date) < now && !['done','cancelled'].includes(t.status));
-    const openBugs = tasks.filter(t => t.type === 'bug' && !['done','cancelled'].includes(t.status));
-    const openMaint = maintenance.filter(m => ['open','in_progress'].includes(m.status));
+    const overdueTasks = tasks.filter(t => t.due_date && new Date(t.due_date) < now && !['done', 'cancelled'].includes(t.status));
+    const openBugs = tasks.filter(t => t.type === 'bug' && !['done', 'cancelled'].includes(t.status));
+    const openMaint = maintenance.filter(m => ['open', 'in_progress'].includes(m.status));
 
     const activeSprint = sprints.find(s => s.status === 'active');
-    const myPendingTasks = myTasks.filter(t => !['done','cancelled'].includes(t.status)).slice(0, 8);
+    const myPendingTasks = myTasks.filter(t => !['done', 'cancelled'].includes(t.status)).slice(0, 8);
     const recentProjects = [...projects]
-      .sort((a,b) => new Date(b.updated_at||b.created_at) - new Date(a.updated_at||a.created_at))
+      .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))
       .slice(0, 5);
 
     const currentUser = members.find(u => u.id === userId);
@@ -216,7 +220,7 @@ export async function render(params = {}) {
       backlog: '#94A3B8', todo: '#0891B2', in_progress: '#D97706',
       in_review: '#7C3AED', done: '#16A34A', cancelled: '#DC2626',
     };
-    const statusOrder = ['backlog','todo','in_progress','in_review','done','cancelled'];
+    const statusOrder = ['backlog', 'todo', 'in_progress', 'in_review', 'done', 'cancelled'];
     const donutData = statusOrder.map(s => ({
       label: getStatusLabel(s),
       value: tasks.filter(t => t.status === s).length,
@@ -224,8 +228,8 @@ export async function render(params = {}) {
     })).filter(d => d.value > 0);
 
     const priorityColors = { critical: '#DC2626', high: '#D97706', medium: '#0891B2', low: '#64748B' };
-    const activeTasks = tasks.filter(t => !['done','cancelled'].includes(t.status));
-    const barData = ['critical','high','medium','low'].map(p => ({
+    const activeTasks = tasks.filter(t => !['done', 'cancelled'].includes(t.status));
+    const barData = ['critical', 'high', 'medium', 'low'].map(p => ({
       label: p.charAt(0).toUpperCase() + p.slice(1),
       value: activeTasks.filter(t => (t.priority || 'medium') === p).length,
       color: priorityColors[p],
@@ -258,7 +262,7 @@ export async function render(params = {}) {
         const proj = log.project_id ? projects.find(p => p.id === log.project_id) : null;
         const actor = sanitize(log.actor_name || 'Someone');
         const entity = sanitize(log.entity_name || log.entity_id || '');
-        const type = (log.entity_type || '').replace(/_/g,' ');
+        const type = (log.entity_type || '').replace(/_/g, ' ');
         const amap = {
           created: `created ${type} <strong>${entity}</strong>`,
           updated: `updated ${type} <strong>${entity}</strong>`,
@@ -309,10 +313,10 @@ export async function render(params = {}) {
 
         <!-- Stats row -->
         <div class="dashboard-stats-grid" role="list" aria-label="Summary statistics">
-          ${statCard('folder','Active Projects', activeProjects, '#/projects', 'var(--color-primary)', '')}
-          ${statCard('alert-circle','Overdue Tasks', overdueTasks.length, '#/projects', 'var(--color-danger)', overdueTasks.length > 0 ? 'badge--danger' : '')}
-          ${statCard('bug','Open Bugs', openBugs.length, '#/projects', 'var(--color-warning)', openBugs.length > 0 ? 'badge--warning' : '')}
-          ${statCard('wrench','Open Maintenance', openMaint.length, '#/projects', 'var(--color-info)', '')}
+          ${statCard('folder', 'Active Projects', activeProjects, '#/projects', 'var(--color-primary)', '')}
+          ${statCard('alert-circle', 'Overdue Tasks', overdueTasks.length, '#/projects', 'var(--color-danger)', overdueTasks.length > 0 ? 'badge--danger' : '')}
+          ${statCard('bug', 'Open Bugs', openBugs.length, '#/projects', 'var(--color-warning)', openBugs.length > 0 ? 'badge--warning' : '')}
+          ${statCard('wrench', 'Open Maintenance', openMaint.length, '#/projects', 'var(--color-info)', '')}
         </div>
 
         <!-- Improvement 3: Charts row (between stats and main-grid) -->
@@ -373,16 +377,16 @@ export async function render(params = {}) {
             </div>
             <div class="card__body" style="padding:0;">
               ${myPendingTasks.length === 0
-                ? `<div class="empty-state" style="padding:var(--space-10) var(--space-4);">
+        ? `<div class="empty-state" style="padding:var(--space-10) var(--space-4);">
                     <i data-lucide="check-circle-2" class="empty-state__icon" aria-hidden="true"></i>
                     <p class="empty-state__title">All caught up!</p>
                     <p class="empty-state__text">No tasks assigned to you right now.</p>
                    </div>`
-                : `<ul class="dashboard-task-list" aria-label="My tasks">
+        : `<ul class="dashboard-task-list" aria-label="My tasks">
                     ${myPendingTasks.map(task => {
-                      const proj = projects.find(p => p.id === task.project_id);
-                      const isOverdue = task.due_date && new Date(task.due_date) < now;
-                      return `<li class="dashboard-task-item">
+          const proj = projects.find(p => p.id === task.project_id);
+          const isOverdue = task.due_date && new Date(task.due_date) < now;
+          return `<li class="dashboard-task-item">
                         <div class="dashboard-task-item__priority priority-dot priority-dot--${task.priority || 'medium'}" title="${task.priority || 'medium'} priority"></div>
                         <div class="dashboard-task-item__content">
                           <p class="dashboard-task-item__title" title="${sanitize(task.title)}">${sanitize(task.title)}</p>
@@ -393,9 +397,9 @@ export async function render(params = {}) {
                         </div>
                         ${renderBadge(getStatusLabel(task.status), getStatusVariant(task.status))}
                       </li>`;
-                    }).join('')}
+        }).join('')}
                    </ul>`
-              }
+      }
             </div>
           </div>
 
@@ -409,21 +413,21 @@ export async function render(params = {}) {
             </div>
             <div class="card__body" style="padding:0;">
               ${recentProjects.length === 0
-                ? `<div class="empty-state" style="padding:var(--space-10) var(--space-4);">
+        ? `<div class="empty-state" style="padding:var(--space-10) var(--space-4);">
                     <i data-lucide="folder-open" class="empty-state__icon" aria-hidden="true"></i>
                     <p class="empty-state__title">No projects yet</p>
                     <p class="empty-state__text">Create your first project to get started.</p>
                     <a href="#/projects" class="btn btn--primary btn--sm" style="margin-top:var(--space-3);">Create Project</a>
                    </div>`
-                : `<ul class="dashboard-project-list" aria-label="Recent projects">
+        : `<ul class="dashboard-project-list" aria-label="Recent projects">
                     ${recentProjects.map(proj => {
-                      const projTasks = tasks.filter(t => t.project_id === proj.id);
-                      const done = projTasks.filter(t => t.status === 'done').length;
-                      const total = projTasks.length;
-                      const pct = total > 0 ? Math.round((done/total)*100) : 0;
-                      return `<li class="dashboard-project-item">
+          const projTasks = tasks.filter(t => t.project_id === proj.id);
+          const done = projTasks.filter(t => t.status === 'done').length;
+          const total = projTasks.length;
+          const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+          return `<li class="dashboard-project-item">
                         <a href="#/projects/${sanitize(proj.id)}" class="dashboard-project-item__link" aria-label="Open project ${sanitize(proj.name)}">
-                          <div class="dashboard-project-item__cover" style="background:${sanitize(proj.cover_color||'var(--color-primary)')};"></div>
+                          <div class="dashboard-project-item__cover" style="background:${sanitize(proj.cover_color || 'var(--color-primary)')};"></div>
                           <div class="dashboard-project-item__info">
                             <p class="dashboard-project-item__name">${sanitize(proj.name)}</p>
                             <div class="dashboard-project-progress">
@@ -436,9 +440,9 @@ export async function render(params = {}) {
                           ${renderBadge(getStatusLabel(proj.status), getStatusVariant(proj.status))}
                         </a>
                       </li>`;
-                    }).join('')}
+        }).join('')}
                    </ul>`
-              }
+      }
             </div>
           </div>
         </div>
@@ -461,11 +465,11 @@ export async function render(params = {}) {
                 ${activeSprint.goal ? `<p class="sprint-summary__goal">${sanitize(activeSprint.goal)}</p>` : ''}
               </div>
               ${(() => {
-                const proj = projects.find(p => p.id === activeSprint.project_id);
-                return proj ? `<a href="#/projects/${sanitize(proj.id)}/sprint" class="btn btn--outline btn--sm">
+          const proj = projects.find(p => p.id === activeSprint.project_id);
+          return proj ? `<a href="#/projects/${sanitize(proj.id)}/sprint" class="btn btn--outline btn--sm">
                   View Sprint
                 </a>` : '';
-              })()}
+        })()}
             </div>
           </div>
         </div>` : ''}
@@ -484,9 +488,9 @@ export async function render(params = {}) {
             </div>
             ${hasMore ? `
             <div class="activity-timeline-show-more">
-              <button class="btn btn--ghost btn--sm" id="activity-show-more-btn" data-expanded="false">
+              <button class="btn btn--outline btn--sm" id="activity-show-more-btn" data-expanded="false">
                 <i data-lucide="chevron-down" aria-hidden="true"></i>
-                Tampilkan lebih banyak (${recentLogs.length - SHOW_DEFAULT} lagi)
+                Show ${recentLogs.length - SHOW_DEFAULT} more
               </button>
             </div>` : ''}
           </div>
@@ -509,12 +513,12 @@ export async function render(params = {}) {
           const expanded = btn.dataset.expanded === 'true';
           if (!expanded) {
             list.innerHTML = buildTimelineItems(recentLogs);
-            btn.innerHTML = '<i data-lucide="chevron-down" aria-hidden="true"></i> Tampilkan lebih sedikit';
+            btn.innerHTML = '<i data-lucide="chevron-up" aria-hidden="true"></i> Show less';
             btn.classList.add('is-expanded');
             btn.dataset.expanded = 'true';
           } else {
             list.innerHTML = buildTimelineItems(recentLogs.slice(0, SHOW_DEFAULT));
-            btn.innerHTML = `<i data-lucide="chevron-down" aria-hidden="true"></i> Tampilkan lebih banyak (${recentLogs.length - SHOW_DEFAULT} lagi)`;
+            btn.innerHTML = `<i data-lucide="chevron-down" aria-hidden="true"></i> Show ${recentLogs.length - SHOW_DEFAULT} more`;
             btn.classList.remove('is-expanded');
             btn.dataset.expanded = 'false';
           }

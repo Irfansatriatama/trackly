@@ -15,9 +15,9 @@ function confirmAsync({ title, message, confirmLabel, confirmClass }) {
       title,
       message,
       confirmLabel,
-      confirmVariant: (confirmClass || 'btn--primary').replace('btn--',''),
+      confirmVariant: (confirmClass || 'btn--primary').replace('btn--', ''),
       onConfirm: () => resolve(true),
-      onCancel:  () => resolve(false),
+      onCancel: () => resolve(false),
     });
   });
 }
@@ -25,139 +25,181 @@ function confirmAsync({ title, message, confirmLabel, confirmClass }) {
 let _settings = {};
 
 const DEFAULT_SETTINGS = {
-  system_name:     'TRACKLY',
-  timezone:        'Asia/Jakarta',
-  date_format:     'DD MMM YYYY',
-  currency:        'IDR',
+  system_name: 'TRACKLY',
+  timezone: 'Asia/Jakarta',
+  date_format: 'DD MMM YYYY',
+  currency: 'IDR',
   currency_symbol: 'Rp',
-  hourly_rate:     0,
-  tax_rate:        11,
+  hourly_rate: 0,
+  tax_rate: 11,
 };
 
 const TIMEZONES = [
-  'Asia/Jakarta','Asia/Singapore','Asia/Kuala_Lumpur','Asia/Bangkok',
-  'Asia/Manila','Asia/Tokyo','Asia/Seoul','Asia/Shanghai',
-  'Europe/London','Europe/Paris','Europe/Berlin',
-  'America/New_York','America/Los_Angeles','America/Chicago','UTC',
+  'Asia/Jakarta', 'Asia/Singapore', 'Asia/Kuala_Lumpur', 'Asia/Bangkok',
+  'Asia/Manila', 'Asia/Tokyo', 'Asia/Seoul', 'Asia/Shanghai',
+  'Europe/London', 'Europe/Paris', 'Europe/Berlin',
+  'America/New_York', 'America/Los_Angeles', 'America/Chicago', 'UTC',
 ];
-const DATE_FORMATS = ['DD MMM YYYY','MM/DD/YYYY','YYYY-MM-DD','DD/MM/YYYY'];
+const DATE_FORMATS = ['DD MMM YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD', 'DD/MM/YYYY'];
 const CURRENCIES = [
-  { code:'IDR', symbol:'Rp', label:'Indonesian Rupiah' },
-  { code:'USD', symbol:'$',  label:'US Dollar' },
-  { code:'EUR', symbol:'€',  label:'Euro' },
-  { code:'SGD', symbol:'S$', label:'Singapore Dollar' },
-  { code:'MYR', symbol:'RM', label:'Malaysian Ringgit' },
-  { code:'GBP', symbol:'£',  label:'British Pound' },
+  { code: 'IDR', symbol: 'Rp', label: 'Indonesian Rupiah' },
+  { code: 'USD', symbol: '$', label: 'US Dollar' },
+  { code: 'EUR', symbol: '€', label: 'Euro' },
+  { code: 'SGD', symbol: 'S$', label: 'Singapore Dollar' },
+  { code: 'MYR', symbol: 'RM', label: 'Malaysian Ringgit' },
+  { code: 'GBP', symbol: '£', label: 'British Pound' },
 ];
 
 const CHANGELOG = [
-  { version:'v1.3.1', date:'2026-02-28', items:[
-    'Phase 21 — Maintenance Enhancement: severity (major/minor), assigned_date, due_date, ordered_by, pic_dev_ids (multi-select, developer visibility filter), pic_client (viewer visibility filter), file attachments (base64, max 5MB)',
-    'Ticket list updated with Severity & Due Date columns; detail panel shows all new fields with Indonesian dates',
-    'PIC Dev displayed as avatar chips in ticket detail panel',
-    'maintenance-report.js: Export Excel (SheetJS CDN), Export CSV (pure JS, BOM-prefixed), formatDateID() for all date fields',
-    'PDF export updated with Severity, Due Date, Assigned Date, Ordered By, PIC Client columns',
-    'guide.js section 9 updated with full Phase 21 field explanations',
-    'DB version bumped to 4; sw.js cache bumped to v1.3.1',
-  ]},
-  { version:'v1.3.0', date:'2026-02-28', items:[
-    'Phase 20 — Project Discussion: discussions store added to db.js (DB v3)',
-    'Discussion tab in project subnav (Admin/PM/Developer) between Gantt and Log',
-    'Feed layout: newest posts first, paginated 20 per page, pinned posts section',
-    'Post type badges: blocker=red, decision=purple, question=blue, update=green, general=neutral',
-    'Inline collapsible reply threads (show last 3, expand all), Markdown render for posts and replies',
-    'File attachments (base64, max 5MB, download link), edit/delete own post, Admin/PM pin/unpin',
-    'logActivity() called for all discussion actions; sw.js bumped to v1.3.0',
-  ]},
-  { version:'v1.2.0', date:'2026-02-28', items:[
-    'Phase 19 — Meeting Agenda & Notulensi: meetings store added to db.js (DB v2)',
-    'Calendar view with month/week toggle; meeting list card with type badge, attendees, status',
-    'Meeting CRUD modal (tabs: Details, Agenda, Attendees & Projects)',
-    'Meeting detail page with agenda checklist and quick status advance (Scheduled → Ongoing → Done)',
-    'Notulensi panel: Mode 1 (Markdown editor + live preview), Mode 2 (file upload base64 max 5MB)',
-    'Action Items with Create Task button to convert to project backlog task',
-    'Meetings in sidebar (Admin/PM only); sw.js bumped to v1.2.0',
-  ]},
-  { version:'v1.1.0', date:'2026-02-28', items:[
-    'Phase 18 — Audit Trail: logActivity() helper in utils.js; ACT- prefix in ID_PREFIX',
-    'Log tab in project subnav (Admin/PM only): timeline view, filter bar, pagination (50/page), diff display',
-    'All modules retrofitted: projects, tasks, board, sprint, maintenance, members, clients, assets',
-    'Dashboard Activity Feed shows last 20 real entries across all projects',
-    'sw.js cache bumped to v1.1.0',
-  ]},
-  { version:'v1.0.0', date:'2026-02-28', items:[
-    'Phase 17 — Testing, Documentation & Handoff: stable v1.0.0 release',
-    'In-app User Guide page with all 15 sections rendered natively',
-    'Tooltip system added to all key interactive elements throughout the UI',
-    'Bug fix: formatDate now correctly handles custom format strings (DD MMM YYYY, MM/DD/YYYY, etc.)',
-    'User Guide link added to sidebar navigation and topbar dropdown',
-    'Settings and User Guide added to mobile bottom navigation',
-    'README updated to v1.0.0 with complete changelog and final handoff notes',
-    'Full QA pass across all roles: Admin, Developer, and Viewer',
-    'Edge case hardening: empty states, missing fields, and null-safe guards verified',
-    'Service Worker cache version bumped to v1.0.0',
-  ]},
-  { version:'v0.16.0', date:'2026-02-28', items:[
-    'Phase 16 — Polish, Accessibility & PWA Completion',
-    'Full Settings page: General, Data Management, PWA, About/Changelog',
-    'Full Dashboard with live stats, My Tasks widget, and activity feed',
-    'Mobile responsive: collapsible bottom nav on screens ≤768px',
-    'Keyboard accessibility on all modals (Tab, Enter, Escape)',
-    'ARIA labels added to all interactive elements across app',
-    'Empty state standardized with action buttons on all list pages',
-    'Page transition animations refined (fade + slide-up 150ms)',
-    'Service Worker cache updated to v0.16.0',
-    'Data export/import (JSON backup & restore)',
-    'Changelog page in Settings > About',
-    'Toast notifications verified across all modules',
-    'Visual consistency audit: spacing, badges, typography aligned',
-  ]},
-  { version:'v0.15.0', date:'2026-02-28', items:[
-    'Reports Module: 5 report types — Progress, Workload, Burndown, Maintenance Summary, Assets',
-    'All charts via Chart.js CDN. PDF export via window.print()',
-  ]},
-  { version:'v0.14.0', date:'2026-02-28', items:[
-    'Asset Management: CRUD, warranty expiry warnings, filters, image upload',
-  ]},
-  { version:'v0.13.0', date:'2026-02-28', items:[
-    'Maintenance Report & Invoice: date-range filter, cost calculator, PDF export',
-  ]},
-  { version:'v0.12.0', date:'2026-02-28', items:[
-    'Maintenance Module: ticket CRUD, status pipeline Open→Closed, activity log',
-  ]},
-  { version:'v0.11.0', date:'2026-02-28', items:[
-    'Gantt Chart: drag-to-move/resize, zoom Day/Week/Month, PNG export',
-  ]},
-  { version:'v0.10.0', date:'2026-02-28', items:[
-    'Sprint Management: planning drag-and-drop, velocity chart, retrospective notes',
-  ]},
-  { version:'v0.9.0', date:'2026-02-28', items:[
-    'Kanban Board: native drag-and-drop, custom columns, swimlane toggle',
-  ]},
-  { version:'v0.8.0', date:'2026-02-28', items:[
-    'Task Management & Backlog: full CRUD, bulk actions, comments, checklist widget',
-  ]},
-  { version:'v0.7.0', date:'2026-02-28', items:[
-    'Project Management Core: card grid, detail page, member assignment',
-  ]},
-  { version:'v0.6.0', date:'2026-02-28', items:[
-    'Client Management: card/table toggle, logo upload, linked projects',
-  ]},
-  { version:'v0.5.0', date:'2026-02-28', items:[
-    'Member Management: avatar upload, role badges, password change, deactivate/reactivate',
-  ]},
-  { version:'v0.4.0', date:'2026-02-28', items:[
-    'First-run wizard (3-step), Admin account seed, Service Worker, PWA install banner',
-  ]},
-  { version:'v0.3.0', date:'2026-02-28', items:[
-    'Authentication: login UI, SHA-256 hashing, route guards, role-based redirect',
-  ]},
-  { version:'v0.2.0', date:'2026-02-28', items:[
-    'Layout shell: sidebar navigation, topbar, hash-based router',
-  ]},
-  { version:'v0.1.0', date:'2026-02-27', items:[
-    'Project scaffolding: design tokens, CSS reset, fonts, icons, folder structure',
-  ]},
+  {
+    version: 'v1.3.1', date: '2026-02-28', items: [
+      'Phase 21 — Maintenance Enhancement: severity (major/minor), assigned_date, due_date, ordered_by, pic_dev_ids (multi-select, developer visibility filter), pic_client (viewer visibility filter), file attachments (base64, max 5MB)',
+      'Ticket list updated with Severity & Due Date columns; detail panel shows all new fields with Indonesian dates',
+      'PIC Dev displayed as avatar chips in ticket detail panel',
+      'maintenance-report.js: Export Excel (SheetJS CDN), Export CSV (pure JS, BOM-prefixed), formatDateID() for all date fields',
+      'PDF export updated with Severity, Due Date, Assigned Date, Ordered By, PIC Client columns',
+      'guide.js section 9 updated with full Phase 21 field explanations',
+      'DB version bumped to 4; sw.js cache bumped to v1.3.1',
+    ]
+  },
+  {
+    version: 'v1.3.0', date: '2026-02-28', items: [
+      'Phase 20 — Project Discussion: discussions store added to db.js (DB v3)',
+      'Discussion tab in project subnav (Admin/PM/Developer) between Gantt and Log',
+      'Feed layout: newest posts first, paginated 20 per page, pinned posts section',
+      'Post type badges: blocker=red, decision=purple, question=blue, update=green, general=neutral',
+      'Inline collapsible reply threads (show last 3, expand all), Markdown render for posts and replies',
+      'File attachments (base64, max 5MB, download link), edit/delete own post, Admin/PM pin/unpin',
+      'logActivity() called for all discussion actions; sw.js bumped to v1.3.0',
+    ]
+  },
+  {
+    version: 'v1.2.0', date: '2026-02-28', items: [
+      'Phase 19 — Meeting Agenda & Notulensi: meetings store added to db.js (DB v2)',
+      'Calendar view with month/week toggle; meeting list card with type badge, attendees, status',
+      'Meeting CRUD modal (tabs: Details, Agenda, Attendees & Projects)',
+      'Meeting detail page with agenda checklist and quick status advance (Scheduled → Ongoing → Done)',
+      'Notulensi panel: Mode 1 (Markdown editor + live preview), Mode 2 (file upload base64 max 5MB)',
+      'Action Items with Create Task button to convert to project backlog task',
+      'Meetings in sidebar (Admin/PM only); sw.js bumped to v1.2.0',
+    ]
+  },
+  {
+    version: 'v1.1.0', date: '2026-02-28', items: [
+      'Phase 18 — Audit Trail: logActivity() helper in utils.js; ACT- prefix in ID_PREFIX',
+      'Log tab in project subnav (Admin/PM only): timeline view, filter bar, pagination (50/page), diff display',
+      'All modules retrofitted: projects, tasks, board, sprint, maintenance, members, clients, assets',
+      'Dashboard Activity Feed shows last 20 real entries across all projects',
+      'sw.js cache bumped to v1.1.0',
+    ]
+  },
+  {
+    version: 'v1.0.0', date: '2026-02-28', items: [
+      'Phase 17 — Testing, Documentation & Handoff: stable v1.0.0 release',
+      'In-app User Guide page with all 15 sections rendered natively',
+      'Tooltip system added to all key interactive elements throughout the UI',
+      'Bug fix: formatDate now correctly handles custom format strings (DD MMM YYYY, MM/DD/YYYY, etc.)',
+      'User Guide link added to sidebar navigation and topbar dropdown',
+      'Settings and User Guide added to mobile bottom navigation',
+      'README updated to v1.0.0 with complete changelog and final handoff notes',
+      'Full QA pass across all roles: Admin, Developer, and Viewer',
+      'Edge case hardening: empty states, missing fields, and null-safe guards verified',
+      'Service Worker cache version bumped to v1.0.0',
+    ]
+  },
+  {
+    version: 'v0.16.0', date: '2026-02-28', items: [
+      'Phase 16 — Polish, Accessibility & PWA Completion',
+      'Full Settings page: General, Data Management, PWA, About/Changelog',
+      'Full Dashboard with live stats, My Tasks widget, and activity feed',
+      'Mobile responsive: collapsible bottom nav on screens ≤768px',
+      'Keyboard accessibility on all modals (Tab, Enter, Escape)',
+      'ARIA labels added to all interactive elements across app',
+      'Empty state standardized with action buttons on all list pages',
+      'Page transition animations refined (fade + slide-up 150ms)',
+      'Service Worker cache updated to v0.16.0',
+      'Data export/import (JSON backup & restore)',
+      'Changelog page in Settings > About',
+      'Toast notifications verified across all modules',
+      'Visual consistency audit: spacing, badges, typography aligned',
+    ]
+  },
+  {
+    version: 'v0.15.0', date: '2026-02-28', items: [
+      'Reports Module: 5 report types — Progress, Workload, Burndown, Maintenance Summary, Assets',
+      'All charts via Chart.js CDN. PDF export via window.print()',
+    ]
+  },
+  {
+    version: 'v0.14.0', date: '2026-02-28', items: [
+      'Asset Management: CRUD, warranty expiry warnings, filters, image upload',
+    ]
+  },
+  {
+    version: 'v0.13.0', date: '2026-02-28', items: [
+      'Maintenance Report & Invoice: date-range filter, cost calculator, PDF export',
+    ]
+  },
+  {
+    version: 'v0.12.0', date: '2026-02-28', items: [
+      'Maintenance Module: ticket CRUD, status pipeline Open→Closed, activity log',
+    ]
+  },
+  {
+    version: 'v0.11.0', date: '2026-02-28', items: [
+      'Gantt Chart: drag-to-move/resize, zoom Day/Week/Month, PNG export',
+    ]
+  },
+  {
+    version: 'v0.10.0', date: '2026-02-28', items: [
+      'Sprint Management: planning drag-and-drop, velocity chart, retrospective notes',
+    ]
+  },
+  {
+    version: 'v0.9.0', date: '2026-02-28', items: [
+      'Kanban Board: native drag-and-drop, custom columns, swimlane toggle',
+    ]
+  },
+  {
+    version: 'v0.8.0', date: '2026-02-28', items: [
+      'Task Management & Backlog: full CRUD, bulk actions, comments, checklist widget',
+    ]
+  },
+  {
+    version: 'v0.7.0', date: '2026-02-28', items: [
+      'Project Management Core: card grid, detail page, member assignment',
+    ]
+  },
+  {
+    version: 'v0.6.0', date: '2026-02-28', items: [
+      'Client Management: card/table toggle, logo upload, linked projects',
+    ]
+  },
+  {
+    version: 'v0.5.0', date: '2026-02-28', items: [
+      'Member Management: avatar upload, role badges, password change, deactivate/reactivate',
+    ]
+  },
+  {
+    version: 'v0.4.0', date: '2026-02-28', items: [
+      'First-run wizard (3-step), Admin account seed, Service Worker, PWA install banner',
+    ]
+  },
+  {
+    version: 'v0.3.0', date: '2026-02-28', items: [
+      'Authentication: login UI, SHA-256 hashing, route guards, role-based redirect',
+    ]
+  },
+  {
+    version: 'v0.2.0', date: '2026-02-28', items: [
+      'Layout shell: sidebar navigation, topbar, hash-based router',
+    ]
+  },
+  {
+    version: 'v0.1.0', date: '2026-02-27', items: [
+      'Project scaffolding: design tokens, CSS reset, fonts, icons, folder structure',
+    ]
+  },
 ];
 
 async function loadSettings() {
@@ -181,7 +223,7 @@ async function saveSetting(key, value) {
 
 export async function render(params = {}) {
   const session = getSession();
-  if (!session || !['admin','pm'].includes(session.role)) {
+  if (!session || !['admin', 'pm'].includes(session.role)) {
     document.getElementById('main-content').innerHTML = `
       <div class="page-container page-enter">
         <div class="empty-state">
@@ -202,7 +244,7 @@ function renderSettingsPage() {
   const content = document.getElementById('main-content');
   if (!content) return;
   content.innerHTML = `
-    <div class="page-container page-enter" style="max-width:900px;">
+    <div class="page-container page-enter" style="max-width:900px;margin:0 auto;">
       <div class="page-header">
         <div class="page-header__info">
           <h1 class="page-header__title">Settings</h1>
@@ -237,19 +279,19 @@ function renderSettingsPage() {
               <div class="form-group">
                 <label class="form-label" for="sysTimezone">Timezone</label>
                 <select class="form-select" id="sysTimezone">
-                  ${TIMEZONES.map(tz=>`<option value="${tz}"${_settings.timezone===tz?' selected':''}>${tz}</option>`).join('')}
+                  ${TIMEZONES.map(tz => `<option value="${tz}"${_settings.timezone === tz ? ' selected' : ''}>${tz}</option>`).join('')}
                 </select>
               </div>
               <div class="form-group">
                 <label class="form-label" for="sysDateFormat">Date Format</label>
                 <select class="form-select" id="sysDateFormat">
-                  ${DATE_FORMATS.map(f=>`<option value="${f}"${_settings.date_format===f?' selected':''}>${f}</option>`).join('')}
+                  ${DATE_FORMATS.map(f => `<option value="${f}"${_settings.date_format === f ? ' selected' : ''}>${f}</option>`).join('')}
                 </select>
               </div>
               <div class="form-group">
                 <label class="form-label" for="sysCurrency">Currency</label>
                 <select class="form-select" id="sysCurrency">
-                  ${CURRENCIES.map(c=>`<option value="${c.code}"${_settings.currency===c.code?' selected':''}>${c.code} — ${c.label}</option>`).join('')}
+                  ${CURRENCIES.map(c => `<option value="${c.code}"${_settings.currency === c.code ? ' selected' : ''}>${c.code} — ${c.label}</option>`).join('')}
                 </select>
               </div>
               <div class="form-group">
@@ -371,14 +413,14 @@ function renderSettingsPage() {
           </div>
           <h3 class="settings-section-title" style="margin-top:var(--space-8);">Changelog</h3>
           <div class="changelog-list">
-            ${CHANGELOG.map(entry=>`
+            ${CHANGELOG.map(entry => `
               <div class="changelog-entry">
                 <div class="changelog-entry__header">
                   <span class="badge badge--primary changelog-entry__version">${sanitize(entry.version)}</span>
                   <span class="text-muted" style="font-size:var(--text-xs);">${sanitize(entry.date)}</span>
                 </div>
                 <ul class="changelog-entry__items">
-                  ${entry.items.map(item=>`<li>${sanitize(item)}</li>`).join('')}
+                  ${entry.items.map(item => `<li>${sanitize(item)}</li>`).join('')}
                 </ul>
               </div>
             `).join('')}
@@ -426,15 +468,15 @@ async function handleSaveGeneral(e) {
   btn.disabled = true;
   try {
     const currencyCode = document.getElementById('sysCurrency').value;
-    const currencyDef  = CURRENCIES.find(c => c.code === currencyCode) || CURRENCIES[0];
+    const currencyDef = CURRENCIES.find(c => c.code === currencyCode) || CURRENCIES[0];
     const toSave = {
-      system_name:     document.getElementById('sysName').value.trim() || 'TRACKLY',
-      timezone:        document.getElementById('sysTimezone').value,
-      date_format:     document.getElementById('sysDateFormat').value,
-      currency:        currencyCode,
+      system_name: document.getElementById('sysName').value.trim() || 'TRACKLY',
+      timezone: document.getElementById('sysTimezone').value,
+      date_format: document.getElementById('sysDateFormat').value,
+      currency: currencyCode,
       currency_symbol: currencyDef.symbol,
-      hourly_rate:     parseFloat(document.getElementById('sysHourlyRate').value) || 0,
-      tax_rate:        parseFloat(document.getElementById('sysTaxRate').value) || 0,
+      hourly_rate: parseFloat(document.getElementById('sysHourlyRate').value) || 0,
+      tax_rate: parseFloat(document.getElementById('sysTaxRate').value) || 0,
     };
     for (const [key, value] of Object.entries(toSave)) { await saveSetting(key, value); }
     showToast('Settings saved successfully.', 'success');
@@ -450,13 +492,13 @@ async function handleExportData() {
   const btn = document.getElementById('btnExportData');
   btn.disabled = true;
   try {
-    const stores = ['users','projects','tasks','sprints','clients','assets','maintenance','invoices','activity_log','settings','meetings','discussions','notifications','notes'];
-    const exportData = { _meta: { version:'v1.3.1', exportedAt: nowISO(), app:'TRACKLY' } };
+    const stores = ['users', 'projects', 'tasks', 'sprints', 'clients', 'assets', 'maintenance', 'invoices', 'activity_log', 'settings', 'meetings', 'discussions', 'notifications', 'notes'];
+    const exportData = { _meta: { version: 'v1.3.1', exportedAt: nowISO(), app: 'TRACKLY' } };
     for (const store of stores) {
       try { exportData[store] = await getAll(store); }
       catch (_) { exportData[store] = []; }
     }
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type:'application/json' });
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -484,7 +526,7 @@ async function handleImportData(e) {
   try {
     const text = await file.text();
     const data = JSON.parse(text);
-    const stores = ['users','projects','tasks','sprints','clients','assets','maintenance','invoices','activity_log','settings','meetings','discussions','notifications','notes'];
+    const stores = ['users', 'projects', 'tasks', 'sprints', 'clients', 'assets', 'maintenance', 'invoices', 'activity_log', 'settings', 'meetings', 'discussions', 'notifications', 'notes'];
     let imported = 0;
     for (const store of stores) {
       const records = data[store];
@@ -526,27 +568,27 @@ async function handleResetData() {
 
 async function checkPWAStatus() {
   const titleEl = document.getElementById('pwaStatusTitle');
-  const descEl  = document.getElementById('pwaStatusDesc');
-  const iconEl  = document.getElementById('pwaStatusIcon');
+  const descEl = document.getElementById('pwaStatusDesc');
+  const iconEl = document.getElementById('pwaStatusIcon');
   if (!titleEl) return;
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   const swReg = await navigator.serviceWorker?.getRegistration().catch(() => null);
   const swActive = !!swReg;
   if (isStandalone) {
     iconEl.style.cssText = 'background:var(--color-success-alpha);color:var(--color-success);';
-    iconEl.querySelector('[data-lucide]')?.setAttribute('data-lucide','check-circle');
+    iconEl.querySelector('[data-lucide]')?.setAttribute('data-lucide', 'check-circle');
     titleEl.textContent = 'Running as Installed App';
-    descEl.textContent  = 'TRACKLY is installed and running as a standalone PWA.';
+    descEl.textContent = 'TRACKLY is installed and running as a standalone PWA.';
   } else if (swActive) {
     iconEl.style.cssText = 'background:var(--color-primary-alpha);color:var(--color-primary);';
-    iconEl.querySelector('[data-lucide]')?.setAttribute('data-lucide','wifi');
+    iconEl.querySelector('[data-lucide]')?.setAttribute('data-lucide', 'wifi');
     titleEl.textContent = 'Service Worker Active — Offline Ready';
-    descEl.textContent  = 'TRACKLY is cached for offline use. Click Install to add it to your device.';
+    descEl.textContent = 'TRACKLY is cached for offline use. Click Install to add it to your device.';
   } else {
     iconEl.style.cssText = 'background:var(--color-warning-alpha);color:var(--color-warning);';
-    iconEl.querySelector('[data-lucide]')?.setAttribute('data-lucide','wifi-off');
+    iconEl.querySelector('[data-lucide]')?.setAttribute('data-lucide', 'wifi-off');
     titleEl.textContent = 'Service Worker Not Active';
-    descEl.textContent  = 'Serve TRACKLY over HTTP/HTTPS (not file://) to enable PWA features.';
+    descEl.textContent = 'Serve TRACKLY over HTTP/HTTPS (not file://) to enable PWA features.';
   }
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }

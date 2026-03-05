@@ -13,33 +13,33 @@ import { renderAvatar } from '../components/avatar.js';
 import { getSession } from '../core/auth.js';
 
 const STATUS_OPTIONS = [
-  { value: 'planning',    label: 'Planning' },
-  { value: 'active',      label: 'Active' },
+  { value: 'planning', label: 'Planning' },
+  { value: 'active', label: 'Active' },
   { value: 'maintenance', label: 'Maintenance' },
-  { value: 'on_hold',     label: 'On Hold' },
-  { value: 'completed',   label: 'Completed' },
-  { value: 'cancelled',   label: 'Cancelled' },
+  { value: 'on_hold', label: 'On Hold' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'cancelled', label: 'Cancelled' },
 ];
 
 const PHASE_OPTIONS = [
   { value: 'development', label: 'Development' },
-  { value: 'uat',         label: 'UAT' },
-  { value: 'deployment',  label: 'Deployment' },
-  { value: 'running',     label: 'Running' },
+  { value: 'uat', label: 'UAT' },
+  { value: 'deployment', label: 'Deployment' },
+  { value: 'running', label: 'Running' },
   { value: 'maintenance', label: 'Maintenance' },
 ];
 
 const PRIORITY_OPTIONS = [
-  { value: 'low',      label: 'Low' },
-  { value: 'medium',   label: 'Medium' },
-  { value: 'high',     label: 'High' },
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
   { value: 'critical', label: 'Critical' },
 ];
 
 const COVER_COLORS = [
-  '#2563EB','#7C3AED','#0891B2','#16A34A','#D97706',
-  '#DC2626','#DB2777','#9333EA','#059669','#B45309',
-  '#0369A1','#6D28D9','#065F46','#92400E','#1D4ED8',
+  '#2563EB', '#7C3AED', '#0891B2', '#16A34A', '#D97706',
+  '#DC2626', '#DB2777', '#9333EA', '#059669', '#B45309',
+  '#0369A1', '#6D28D9', '#065F46', '#92400E', '#1D4ED8',
 ];
 
 let _projects = [];
@@ -107,7 +107,7 @@ function renderProjectsPage() {
                 <i data-lucide="filter" aria-hidden="true"></i> Filter
               </button>
               ${[_filterStatus, _filterPhase, _filterClient].filter(Boolean).length > 0
-                ? `<span class="filter-badge">${[_filterStatus, _filterPhase, _filterClient].filter(Boolean).length}</span>` : ''}
+      ? `<span class="filter-badge">${[_filterStatus, _filterPhase, _filterClient].filter(Boolean).length}</span>` : ''}
             </div>
           </div>
           <div class="filter-chips" id="projectsFilterChips">${renderProjectsFilterChips()}</div>
@@ -141,14 +141,14 @@ function renderProjectCard(p) {
   const progress = p.progress || 0;
   const memberObjs = (p.members || []).slice(0, 4).map(m => _members.find(u => u.id === (m.user_id || m)));
   const memberAvatarsHtml = memberObjs.filter(Boolean).map(m => {
-    const initials = (m.full_name || '?').split(' ').filter(Boolean).slice(0,2).map(n=>n[0].toUpperCase()).join('');
+    const initials = (m.full_name || '?').split(' ').filter(Boolean).slice(0, 2).map(n => n[0].toUpperCase()).join('');
     return `<div class="avatar avatar--sm" style="${m.avatar ? '' : 'background:var(--color-primary);'}" title="${sanitize(m.full_name)}">
       ${m.avatar ? `<img src="${m.avatar}" alt="" class="avatar__img" />` : `<span class="avatar__initials">${sanitize(initials)}</span>`}
     </div>`;
   }).join('');
   const extraCount = Math.max(0, (p.members || []).length - 4);
   const coverColor = p.cover_color || '#2563EB';
-  const isOverdue = p.end_date && isPast(p.end_date) && !['completed','cancelled'].includes(p.status);
+  const isOverdue = p.end_date && isPast(p.end_date) && !['completed', 'cancelled'].includes(p.status);
 
   return `
     <div class="project-card" data-id="${sanitize(p.id)}">
@@ -286,9 +286,9 @@ function openProjectsFilterModal() {
     closeModal(); refreshContent(); updateProjectsFilterUI();
   });
   document.getElementById('btnApplyProjectsFilter')?.addEventListener('click', () => {
-    _filterStatus  = document.getElementById('fmFilterStatus')?.value || '';
-    _filterPhase   = document.getElementById('fmFilterPhase')?.value || '';
-    _filterClient  = document.getElementById('fmFilterClient')?.value || '';
+    _filterStatus = document.getElementById('fmFilterStatus')?.value || '';
+    _filterPhase = document.getElementById('fmFilterPhase')?.value || '';
+    _filterClient = document.getElementById('fmFilterClient')?.value || '';
     closeModal(); refreshContent(); updateProjectsFilterUI();
   });
 }
@@ -360,10 +360,10 @@ function openProjectModal(project) {
     ? '<p class="text-muted" style="font-size:var(--text-sm);">No members found. Add members in the Members section first.</p>'
     : `<div class="member-picker" id="memberPicker">
         ${_members.map(m => {
-          const isSel = _selectedMembers.some(sm => (sm.user_id || sm) === m.id);
-          const memberRole = _selectedMembers.find(sm => (sm.user_id || sm) === m.id)?.project_role || 'developer';
-          const initials = (m.full_name || '?').split(' ').filter(Boolean).slice(0,2).map(n=>n[0].toUpperCase()).join('');
-          return `
+      const isSel = _selectedMembers.some(sm => (sm.user_id || sm) === m.id);
+      const memberRole = _selectedMembers.find(sm => (sm.user_id || sm) === m.id)?.project_role || 'developer';
+      const initials = (m.full_name || '?').split(' ').filter(Boolean).slice(0, 2).map(n => n[0].toUpperCase()).join('');
+      return `
             <label class="member-picker__item ${isSel ? 'is-selected' : ''}" data-id="${sanitize(m.id)}">
               <input type="checkbox" class="member-picker__check" value="${sanitize(m.id)}" ${isSel ? 'checked' : ''} />
               <div class="avatar avatar--sm" style="${m.avatar ? '' : 'background:var(--color-primary);'}">
@@ -377,9 +377,10 @@ function openProjectModal(project) {
                 <option value="pm" ${memberRole === 'pm' ? 'selected' : ''}>PM</option>
                 <option value="developer" ${memberRole === 'developer' ? 'selected' : ''}>Developer</option>
                 <option value="viewer" ${memberRole === 'viewer' ? 'selected' : ''}>Viewer</option>
+                <option value="client" ${memberRole === 'client' ? 'selected' : ''}>Client</option>
               </select>
             </label>`;
-        }).join('')}
+    }).join('')}
       </div>`;
 
   const formHtml = `
@@ -588,7 +589,7 @@ async function handleSaveProject(existing, isEdit, getColor, getMembers) {
       // Build changes diff
       const changes = [];
       if (existing) {
-        for (const field of ['name','status','phase','priority','start_date','end_date','budget','description']) {
+        for (const field of ['name', 'status', 'phase', 'priority', 'start_date', 'end_date', 'budget', 'description']) {
           if (String(existing[field] || '') !== String(projectData[field] || '')) {
             changes.push({ field, old_value: existing[field], new_value: projectData[field] });
           }
@@ -689,8 +690,8 @@ async function renderProjectDetail(projectId) {
     const taskProgress = taskTotal > 0 ? Math.round((taskDone / taskTotal) * 100) : (project.progress || 0);
     const budgetUsed = project.budget > 0 ? Math.min(100, Math.round(((project.actual_cost || 0) / project.budget) * 100)) : 0;
     const isOverBudget = project.budget > 0 && (project.actual_cost || 0) > project.budget;
-    const isOverdue = project.end_date && isPast(project.end_date) && !['completed','cancelled'].includes(project.status);
-    const showMaintenance = ['running','maintenance'].includes(project.phase) || ['maintenance'].includes(project.status);
+    const isOverdue = project.end_date && isPast(project.end_date) && !['completed', 'cancelled'].includes(project.status);
+    const showMaintenance = ['running', 'maintenance'].includes(project.phase) || ['maintenance'].includes(project.status);
     const sessionUser = getSession();
     const isAdminOrPM = sessionUser && ['admin', 'pm'].includes(sessionUser.role);
 
@@ -901,8 +902,8 @@ async function renderProjectDetail(projectId) {
                 ${projectMembers.length === 0 ? `<p class="text-muted" style="font-size:var(--text-sm);margin:0;">No members assigned yet.</p>` : `
                   <div class="project-members-list">
                     ${projectMembers.map(m => {
-                      const initials = (m.full_name || '?').split(' ').filter(Boolean).slice(0,2).map(n=>n[0].toUpperCase()).join('');
-                      return `
+      const initials = (m.full_name || '?').split(' ').filter(Boolean).slice(0, 2).map(n => n[0].toUpperCase()).join('');
+      return `
                         <div class="project-member-item">
                           <div class="avatar avatar--sm" style="${m.avatar ? '' : 'background:var(--color-primary);'}">
                             ${m.avatar ? `<img src="${m.avatar}" alt="" class="avatar__img" />` : `<span class="avatar__initials">${sanitize(initials)}</span>`}
@@ -912,7 +913,7 @@ async function renderProjectDetail(projectId) {
                             <span class="project-member-item__role text-muted">${sanitize(m.project_role || m.role || '')}</span>
                           </div>
                         </div>`;
-                    }).join('')}
+    }).join('')}
                   </div>`}
               </div>
             </div>
@@ -948,10 +949,10 @@ async function renderProjectDetail(projectId) {
 // ============================================================
 
 function getStatusVariant(status) {
-  return { planning:'info', active:'success', maintenance:'warning', on_hold:'neutral', completed:'success', cancelled:'danger' }[status] || 'neutral';
+  return { planning: 'info', active: 'success', maintenance: 'warning', on_hold: 'neutral', completed: 'success', cancelled: 'danger' }[status] || 'neutral';
 }
 function getPriorityVariant(priority) {
-  return { low:'neutral', medium:'info', high:'warning', critical:'danger' }[priority] || 'neutral';
+  return { low: 'neutral', medium: 'info', high: 'warning', critical: 'danger' }[priority] || 'neutral';
 }
 function setModalFieldError(fieldId, message) {
   const field = document.getElementById(fieldId);

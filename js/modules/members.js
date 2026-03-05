@@ -13,21 +13,22 @@ import { renderBadge } from '../components/badge.js';
 import { renderAvatar } from '../components/avatar.js';
 
 const ROLE_OPTIONS = [
-  { value: 'admin',     label: 'Admin' },
-  { value: 'pm',        label: 'Project Manager' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'pm', label: 'Project Manager' },
   { value: 'developer', label: 'Developer' },
-  { value: 'viewer',    label: 'Viewer' },
+  { value: 'viewer', label: 'Viewer' },
+  { value: 'client', label: 'Client' },
 ];
 const STATUS_OPTIONS = [
-  { value: 'active',   label: 'Active' },
+  { value: 'active', label: 'Active' },
   { value: 'inactive', label: 'Inactive' },
-  { value: 'invited',  label: 'Invited' },
+  { value: 'invited', label: 'Invited' },
 ];
 const TIMEZONE_OPTIONS = [
-  'Asia/Jakarta','Asia/Singapore','Asia/Kuala_Lumpur','Asia/Bangkok',
-  'Asia/Manila','Asia/Tokyo','Asia/Seoul','Asia/Shanghai',
-  'Europe/London','Europe/Paris','Europe/Berlin',
-  'America/New_York','America/Los_Angeles','America/Chicago','UTC',
+  'Asia/Jakarta', 'Asia/Singapore', 'Asia/Kuala_Lumpur', 'Asia/Bangkok',
+  'Asia/Manila', 'Asia/Tokyo', 'Asia/Seoul', 'Asia/Shanghai',
+  'Europe/London', 'Europe/Paris', 'Europe/Berlin',
+  'America/New_York', 'America/Los_Angeles', 'America/Chicago', 'UTC',
 ];
 
 let _members = [];
@@ -83,7 +84,7 @@ function renderMembersPage() {
                 <i data-lucide="filter" aria-hidden="true"></i> Filter
               </button>
               ${[_filterRole, _filterStatus].filter(Boolean).length > 0
-                ? `<span class="filter-badge">${[_filterRole, _filterStatus].filter(Boolean).length}</span>` : ''}
+      ? `<span class="filter-badge">${[_filterRole, _filterStatus].filter(Boolean).length}</span>` : ''}
             </div>
           </div>
           <div class="filter-chips" id="membersFilterChips">${renderMembersFilterChips()}</div>
@@ -105,9 +106,9 @@ function renderMembersTable() {
     return `
       <div class="empty-state" style="padding:var(--space-12) var(--space-6);">
         <i data-lucide="users" class="empty-state__icon"></i>
-        <p class="empty-state__title">${_members.length===0?'No members yet':'No members match your filters'}</p>
-        <p class="empty-state__text">${_members.length===0?'Add your first team member to get started.':'Try adjusting your search or filter criteria.'}</p>
-        ${_members.length===0?`<button class="btn btn--primary" id="btnAddMemberEmpty"><i data-lucide="user-plus"></i> Add Member</button>`:''}
+        <p class="empty-state__title">${_members.length === 0 ? 'No members yet' : 'No members match your filters'}</p>
+        <p class="empty-state__text">${_members.length === 0 ? 'Add your first team member to get started.' : 'Try adjusting your search or filter criteria.'}</p>
+        ${_members.length === 0 ? `<button class="btn btn--primary" id="btnAddMemberEmpty"><i data-lucide="user-plus"></i> Add Member</button>` : ''}
       </div>`;
   }
   return `
@@ -126,8 +127,8 @@ function renderMembersTable() {
 }
 
 function renderMemberRow(m) {
-  const roleBadge = renderBadge(ROLE_OPTIONS.find(r=>r.value===m.role)?.label||m.role, getRoleVariant(m.role));
-  const statusBadge = renderBadge(STATUS_OPTIONS.find(s=>s.value===m.status)?.label||m.status, getStatusVariant(m.status));
+  const roleBadge = renderBadge(ROLE_OPTIONS.find(r => r.value === m.role)?.label || m.role, getRoleVariant(m.role));
+  const statusBadge = renderBadge(STATUS_OPTIONS.find(s => s.value === m.status)?.label || m.status, getStatusVariant(m.status));
   const lastLogin = m.last_login ? formatRelativeDate(m.last_login) : 'Never';
   const avatarHtml = renderAvatar(m, 'md');
   return `
@@ -144,9 +145,9 @@ function renderMemberRow(m) {
       <td>${roleBadge}</td>
       <td>
         <div class="member-dept">
-          ${m.position?`<span class="member-dept__position">${sanitize(m.position)}</span>`:''}
-          ${m.department?`<span class="member-dept__dept text-muted">${sanitize(m.department)}</span>`:''}
-          ${!m.position&&!m.department?'<span class="text-muted">—</span>':''}
+          ${m.position ? `<span class="member-dept__position">${sanitize(m.position)}</span>` : ''}
+          ${m.department ? `<span class="member-dept__dept text-muted">${sanitize(m.department)}</span>` : ''}
+          ${!m.position && !m.department ? '<span class="text-muted">—</span>' : ''}
         </div>
       </td>
       <td>${statusBadge}</td>
@@ -159,10 +160,10 @@ function renderMemberRow(m) {
           <button class="btn btn--ghost btn--sm btn-change-password" data-id="${sanitize(m.id)}" title="Change password">
             <i data-lucide="key-round" aria-hidden="true"></i>
           </button>
-          ${m.status==='active'
-            ?`<button class="btn btn--ghost btn--sm btn-deactivate-member" data-id="${sanitize(m.id)}" title="Deactivate" style="color:var(--color-danger);"><i data-lucide="user-x"></i></button>`
-            :`<button class="btn btn--ghost btn--sm btn-activate-member" data-id="${sanitize(m.id)}" title="Activate" style="color:var(--color-success);"><i data-lucide="user-check"></i></button>`
-          }
+          ${m.status === 'active'
+      ? `<button class="btn btn--ghost btn--sm btn-deactivate-member" data-id="${sanitize(m.id)}" title="Deactivate" style="color:var(--color-danger);"><i data-lucide="user-x"></i></button>`
+      : `<button class="btn btn--ghost btn--sm btn-activate-member" data-id="${sanitize(m.id)}" title="Activate" style="color:var(--color-success);"><i data-lucide="user-check"></i></button>`
+    }
         </div>
       </td>
     </tr>`;
@@ -179,9 +180,9 @@ function getFilteredMembers() {
 }
 
 function bindPageEvents() {
-  document.getElementById('btnAddMember')?.addEventListener('click', ()=>openMemberModal(null));
-  document.getElementById('btnAddMemberEmpty')?.addEventListener('click', ()=>openMemberModal(null));
-  document.getElementById('membersSearch')?.addEventListener('input', e=>{ _searchQuery=e.target.value; refreshTable(); });
+  document.getElementById('btnAddMember')?.addEventListener('click', () => openMemberModal(null));
+  document.getElementById('btnAddMemberEmpty')?.addEventListener('click', () => openMemberModal(null));
+  document.getElementById('membersSearch')?.addEventListener('input', e => { _searchQuery = e.target.value; refreshTable(); });
   document.getElementById('btnOpenFilterModal')?.addEventListener('click', openMembersFilterModal);
   document.getElementById('membersFilterChips')?.addEventListener('click', handleMembersChipRemove);
   document.getElementById('membersTableContainer')?.addEventListener('click', handleTableAction);
@@ -218,14 +219,14 @@ function openMembersFilterModal() {
         <label class="form-label" for="fmFilterRole">Role</label>
         <select class="form-select" id="fmFilterRole">
           <option value="">All Roles</option>
-          ${ROLE_OPTIONS.map(r => `<option value="${r.value}" ${_filterRole===r.value?'selected':''}>${r.label}</option>`).join('')}
+          ${ROLE_OPTIONS.map(r => `<option value="${r.value}" ${_filterRole === r.value ? 'selected' : ''}>${r.label}</option>`).join('')}
         </select>
       </div>
       <div class="form-group">
         <label class="form-label" for="fmFilterStatus">Status</label>
         <select class="form-select" id="fmFilterStatus">
           <option value="">All Status</option>
-          ${STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus===s.value?'selected':''}>${s.label}</option>`).join('')}
+          ${STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus === s.value ? 'selected' : ''}>${s.label}</option>`).join('')}
         </select>
       </div>
     </div>`,
@@ -238,7 +239,7 @@ function openMembersFilterModal() {
     closeModal(); refreshTable(); updateMembersFilterUI();
   });
   document.getElementById('btnApplyMembersFilter')?.addEventListener('click', () => {
-    _filterRole   = document.getElementById('fmFilterRole')?.value || '';
+    _filterRole = document.getElementById('fmFilterRole')?.value || '';
     _filterStatus = document.getElementById('fmFilterStatus')?.value || '';
     closeModal(); refreshTable(); updateMembersFilterUI();
   });
@@ -265,10 +266,10 @@ function handleTableAction(e) {
   const cpBtn = e.target.closest('.btn-change-password');
   const deactivateBtn = e.target.closest('.btn-deactivate-member');
   const activateBtn = e.target.closest('.btn-activate-member');
-  if (editBtn) { const m=_members.find(x=>x.id===editBtn.dataset.id); if(m) openMemberModal(m); }
-  else if (cpBtn) { const m=_members.find(x=>x.id===cpBtn.dataset.id); if(m) openChangePasswordModal(m); }
-  else if (deactivateBtn) { const m=_members.find(x=>x.id===deactivateBtn.dataset.id); if(m) handleDeactivate(m); }
-  else if (activateBtn) { const m=_members.find(x=>x.id===activateBtn.dataset.id); if(m) handleActivate(m); }
+  if (editBtn) { const m = _members.find(x => x.id === editBtn.dataset.id); if (m) openMemberModal(m); }
+  else if (cpBtn) { const m = _members.find(x => x.id === cpBtn.dataset.id); if (m) openChangePasswordModal(m); }
+  else if (deactivateBtn) { const m = _members.find(x => x.id === deactivateBtn.dataset.id); if (m) handleDeactivate(m); }
+  else if (activateBtn) { const m = _members.find(x => x.id === activateBtn.dataset.id); if (m) handleActivate(m); }
 }
 
 function refreshTable() {
@@ -290,25 +291,25 @@ function openMemberModal(member) {
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="mFullName">Full Name <span class="required">*</span></label>
-          <input class="form-input" type="text" id="mFullName" placeholder="e.g. Budi Santoso" value="${sanitize(member?.full_name||'')}" />
+          <input class="form-input" type="text" id="mFullName" placeholder="e.g. Budi Santoso" value="${sanitize(member?.full_name || '')}" />
         </div>
         <div class="form-group">
           <label class="form-label" for="mUsername">Username <span class="required">*</span></label>
-          <input class="form-input" type="text" id="mUsername" placeholder="e.g. budi.s" value="${sanitize(member?.username||'')}" spellcheck="false" ${isEdit?'readonly':''} />
-          ${isEdit?'<p class="form-help">Username cannot be changed after creation.</p>':''}
+          <input class="form-input" type="text" id="mUsername" placeholder="e.g. budi.s" value="${sanitize(member?.username || '')}" spellcheck="false" ${isEdit ? 'readonly' : ''} />
+          ${isEdit ? '<p class="form-help">Username cannot be changed after creation.</p>' : ''}
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="mEmail">Email <span class="required">*</span></label>
-          <input class="form-input" type="email" id="mEmail" placeholder="e.g. budi@company.com" value="${sanitize(member?.email||'')}" />
+          <input class="form-input" type="email" id="mEmail" placeholder="e.g. budi@company.com" value="${sanitize(member?.email || '')}" />
         </div>
         <div class="form-group">
           <label class="form-label" for="mPhone">Phone Number</label>
-          <input class="form-input" type="tel" id="mPhone" placeholder="e.g. +62 812 3456 7890" value="${sanitize(member?.phone_number||'')}" />
+          <input class="form-input" type="tel" id="mPhone" placeholder="e.g. +62 812 3456 7890" value="${sanitize(member?.phone_number || '')}" />
         </div>
       </div>
-      ${!isEdit?`
+      ${!isEdit ? `
       <p class="form-section-title">Password</p>
       <div class="form-row">
         <div class="form-group">
@@ -322,19 +323,19 @@ function openMemberModal(member) {
           <label class="form-label" for="mConfirmPassword">Confirm Password <span class="required">*</span></label>
           <input class="form-input" type="password" id="mConfirmPassword" placeholder="Re-enter password" autocomplete="new-password" />
         </div>
-      </div>`:''}
+      </div>`: ''}
       <p class="form-section-title">Role &amp; Status</p>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="mRole">Role <span class="required">*</span></label>
           <select class="form-select" id="mRole">
-            ${ROLE_OPTIONS.map(r=>`<option value="${r.value}" ${(member?.role||'developer')===r.value?'selected':''}>${r.label}</option>`).join('')}
+            ${ROLE_OPTIONS.map(r => `<option value="${r.value}" ${(member?.role || 'developer') === r.value ? 'selected' : ''}>${r.label}</option>`).join('')}
           </select>
         </div>
         <div class="form-group">
           <label class="form-label" for="mStatus">Status</label>
           <select class="form-select" id="mStatus">
-            ${STATUS_OPTIONS.map(s=>`<option value="${s.value}" ${(member?.status||'active')===s.value?'selected':''}>${s.label}</option>`).join('')}
+            ${STATUS_OPTIONS.map(s => `<option value="${s.value}" ${(member?.status || 'active') === s.value ? 'selected' : ''}>${s.label}</option>`).join('')}
           </select>
         </div>
       </div>
@@ -342,46 +343,46 @@ function openMemberModal(member) {
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="mCompany">Company</label>
-          <input class="form-input" type="text" id="mCompany" placeholder="e.g. PT Teknologi Maju" value="${sanitize(member?.company||'')}" />
+          <input class="form-input" type="text" id="mCompany" placeholder="e.g. PT Teknologi Maju" value="${sanitize(member?.company || '')}" />
         </div>
         <div class="form-group">
           <label class="form-label" for="mDepartment">Department</label>
-          <input class="form-input" type="text" id="mDepartment" placeholder="e.g. Engineering" value="${sanitize(member?.department||'')}" />
+          <input class="form-input" type="text" id="mDepartment" placeholder="e.g. Engineering" value="${sanitize(member?.department || '')}" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="mPosition">Position / Job Title</label>
-          <input class="form-input" type="text" id="mPosition" placeholder="e.g. Backend Developer" value="${sanitize(member?.position||'')}" />
+          <input class="form-input" type="text" id="mPosition" placeholder="e.g. Backend Developer" value="${sanitize(member?.position || '')}" />
         </div>
         <div class="form-group">
           <label class="form-label" for="mTimezone">Timezone</label>
           <select class="form-select" id="mTimezone">
-            ${TIMEZONE_OPTIONS.map(tz=>`<option value="${tz}" ${(member?.timezone||'Asia/Jakarta')===tz?'selected':''}>${tz}</option>`).join('')}
+            ${TIMEZONE_OPTIONS.map(tz => `<option value="${tz}" ${(member?.timezone || 'Asia/Jakarta') === tz ? 'selected' : ''}>${tz}</option>`).join('')}
           </select>
         </div>
       </div>
       <div class="form-group">
         <label class="form-label" for="mBio">Bio</label>
-        <textarea class="form-textarea" id="mBio" rows="2" placeholder="A short profile description…">${sanitize(member?.bio||'')}</textarea>
+        <textarea class="form-textarea" id="mBio" rows="2" placeholder="A short profile description…">${sanitize(member?.bio || '')}</textarea>
       </div>
       <p class="form-section-title">Social Links</p>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="mLinkedin">LinkedIn</label>
-          <input class="form-input" type="url" id="mLinkedin" placeholder="https://linkedin.com/in/username" value="${sanitize(member?.linkedin||'')}" />
+          <input class="form-input" type="url" id="mLinkedin" placeholder="https://linkedin.com/in/username" value="${sanitize(member?.linkedin || '')}" />
         </div>
         <div class="form-group">
           <label class="form-label" for="mGithub">GitHub</label>
-          <input class="form-input" type="url" id="mGithub" placeholder="https://github.com/username" value="${sanitize(member?.github||'')}" />
+          <input class="form-input" type="url" id="mGithub" placeholder="https://github.com/username" value="${sanitize(member?.github || '')}" />
         </div>
       </div>
       <p class="form-section-title">Avatar</p>
       <div class="avatar-upload-area">
         <div class="avatar-upload__preview" id="avatarPreview">
           ${member?.avatar
-            ?`<img src="${member.avatar}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`
-            :`<span class="avatar-upload__initials">${getInitials(member?.full_name||'?')}</span>`}
+      ? `<img src="${member.avatar}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`
+      : `<span class="avatar-upload__initials">${getInitials(member?.full_name || '?')}</span>`}
         </div>
         <div class="avatar-upload__controls">
           <label class="btn btn--secondary btn--sm" for="mAvatar" style="cursor:pointer;">
@@ -389,7 +390,7 @@ function openMemberModal(member) {
           </label>
           <input type="file" id="mAvatar" accept="image/*" style="display:none;" />
           <p class="form-help">JPG, PNG, or WebP. Resized to 150×150px.</p>
-          ${member?.avatar?`<button type="button" class="btn btn--ghost btn--sm" id="btnRemoveAvatar" style="color:var(--color-danger);">Remove</button>`:''}
+          ${member?.avatar ? `<button type="button" class="btn btn--ghost btn--sm" id="btnRemoveAvatar" style="color:var(--color-danger);">Remove</button>` : ''}
         </div>
       </div>
     </form>`;
@@ -401,8 +402,8 @@ function openMemberModal(member) {
     footer: `
       <button class="btn btn--secondary" id="btnCancelMember">Cancel</button>
       <button class="btn btn--primary" id="btnSaveMember">
-        <i data-lucide="${isEdit?'save':'user-plus'}" aria-hidden="true"></i>
-        ${isEdit?'Save Changes':'Add Member'}
+        <i data-lucide="${isEdit ? 'save' : 'user-plus'}" aria-hidden="true"></i>
+        ${isEdit ? 'Save Changes' : 'Add Member'}
       </button>`,
   });
 
@@ -410,15 +411,15 @@ function openMemberModal(member) {
   document.getElementById('toggleMPassword')?.addEventListener('click', () => {
     const inp = document.getElementById('mPassword');
     const icon = document.querySelector('#toggleMPassword [data-lucide]');
-    if (!inp||!icon) return;
-    const hidden = inp.type==='password';
-    inp.type = hidden?'text':'password';
-    icon.setAttribute('data-lucide', hidden?'eye-off':'eye');
-    if (typeof lucide!=='undefined') lucide.createIcons();
+    if (!inp || !icon) return;
+    const hidden = inp.type === 'password';
+    inp.type = hidden ? 'text' : 'password';
+    icon.setAttribute('data-lucide', hidden ? 'eye-off' : 'eye');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   });
 
   // Avatar state
-  let _avatarBase64 = member?.avatar||null;
+  let _avatarBase64 = member?.avatar || null;
 
   document.getElementById('mAvatar')?.addEventListener('change', async e => {
     const file = e.target.files[0];
@@ -433,19 +434,19 @@ function openMemberModal(member) {
   document.getElementById('btnRemoveAvatar')?.addEventListener('click', () => {
     _avatarBase64 = null;
     const preview = document.getElementById('avatarPreview');
-    if (preview) preview.innerHTML = `<span class="avatar-upload__initials">${getInitials(document.getElementById('mFullName')?.value||'?')}</span>`;
+    if (preview) preview.innerHTML = `<span class="avatar-upload__initials">${getInitials(document.getElementById('mFullName')?.value || '?')}</span>`;
   });
 
   document.getElementById('mFullName')?.addEventListener('input', e => {
     if (!_avatarBase64) {
       const preview = document.getElementById('avatarPreview');
       if (preview && !preview.querySelector('img'))
-        preview.innerHTML = `<span class="avatar-upload__initials">${getInitials(e.target.value||'?')}</span>`;
+        preview.innerHTML = `<span class="avatar-upload__initials">${getInitials(e.target.value || '?')}</span>`;
     }
   });
 
   document.getElementById('btnCancelMember')?.addEventListener('click', closeModal);
-  document.getElementById('btnSaveMember')?.addEventListener('click', () => handleSaveMember(member, isEdit, ()=>_avatarBase64));
+  document.getElementById('btnSaveMember')?.addEventListener('click', () => handleSaveMember(member, isEdit, () => _avatarBase64));
 }
 
 // ============================================================
@@ -453,7 +454,7 @@ function openMemberModal(member) {
 // ============================================================
 async function handleSaveMember(existing, isEdit, getAvatar) {
   const btn = document.getElementById('btnSaveMember');
-  const getValue = id => document.getElementById(id)?.value.trim()||'';
+  const getValue = id => document.getElementById(id)?.value.trim() || '';
 
   const fullName = getValue('mFullName');
   const username = getValue('mUsername');
@@ -465,40 +466,38 @@ async function handleSaveMember(existing, isEdit, getAvatar) {
   const department = getValue('mDepartment');
   const position = getValue('mPosition');
   const timezone = document.getElementById('mTimezone')?.value;
-  const bio = document.getElementById('mBio')?.value.trim()||'';
+  const bio = document.getElementById('mBio')?.value.trim() || '';
   const linkedin = getValue('mLinkedin');
   const github = getValue('mGithub');
 
   clearAllFieldErrors();
   let valid = true;
 
-  if (!fullName) { setModalFieldError('mFullName','Full name is required.'); valid=false; }
-  if (!username) { setModalFieldError('mUsername','Username is required.'); valid=false; }
-  else if (!/^[a-z0-9_.\-]{3,30}$/i.test(username)) { setModalFieldError('mUsername','Username: 3–30 chars, letters/numbers/_ . - only.'); valid=false; }
-  if (!email) { setModalFieldError('mEmail','Email is required.'); valid=false; }
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setModalFieldError('mEmail','Enter a valid email address.'); valid=false; }
+  if (!fullName) { setModalFieldError('mFullName', 'Full name is required.'); valid = false; }
+  if (!username) { setModalFieldError('mUsername', 'Username is required.'); valid = false; }
+  else if (!/^[a-z0-9_.\-]{3,30}$/i.test(username)) { setModalFieldError('mUsername', 'Username: 3–30 chars, letters/numbers/_ . - only.'); valid = false; }
+  if (!email) { setModalFieldError('mEmail', 'Email is required.'); valid = false; }
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setModalFieldError('mEmail', 'Enter a valid email address.'); valid = false; }
 
-  let passwordHash = existing?.password_hash||null;
+  let passwordHash = existing?.password_hash || null;
   if (!isEdit) {
-    const pass = document.getElementById('mPassword')?.value||'';
-    const conf = document.getElementById('mConfirmPassword')?.value||'';
-    if (!pass) { setModalFieldError('mPassword','Password is required.'); valid=false; }
-    else if (pass.length<8) { setModalFieldError('mPassword','Password must be at least 8 characters.'); valid=false; }
-    if (pass && conf!==pass) { setModalFieldError('mConfirmPassword','Passwords do not match.'); valid=false; }
+    const pass = document.getElementById('mPassword')?.value || '';
+    const conf = document.getElementById('mConfirmPassword')?.value || '';
+    if (!pass) { setModalFieldError('mPassword', 'Password is required.'); valid = false; }
+    else if (pass.length < 8) { setModalFieldError('mPassword', 'Password must be at least 8 characters.'); valid = false; }
+    if (pass && conf !== pass) { setModalFieldError('mConfirmPassword', 'Passwords do not match.'); valid = false; }
     if (valid && pass) passwordHash = await hashPassword(pass);
   }
 
   // Check uniqueness
   if (valid) {
     const allUsers = await getAll('users');
-    if (allUsers.find(u=>u.username?.toLowerCase()===username.toLowerCase()&&u.id!==existing?.id))
-      { setModalFieldError('mUsername','This username is already in use.'); valid=false; }
-    if (allUsers.find(u=>u.email?.toLowerCase()===email.toLowerCase()&&u.id!==existing?.id))
-      { setModalFieldError('mEmail','This email is already in use.'); valid=false; }
+    if (allUsers.find(u => u.username?.toLowerCase() === username.toLowerCase() && u.id !== existing?.id)) { setModalFieldError('mUsername', 'This username is already in use.'); valid = false; }
+    if (allUsers.find(u => u.email?.toLowerCase() === email.toLowerCase() && u.id !== existing?.id)) { setModalFieldError('mEmail', 'This email is already in use.'); valid = false; }
   }
 
   if (!valid) return;
-  if (btn) btn.disabled=true;
+  if (btn) btn.disabled = true;
 
   try {
     const now = nowISO();
@@ -509,17 +508,17 @@ async function handleSaveMember(existing, isEdit, getAvatar) {
     const memberData = {
       id: memberId, username, full_name: fullName, email,
       password_hash: passwordHash, phone_number: phone,
-      avatar: avatarBase64||'', company, department, position, role,
-      project_roles: existing?.project_roles||{},
+      avatar: avatarBase64 || '', company, department, position, role,
+      project_roles: existing?.project_roles || {},
       bio, linkedin, github, status,
-      last_login: existing?.last_login||null,
-      timezone, created_at: existing?.created_at||now, updated_at: now,
+      last_login: existing?.last_login || null,
+      timezone, created_at: existing?.created_at || now, updated_at: now,
     };
 
     if (isEdit) {
       await update('users', memberData);
-      const idx = _members.findIndex(m=>m.id===memberId);
-      if (idx!==-1) _members[idx]=memberData;
+      const idx = _members.findIndex(m => m.id === memberId);
+      if (idx !== -1) _members[idx] = memberData;
       logActivity({ project_id: null, entity_type: 'member', entity_id: memberId, entity_name: fullName, action: 'updated' });
       showToast(`${fullName}'s profile has been updated.`, 'success');
     } else {
@@ -534,7 +533,7 @@ async function handleSaveMember(existing, isEdit, getAvatar) {
   } catch (err) {
     showToast('Failed to save member. Please try again.', 'error');
   } finally {
-    if (btn) btn.disabled=false;
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -569,37 +568,37 @@ function openChangePasswordModal(member) {
       </button>`,
   });
 
-  document.getElementById('toggleCpPass')?.addEventListener('click', ()=>{
-    const inp=document.getElementById('cpNewPassword');
-    const icon=document.querySelector('#toggleCpPass [data-lucide]');
-    if (!inp||!icon) return;
-    const hidden=inp.type==='password'; inp.type=hidden?'text':'password';
-    icon.setAttribute('data-lucide',hidden?'eye-off':'eye');
-    if (typeof lucide!=='undefined') lucide.createIcons();
+  document.getElementById('toggleCpPass')?.addEventListener('click', () => {
+    const inp = document.getElementById('cpNewPassword');
+    const icon = document.querySelector('#toggleCpPass [data-lucide]');
+    if (!inp || !icon) return;
+    const hidden = inp.type === 'password'; inp.type = hidden ? 'text' : 'password';
+    icon.setAttribute('data-lucide', hidden ? 'eye-off' : 'eye');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   });
 
   document.getElementById('btnCancelChangePass')?.addEventListener('click', closeModal);
-  document.getElementById('btnSaveChangePass')?.addEventListener('click', async ()=>{
-    const btn=document.getElementById('btnSaveChangePass');
-    const newPass=document.getElementById('cpNewPassword')?.value||'';
-    const confirmPass=document.getElementById('cpConfirmPassword')?.value||'';
+  document.getElementById('btnSaveChangePass')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btnSaveChangePass');
+    const newPass = document.getElementById('cpNewPassword')?.value || '';
+    const confirmPass = document.getElementById('cpConfirmPassword')?.value || '';
     clearAllFieldErrors();
-    let valid=true;
-    if (!newPass) { setModalFieldError('cpNewPassword','Password is required.'); valid=false; }
-    else if (newPass.length<8) { setModalFieldError('cpNewPassword','Password must be at least 8 characters.'); valid=false; }
-    if (newPass&&confirmPass!==newPass) { setModalFieldError('cpConfirmPassword','Passwords do not match.'); valid=false; }
+    let valid = true;
+    if (!newPass) { setModalFieldError('cpNewPassword', 'Password is required.'); valid = false; }
+    else if (newPass.length < 8) { setModalFieldError('cpNewPassword', 'Password must be at least 8 characters.'); valid = false; }
+    if (newPass && confirmPass !== newPass) { setModalFieldError('cpConfirmPassword', 'Passwords do not match.'); valid = false; }
     if (!valid) return;
-    btn.disabled=true;
+    btn.disabled = true;
     try {
-      const hash=await hashPassword(newPass);
-      const updated={...member,password_hash:hash,updated_at:nowISO()};
-      await update('users',updated);
-      const idx=_members.findIndex(m=>m.id===member.id);
-      if (idx!==-1) _members[idx]=updated;
-      showToast('Password updated successfully.','success');
+      const hash = await hashPassword(newPass);
+      const updated = { ...member, password_hash: hash, updated_at: nowISO() };
+      await update('users', updated);
+      const idx = _members.findIndex(m => m.id === member.id);
+      if (idx !== -1) _members[idx] = updated;
+      showToast('Password updated successfully.', 'success');
       closeModal();
-    } catch { showToast('Failed to update password.','error'); }
-    finally { btn.disabled=false; }
+    } catch { showToast('Failed to update password.', 'error'); }
+    finally { btn.disabled = false; }
   });
 }
 
@@ -612,73 +611,73 @@ async function handleDeactivate(member) {
     message: `Are you sure you want to deactivate <strong>${sanitize(member.full_name)}</strong>? They will no longer be able to log in.`,
     confirmLabel: 'Deactivate',
     confirmVariant: 'danger',
-    onConfirm: async ()=>{
+    onConfirm: async () => {
       try {
-        const updated={...member,status:'inactive',updated_at:nowISO()};
-        await update('users',updated);
-        const idx=_members.findIndex(m=>m.id===member.id);
-        if (idx!==-1) _members[idx]=updated;
+        const updated = { ...member, status: 'inactive', updated_at: nowISO() };
+        await update('users', updated);
+        const idx = _members.findIndex(m => m.id === member.id);
+        if (idx !== -1) _members[idx] = updated;
         logActivity({ project_id: null, entity_type: 'member', entity_id: member.id, entity_name: member.full_name, action: 'status_changed', changes: [{ field: 'status', old_value: 'active', new_value: 'inactive' }] });
-        showToast(`${member.full_name} has been deactivated.`,'success');
+        showToast(`${member.full_name} has been deactivated.`, 'success');
         refreshTable();
-      } catch { showToast('Failed to deactivate member.','error'); }
+      } catch { showToast('Failed to deactivate member.', 'error'); }
     },
   });
 }
 
 async function handleActivate(member) {
   try {
-    const updated={...member,status:'active',updated_at:nowISO()};
-    await update('users',updated);
-    const idx=_members.findIndex(m=>m.id===member.id);
-    if (idx!==-1) _members[idx]=updated;
+    const updated = { ...member, status: 'active', updated_at: nowISO() };
+    await update('users', updated);
+    const idx = _members.findIndex(m => m.id === member.id);
+    if (idx !== -1) _members[idx] = updated;
     logActivity({ project_id: null, entity_type: 'member', entity_id: member.id, entity_name: member.full_name, action: 'status_changed', changes: [{ field: 'status', old_value: 'inactive', new_value: 'active' }] });
-    showToast(`${member.full_name} has been reactivated.`,'success');
+    showToast(`${member.full_name} has been reactivated.`, 'success');
     refreshTable();
-  } catch { showToast('Failed to activate member.','error'); }
+  } catch { showToast('Failed to activate member.', 'error'); }
 }
 
 // ============================================================
 // HELPERS
 // ============================================================
 function getRoleVariant(role) {
-  return {admin:'danger',pm:'primary',developer:'info',viewer:'neutral'}[role]||'neutral';
+  return { admin: 'danger', pm: 'primary', developer: 'info', viewer: 'neutral', client: 'warning' }[role] || 'neutral';
 }
 function getStatusVariant(status) {
-  return {active:'success',inactive:'neutral',invited:'warning'}[status]||'neutral';
+  return { active: 'success', inactive: 'neutral', invited: 'warning' }[status] || 'neutral';
 }
 function setModalFieldError(fieldId, message) {
-  const field=document.getElementById(fieldId);
+  const field = document.getElementById(fieldId);
   if (!field) return;
-  const group=field.closest('.form-group');
+  const group = field.closest('.form-group');
   if (!group) return;
   group.querySelector('.form-error')?.remove();
   field.classList.add('is-invalid');
-  const err=document.createElement('p');
-  err.className='form-error'; err.textContent=message;
+  const err = document.createElement('p');
+  err.className = 'form-error'; err.textContent = message;
   group.appendChild(err);
 }
 function clearAllFieldErrors() {
-  document.querySelectorAll('.form-error').forEach(el=>el.remove());
-  document.querySelectorAll('.is-invalid').forEach(el=>el.classList.remove('is-invalid'));
+  document.querySelectorAll('.form-error').forEach(el => el.remove());
+  document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 }
 function resizeImageToBase64(file, maxW, maxH) {
   return new Promise((resolve, reject) => {
-    const reader=new FileReader();
-    reader.onerror=reject;
-    reader.onload=e=>{
-      const img=new Image();
-      img.onerror=reject;
-      img.onload=()=>{
-        const canvas=document.createElement('canvas');
-        canvas.width=maxW; canvas.height=maxH;
-        const ctx=canvas.getContext('2d');
-        const scale=Math.max(maxW/img.width,maxH/img.height);
-        const sw=img.width*scale, sh=img.height*scale;
-        ctx.drawImage(img,(maxW-sw)/2,(maxH-sh)/2,sw,sh);
-        resolve(canvas.toDataURL('image/jpeg',0.85));
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = maxW; canvas.height = maxH;
+        const ctx = canvas.getContext('2d');
+        const scale = Math.max(maxW / img.width, maxH / img.height);
+        const sw = img.width * scale, sh = img.height * scale;
+        ctx.drawImage(img, (maxW - sw) / 2, (maxH - sh) / 2, sw, sh);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
       };
-      img.src=e.target.result;
+      img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   });

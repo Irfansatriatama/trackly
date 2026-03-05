@@ -508,7 +508,7 @@ async function renderLogin() {
       } catch (_) { /* non-fatal */ }
 
       // Redirect based on role
-      const dest = (user.role === 'viewer') ? '/projects' : '/dashboard';
+      const dest = (['viewer', 'client'].includes(user.role)) ? '/projects' : '/dashboard';
 
       // Mount app shell then navigate
       mountAppShell(user);
