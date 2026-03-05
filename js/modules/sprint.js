@@ -13,15 +13,16 @@ import { getSession } from '../core/auth.js';
 import { TASK_STATUS_OPTIONS, TASK_PRIORITY_OPTIONS, TASK_TYPE_OPTIONS } from './backlog.js';
 
 let _projectId = null;
-let _project   = null;
-let _sprints   = [];
-let _tasks     = [];
-let _members   = [];
+let _project = null;
+let _sprints = [];
+let _tasks = [];
+let _members = [];
 let _activeTab = 'list';
 let _planningSprintId = null;
 let _planningSearch = '';
 let _dragTaskId = null;
 let _dragSource = null;
+let _isReadOnly = false;
 
 export async function render(params = {}) {
   _projectId = params.id;
@@ -38,7 +39,7 @@ export async function render(params = {}) {
       getAll('sprints'),
     ]);
     _project = project;
-    _tasks   = allTasks.filter(t => t.project_id === _projectId);
+    _tasks = allTasks.filter(t => t.project_id === _projectId);
     _members = members;
     _sprints = allSprints.filter(s => s.project_id === _projectId)
       .sort((a, b) => (a.created_at || '') < (b.created_at || '') ? -1 : 1);
@@ -64,6 +65,7 @@ function _renderPage() {
   if (!content) return;
   const session = getSession();
   const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
+  _isReadOnly = session && ['viewer', 'client'].includes(session.role);
   const banner = buildProjectBanner(_project, 'sprint', { renderBadge, isAdminOrPM });
   const activeSprint = _sprints.find(s => s.status === 'active');
 
@@ -76,16 +78,16 @@ function _renderPage() {
           <p class="page-header__subtitle">${sanitize(_project.name)} &mdash; ${_sprints.length} sprint${_sprints.length !== 1 ? 's' : ''}</p>
         </div>
         <div class="page-header__actions">
-          <button class="btn btn--primary" id="btnNewSprint"><i data-lucide="plus" aria-hidden="true"></i> New Sprint</button>
+          ${_isReadOnly ? '' : `<button class="btn btn--primary" id="btnNewSprint"><i data-lucide="plus" aria-hidden="true"></i> New Sprint</button>`}
         </div>
       </div>
       ${activeSprint ? _renderActiveBanner(activeSprint) : ''}
       <div class="project-tab-body">
       <div class="sprint-tabs">
-        <button class="sprint-tab${_activeTab==='list'?' is-active':''}" data-tab="list"><i data-lucide="list" aria-hidden="true"></i> Sprints</button>
-        <button class="sprint-tab${_activeTab==='planning'?' is-active':''}" data-tab="planning"><i data-lucide="move" aria-hidden="true"></i> Planning</button>
-        <button class="sprint-tab${_activeTab==='board'?' is-active':''}" data-tab="board"><i data-lucide="kanban" aria-hidden="true"></i> Sprint Board</button>
-        <button class="sprint-tab${_activeTab==='velocity'?' is-active':''}" data-tab="velocity"><i data-lucide="bar-chart-2" aria-hidden="true"></i> Velocity</button>
+        <button class="sprint-tab${_activeTab === 'list' ? ' is-active' : ''}" data-tab="list"><i data-lucide="list" aria-hidden="true"></i> Sprints</button>
+        <button class="sprint-tab${_activeTab === 'planning' ? ' is-active' : ''}" data-tab="planning"><i data-lucide="move" aria-hidden="true"></i> Planning</button>
+        <button class="sprint-tab${_activeTab === 'board' ? ' is-active' : ''}" data-tab="board"><i data-lucide="kanban" aria-hidden="true"></i> Sprint Board</button>
+        <button class="sprint-tab${_activeTab === 'velocity' ? ' is-active' : ''}" data-tab="velocity"><i data-lucide="bar-chart-2" aria-hidden="true"></i> Velocity</button>
       </div>
       <div class="sprint-view" id="sprintView">${_renderActiveTabContent()}</div>
       </div>
@@ -98,12 +100,12 @@ function _renderPage() {
   _bindPageEvents();
   if (_activeTab === 'velocity') requestAnimationFrame(() => _drawVelocityChart());
   if (_activeTab === 'planning') requestAnimationFrame(() => _bindPlanningDragDrop());
-  if (_activeTab === 'board')    requestAnimationFrame(() => _bindSprintBoardDragDrop());
+  if (_activeTab === 'board') requestAnimationFrame(() => _bindSprintBoardDragDrop());
 }
 
 function _renderActiveBanner(sprint) {
   const sprintTasks = _tasks.filter(t => t.sprint_id === sprint.id);
-  const doneTasks   = sprintTasks.filter(t => t.status === 'done');
+  const doneTasks = sprintTasks.filter(t => t.status === 'done');
   const pct = sprintTasks.length > 0 ? Math.round((doneTasks.length / sprintTasks.length) * 100) : 0;
   const daysLeft = sprint.end_date ? Math.ceil((new Date(sprint.end_date) - new Date()) / 86400000) : null;
   return `
@@ -113,24 +115,24 @@ function _renderActiveBanner(sprint) {
         <div class="active-sprint-banner__title">Active Sprint</div>
         <div class="active-sprint-banner__name">${sanitize(sprint.name)}</div>
         <div class="active-sprint-banner__meta">
-          ${sprint.end_date ? `Ends ${formatDate(sprint.end_date)} ${daysLeft !== null ? `(${daysLeft > 0 ? daysLeft+' days left' : daysLeft === 0 ? 'ends today' : Math.abs(daysLeft)+' days overdue'})` : ''}` : 'No end date set'}
+          ${sprint.end_date ? `Ends ${formatDate(sprint.end_date)} ${daysLeft !== null ? `(${daysLeft > 0 ? daysLeft + ' days left' : daysLeft === 0 ? 'ends today' : Math.abs(daysLeft) + ' days overdue'})` : ''}` : 'No end date set'}
           &nbsp;&bull;&nbsp; ${doneTasks.length}/${sprintTasks.length} tasks done &nbsp;&bull;&nbsp; ${pct}%
         </div>
       </div>
       <div class="active-sprint-banner__actions">
         <button class="btn btn--secondary btn--sm" id="btnViewBoard"><i data-lucide="kanban" aria-hidden="true"></i> Board</button>
-        <button class="btn btn--danger btn--sm" id="btnCompleteSprint" data-id="${sanitize(sprint.id)}"><i data-lucide="flag" aria-hidden="true"></i> Complete Sprint</button>
+        ${_isReadOnly ? '' : `<button class="btn btn--danger btn--sm" id="btnCompleteSprint" data-id="${sanitize(sprint.id)}"><i data-lucide="flag" aria-hidden="true"></i> Complete Sprint</button>`}
       </div>
     </div>`;
 }
 
 function _renderActiveTabContent() {
   switch (_activeTab) {
-    case 'list':     return _renderSprintList();
+    case 'list': return _renderSprintList();
     case 'planning': return _renderPlanningView();
-    case 'board':    return _renderSprintBoardTab();
+    case 'board': return _renderSprintBoardTab();
     case 'velocity': return _renderVelocityTab();
-    default:         return _renderSprintList();
+    default: return _renderSprintList();
   }
 }
 
@@ -143,15 +145,15 @@ function _renderSprintList() {
 
 function _renderSprintCard(sprint) {
   const sprintTasks = _tasks.filter(t => t.sprint_id === sprint.id);
-  const doneTasks   = sprintTasks.filter(t => t.status === 'done');
-  const totalSP     = sprintTasks.reduce((s, t) => s + (t.story_points || 0), 0);
-  const doneSP      = doneTasks.reduce((s, t) => s + (t.story_points || 0), 0);
-  const pct         = sprintTasks.length > 0 ? Math.round((doneTasks.length / sprintTasks.length) * 100) : 0;
-  const statusBadge = { planning:'badge--neutral', active:'badge--success', completed:'badge--info' }[sprint.status] || 'badge--neutral';
-  const statusLabel = { planning:'Planning', active:'Active', completed:'Completed' }[sprint.status] || sprint.status;
+  const doneTasks = sprintTasks.filter(t => t.status === 'done');
+  const totalSP = sprintTasks.reduce((s, t) => s + (t.story_points || 0), 0);
+  const doneSP = doneTasks.reduce((s, t) => s + (t.story_points || 0), 0);
+  const pct = sprintTasks.length > 0 ? Math.round((doneTasks.length / sprintTasks.length) * 100) : 0;
+  const statusBadge = { planning: 'badge--neutral', active: 'badge--success', completed: 'badge--info' }[sprint.status] || 'badge--neutral';
+  const statusLabel = { planning: 'Planning', active: 'Active', completed: 'Completed' }[sprint.status] || sprint.status;
   const canActivate = sprint.status === 'planning' && !_sprints.find(s => s.status === 'active');
   const canComplete = sprint.status === 'active';
-  const canReopen   = sprint.status === 'completed';
+  const canReopen = sprint.status === 'completed';
   return `
     <div class="sprint-card" data-sprint-id="${sanitize(sprint.id)}">
       <div class="sprint-card__header">
@@ -159,16 +161,16 @@ function _renderSprintCard(sprint) {
         <span class="sprint-card__name">${sanitize(sprint.name)}</span>
         <div class="sprint-card__meta">
           ${sprint.start_date ? `<span class="sprint-card__meta-item"><i data-lucide="calendar" aria-hidden="true"></i>${formatDate(sprint.start_date)}</span>` : ''}
-          ${sprint.end_date   ? `<span class="sprint-card__meta-item">&rarr; ${formatDate(sprint.end_date)}</span>` : ''}
+          ${sprint.end_date ? `<span class="sprint-card__meta-item">&rarr; ${formatDate(sprint.end_date)}</span>` : ''}
           <span class="sprint-card__meta-item"><i data-lucide="check-square" aria-hidden="true"></i>${sprintTasks.length} task${sprintTasks.length !== 1 ? 's' : ''}</span>
         </div>
         <div class="sprint-card__actions">
-          ${canActivate ? `<button class="btn btn--success btn--sm btn-activate-sprint" data-id="${sanitize(sprint.id)}"><i data-lucide="play" aria-hidden="true"></i> Start</button>` : ''}
-          ${canComplete ? `<button class="btn btn--danger btn--sm btn-complete-sprint" data-id="${sanitize(sprint.id)}"><i data-lucide="flag" aria-hidden="true"></i> Complete</button>` : ''}
-          ${canReopen   ? `<button class="btn btn--ghost btn--sm btn-reopen-sprint" data-id="${sanitize(sprint.id)}"><i data-lucide="rotate-ccw" aria-hidden="true"></i> Reopen</button>` : ''}
+          ${!_isReadOnly && canActivate ? `<button class="btn btn--success btn--sm btn-activate-sprint" data-id="${sanitize(sprint.id)}"><i data-lucide="play" aria-hidden="true"></i> Start</button>` : ''}
+          ${!_isReadOnly && canComplete ? `<button class="btn btn--danger btn--sm btn-complete-sprint" data-id="${sanitize(sprint.id)}"><i data-lucide="flag" aria-hidden="true"></i> Complete</button>` : ''}
+          ${!_isReadOnly && canReopen ? `<button class="btn btn--ghost btn--sm btn-reopen-sprint" data-id="${sanitize(sprint.id)}"><i data-lucide="rotate-ccw" aria-hidden="true"></i> Reopen</button>` : ''}
           <button class="btn btn--ghost btn--sm btn-plan-sprint" data-id="${sanitize(sprint.id)}" title="Open Planning"><i data-lucide="move" aria-hidden="true"></i></button>
-          <button class="btn btn--ghost btn--sm btn-edit-sprint" data-id="${sanitize(sprint.id)}" title="Edit"><i data-lucide="pencil" aria-hidden="true"></i></button>
-          <button class="btn btn--ghost btn--sm btn-delete-sprint" data-id="${sanitize(sprint.id)}" title="Delete"><i data-lucide="trash-2" aria-hidden="true"></i></button>
+          ${_isReadOnly ? '' : `<button class="btn btn--ghost btn--sm btn-edit-sprint" data-id="${sanitize(sprint.id)}" title="Edit"><i data-lucide="pencil" aria-hidden="true"></i></button>
+          <button class="btn btn--ghost btn--sm btn-delete-sprint" data-id="${sanitize(sprint.id)}" title="Delete"><i data-lucide="trash-2" aria-hidden="true"></i></button>`}
         </div>
       </div>
       <div class="sprint-card__body">
@@ -192,8 +194,8 @@ function _renderPlanningView() {
   }
   const selectedSprint = _sprints.find(s => s.id === _planningSprintId) || planningSprints[0];
   if (!_planningSprintId) _planningSprintId = selectedSprint.id;
-  const backlogTasks = _tasks.filter(t => !t.sprint_id && !['done','cancelled'].includes(t.status));
-  const sprintTasks  = _tasks.filter(t => t.sprint_id === selectedSprint.id);
+  const backlogTasks = _tasks.filter(t => !t.sprint_id && !['done', 'cancelled'].includes(t.status));
+  const sprintTasks = _tasks.filter(t => t.sprint_id === selectedSprint.id);
   const q = _planningSearch.toLowerCase();
   const filteredBacklog = q ? backlogTasks.filter(t => t.title?.toLowerCase().includes(q) || t.id?.toLowerCase().includes(q)) : backlogTasks;
   const totalSP = sprintTasks.reduce((s, t) => s + (t.story_points || 0), 0);
@@ -235,9 +237,9 @@ function _renderPlanningView() {
 
 function _renderPlanTaskCard(task, pane) {
   const priorityOpt = TASK_PRIORITY_OPTIONS.find(p => p.value === task.priority);
-  const typeOpt     = TASK_TYPE_OPTIONS.find(t => t.value === task.type);
+  const typeOpt = TASK_TYPE_OPTIONS.find(t => t.value === task.type);
   return `
-    <div class="plan-task-card" draggable="true" data-task-id="${sanitize(task.id)}" data-pane="${pane}" data-priority="${sanitize(task.priority || 'medium')}">
+    <div class="plan-task-card" draggable="${_isReadOnly ? 'false' : 'true'}" data-task-id="${sanitize(task.id)}" data-pane="${pane}" data-priority="${sanitize(task.priority || 'medium')}">
       <div class="plan-task-card__title">${sanitize(task.title)}</div>
       <div class="plan-task-card__meta">
         <span class="plan-task-card__id">${sanitize(task.id)}</span>
@@ -255,10 +257,10 @@ function _renderSprintBoardTab() {
   }
   const sprintTasks = _tasks.filter(t => t.sprint_id === activeSprint.id);
   const columns = [
-    { id: 'todo',        label: 'To Do',       status: 'todo' },
-    { id: 'in_progress', label: 'In Progress',  status: 'in_progress' },
-    { id: 'in_review',   label: 'In Review',    status: 'in_review' },
-    { id: 'done',        label: 'Done',         status: 'done' },
+    { id: 'todo', label: 'To Do', status: 'todo' },
+    { id: 'in_progress', label: 'In Progress', status: 'in_progress' },
+    { id: 'in_review', label: 'In Review', status: 'in_review' },
+    { id: 'done', label: 'Done', status: 'done' },
   ];
   const boardHtml = columns.map(col => {
     const colTasks = sprintTasks.filter(t => t.status === col.status);
@@ -286,14 +288,14 @@ function _renderSprintBoardTab() {
 
 function _renderSprintBoardCard(task) {
   const priorityOpt = TASK_PRIORITY_OPTIONS.find(p => p.value === task.priority);
-  const assignees   = (task.assignees || []).slice(0, 2).map(uid => _members.find(m => m.id === uid)).filter(Boolean);
+  const assignees = (task.assignees || []).slice(0, 2).map(uid => _members.find(m => m.id === uid)).filter(Boolean);
   return `
-    <div class="sprint-board-card" draggable="true" data-task-id="${sanitize(task.id)}" style="border-left:3px solid ${priorityOpt?.color || '#E2E8F0'};background:var(--color-card);border-radius:var(--radius-sm);padding:var(--space-3);cursor:grab;box-shadow:var(--shadow-card);transition:transform 100ms,box-shadow 100ms;">
+    <div class="sprint-board-card" draggable="${_isReadOnly ? 'false' : 'true'}" data-task-id="${sanitize(task.id)}" style="border-left:3px solid ${priorityOpt?.color || '#E2E8F0'};background:var(--color-card);border-radius:var(--radius-sm);padding:var(--space-3);${_isReadOnly ? '' : 'cursor:grab;'}box-shadow:var(--shadow-card);transition:transform 100ms,box-shadow 100ms;">
       <div style="font-size:var(--text-xs);color:var(--color-text-muted);font-family:'JetBrains Mono',monospace;margin-bottom:var(--space-1);">${sanitize(task.id)}</div>
       <div style="font-size:var(--text-sm);font-weight:500;color:var(--color-text);margin-bottom:var(--space-2);line-height:1.4;">${sanitize(task.title)}</div>
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <div style="display:flex;gap:var(--space-1);">
-          ${assignees.map(m => { const ini=(m.full_name||'?').split(' ').filter(Boolean).slice(0,2).map(n=>n[0].toUpperCase()).join(''); return `<div class="avatar avatar--xs" title="${sanitize(m.full_name)}" style="${m.avatar?'':'background:var(--color-primary);'}">${m.avatar?`<img src="${m.avatar}" alt="" class="avatar__img" />`:`<span class="avatar__initials">${sanitize(ini)}</span>`}</div>`; }).join('')}
+          ${assignees.map(m => { const ini = (m.full_name || '?').split(' ').filter(Boolean).slice(0, 2).map(n => n[0].toUpperCase()).join(''); return `<div class="avatar avatar--xs" title="${sanitize(m.full_name)}" style="${m.avatar ? '' : 'background:var(--color-primary);'}">${m.avatar ? `<img src="${m.avatar}" alt="" class="avatar__img" />` : `<span class="avatar__initials">${sanitize(ini)}</span>`}</div>`; }).join('')}
         </div>
         ${task.story_points ? `<span style="font-size:10px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:99px;padding:1px 6px;color:var(--color-text-muted);font-weight:600;">${task.story_points} SP</span>` : ''}
       </div>
@@ -332,12 +334,12 @@ function _renderVelocityTab() {
 function _renderRetroContent(sprint) {
   if (!sprint) return '';
   return `
-    <textarea class="form-textarea" id="retroNotesInput" rows="5" placeholder="What went well? What could be improved? Action items..." style="width:100%;">${sanitize(sprint.retro_notes || '')}</textarea>
-    <div style="display:flex;justify-content:flex-end;margin-top:var(--space-3);">
+    <textarea class="form-textarea" id="retroNotesInput" rows="5" placeholder="What went well? What could be improved? Action items..." style="width:100%;"${_isReadOnly ? ' readonly' : ''}>${sanitize(sprint.retro_notes || '')}</textarea>
+    ${_isReadOnly ? '' : `<div style="display:flex;justify-content:flex-end;margin-top:var(--space-3);">
       <button class="btn btn--primary btn--sm" id="btnSaveRetro" data-sprint-id="${sanitize(sprint.id)}">
         <i data-lucide="save" aria-hidden="true"></i> Save Notes
       </button>
-    </div>`;
+    </div>`}`;
 }
 
 function _drawVelocityChart() {
@@ -349,7 +351,7 @@ function _drawVelocityChart() {
   const data = displaySprints.map(sprint => {
     const st = _tasks.filter(t => t.sprint_id === sprint.id);
     return {
-      name:      sprint.name,
+      name: sprint.name,
       committed: st.reduce((s, t) => s + (t.story_points || 0), 0),
       completed: st.filter(t => t.status === 'done').reduce((s, t) => s + (t.story_points || 0), 0),
     };
@@ -361,7 +363,7 @@ function _drawVelocityChart() {
   const chartW = W - PAD.left - PAD.right;
   const chartH = H - PAD.top - PAD.bottom;
   const maxVal = Math.max(...data.flatMap(d => [d.committed, d.completed]), 1);
-  const yMax   = Math.ceil(maxVal * 1.2) || 10;
+  const yMax = Math.ceil(maxVal * 1.2) || 10;
   const barGroupW = chartW / data.length;
   const barW = Math.min(barGroupW * 0.32, 32);
   ctx.clearRect(0, 0, W, H);
@@ -380,12 +382,12 @@ function _drawVelocityChart() {
     const completedH = (d.completed / yMax) * chartH;
     ctx.fillStyle = '#CBD5E1';
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(cx - barW - 2, PAD.top + chartH - committedH, barW, committedH, [3,3,0,0]);
+    if (ctx.roundRect) ctx.roundRect(cx - barW - 2, PAD.top + chartH - committedH, barW, committedH, [3, 3, 0, 0]);
     else ctx.rect(cx - barW - 2, PAD.top + chartH - committedH, barW, committedH);
     ctx.fill();
     ctx.fillStyle = '#2563EB';
     ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(cx + 2, PAD.top + chartH - completedH, barW, completedH, [3,3,0,0]);
+    if (ctx.roundRect) ctx.roundRect(cx + 2, PAD.top + chartH - completedH, barW, completedH, [3, 3, 0, 0]);
     else ctx.rect(cx + 2, PAD.top + chartH - completedH, barW, completedH);
     ctx.fill();
     if (d.completed > 0) {
@@ -393,7 +395,7 @@ function _drawVelocityChart() {
       ctx.fillText(d.completed, cx + 2 + barW / 2, PAD.top + chartH - completedH - 5);
     }
     ctx.fillStyle = '#64748B'; ctx.font = '10px Inter,sans-serif'; ctx.textAlign = 'center';
-    const lbl = d.name.length > 11 ? d.name.slice(0,11) + '…' : d.name;
+    const lbl = d.name.length > 11 ? d.name.slice(0, 11) + '…' : d.name;
     ctx.fillText(lbl, cx, PAD.top + chartH + 18);
   });
 }
@@ -424,7 +426,7 @@ function _openSprintModal(sprint = null) {
   openModal({
     title: isEdit ? `Edit Sprint — ${sanitize(sprint.name)}` : 'New Sprint',
     size: 'md', body,
-    footer: `<button class="btn btn--secondary" id="btnCancelSprint">Cancel</button><button class="btn btn--primary" id="btnSaveSprint"><i data-lucide="${isEdit?'save':'plus'}" aria-hidden="true"></i> ${isEdit ? 'Save Changes' : 'Create Sprint'}</button>`,
+    footer: `<button class="btn btn--secondary" id="btnCancelSprint">Cancel</button><button class="btn btn--primary" id="btnSaveSprint"><i data-lucide="${isEdit ? 'save' : 'plus'}" aria-hidden="true"></i> ${isEdit ? 'Save Changes' : 'Create Sprint'}</button>`,
   });
   if (typeof lucide !== 'undefined') lucide.createIcons();
   document.getElementById('btnCancelSprint')?.addEventListener('click', closeModal);
@@ -432,11 +434,11 @@ function _openSprintModal(sprint = null) {
 }
 
 async function _handleSaveSprint(existing) {
-  const btn  = document.getElementById('btnSaveSprint');
+  const btn = document.getElementById('btnSaveSprint');
   const name = document.getElementById('sName')?.value.trim();
   if (!name) {
     const f = document.getElementById('sName'); const g = f?.closest('.form-group');
-    if (g) { g.querySelector('.form-error')?.remove(); const e = document.createElement('p'); e.className='form-error'; e.textContent='Sprint name is required.'; g.appendChild(e); }
+    if (g) { g.querySelector('.form-error')?.remove(); const e = document.createElement('p'); e.className = 'form-error'; e.textContent = 'Sprint name is required.'; g.appendChild(e); }
     return;
   }
   if (btn) btn.disabled = true;
@@ -444,14 +446,14 @@ async function _handleSaveSprint(existing) {
     const allSprints = await getAll('sprints');
     const now = nowISO(); const isEdit = !!existing;
     const sprintData = {
-      id:         isEdit ? existing.id : generateSequentialId('SPR', allSprints),
+      id: isEdit ? existing.id : generateSequentialId('SPR', allSprints),
       project_id: _projectId,
       name,
-      goal:       document.getElementById('sGoal')?.value.trim() || '',
+      goal: document.getElementById('sGoal')?.value.trim() || '',
       start_date: document.getElementById('sStartDate')?.value || null,
-      end_date:   document.getElementById('sEndDate')?.value || null,
-      status:     isEdit ? existing.status : 'planning',
-      retro_notes:existing?.retro_notes || '',
+      end_date: document.getElementById('sEndDate')?.value || null,
+      status: isEdit ? existing.status : 'planning',
+      retro_notes: existing?.retro_notes || '',
       created_at: isEdit ? existing.created_at : now,
       updated_at: now,
     };
@@ -496,7 +498,7 @@ async function _handleCompleteSprint(sprintId) {
   const sprint = _sprints.find(s => s.id === sprintId);
   if (!sprint) return;
   const sprintTasks = _tasks.filter(t => t.sprint_id === sprintId);
-  const unfinished  = sprintTasks.filter(t => !['done','cancelled'].includes(t.status));
+  const unfinished = sprintTasks.filter(t => !['done', 'cancelled'].includes(t.status));
   const nextSprints = _sprints.filter(s => s.status === 'planning' && s.id !== sprintId);
   const unfinishedHtml = unfinished.length > 0
     ? `<div style="margin:var(--space-3) 0;">
@@ -530,7 +532,7 @@ async function _handleCompleteSprint(sprintId) {
     try {
       const action = document.querySelector('input[name="unfinishedAction"]:checked')?.value || 'backlog';
       const nextSprintId = action === 'next' ? document.getElementById('nextSprintId')?.value : null;
-      const retroNotes   = document.getElementById('completedRetroNotes')?.value.trim() || '';
+      const retroNotes = document.getElementById('completedRetroNotes')?.value.trim() || '';
       const now = nowISO();
       for (const task of unfinished) {
         const updated = { ...task, sprint_id: nextSprintId || null, updated_at: now };
@@ -606,17 +608,17 @@ function _bindPageEvents() {
       const id = btn.dataset.id;
       if (btn.classList.contains('btn-activate-sprint')) _handleActivateSprint(id);
       if (btn.classList.contains('btn-complete-sprint')) _handleCompleteSprint(id);
-      if (btn.classList.contains('btn-delete-sprint'))  _handleDeleteSprint(id);
-      if (btn.classList.contains('btn-reopen-sprint'))  _handleReopenSprint(id);
+      if (btn.classList.contains('btn-delete-sprint')) _handleDeleteSprint(id);
+      if (btn.classList.contains('btn-reopen-sprint')) _handleReopenSprint(id);
       if (btn.classList.contains('btn-edit-sprint')) { const sprint = _sprints.find(s => s.id === id); if (sprint) _openSprintModal(sprint); }
-      if (btn.classList.contains('btn-plan-sprint'))  { _planningSprintId = id; _activeTab = 'planning'; _renderPage(); }
+      if (btn.classList.contains('btn-plan-sprint')) { _planningSprintId = id; _activeTab = 'planning'; _renderPage(); }
     });
   }
   document.getElementById('planningSprintSelect')?.addEventListener('change', e => { _planningSprintId = e.target.value; _renderPage(); });
   document.getElementById('planningSearch')?.addEventListener('input', e => { _planningSearch = e.target.value; _refreshPlanningPanes(); });
   document.getElementById('retroSprintSelect')?.addEventListener('change', e => {
     const sprint = _sprints.find(s => s.id === e.target.value);
-    const retro  = document.getElementById('retroContent');
+    const retro = document.getElementById('retroContent');
     if (retro && sprint) { retro.innerHTML = _renderRetroContent(sprint); if (typeof lucide !== 'undefined') lucide.createIcons(); _bindRetroSave(); }
   });
   _bindRetroSave();
@@ -625,8 +627,8 @@ function _bindPageEvents() {
 function _bindRetroSave() {
   document.getElementById('btnSaveRetro')?.addEventListener('click', async e => {
     const sprintId = e.currentTarget.dataset.sprintId;
-    const notes    = document.getElementById('retroNotesInput')?.value.trim() || '';
-    const sprint   = _sprints.find(s => s.id === sprintId); if (!sprint) return;
+    const notes = document.getElementById('retroNotesInput')?.value.trim() || '';
+    const sprint = _sprints.find(s => s.id === sprintId); if (!sprint) return;
     try {
       const u = { ...sprint, retro_notes: notes, updated_at: nowISO() };
       await update('sprints', u);
@@ -638,7 +640,7 @@ function _bindRetroSave() {
 
 function _bindPlanningDragDrop() {
   const backlogPane = document.getElementById('planBacklogPane');
-  const sprintPane  = document.getElementById('planSprintPane');
+  const sprintPane = document.getElementById('planSprintPane');
   if (!backlogPane || !sprintPane) return;
   const panes = [backlogPane, sprintPane];
   document.querySelectorAll('.plan-task-card[draggable]').forEach(card => {
@@ -656,7 +658,7 @@ function _bindPlanningDragDrop() {
     pane.addEventListener('dragleave', e => { if (!pane.contains(e.relatedTarget)) pane.classList.remove('is-drag-over'); });
     pane.addEventListener('drop', async e => {
       e.preventDefault(); pane.classList.remove('is-drag-over');
-      const targetPane   = pane.dataset.pane;
+      const targetPane = pane.dataset.pane;
       const targetSprint = pane.dataset.sprintId || null;
       if (!_dragTaskId || _dragSource === targetPane) return;
       const task = _tasks.find(t => t.id === _dragTaskId); if (!task) return;
@@ -676,14 +678,14 @@ function _bindPlanningDragDrop() {
 function _refreshPlanningPanes() {
   const q = _planningSearch.toLowerCase();
   const selectedSprint = _sprints.find(s => s.id === _planningSprintId);
-  const backlogTasks   = _tasks.filter(t => !t.sprint_id && !['done','cancelled'].includes(t.status));
-  const sprintTasks    = selectedSprint ? _tasks.filter(t => t.sprint_id === _planningSprintId) : [];
+  const backlogTasks = _tasks.filter(t => !t.sprint_id && !['done', 'cancelled'].includes(t.status));
+  const sprintTasks = selectedSprint ? _tasks.filter(t => t.sprint_id === _planningSprintId) : [];
   const filteredBacklog = q ? backlogTasks.filter(t => t.title?.toLowerCase().includes(q) || t.id?.toLowerCase().includes(q)) : backlogTasks;
   const bp = document.getElementById('planBacklogPane');
   const sp = document.getElementById('planSprintPane');
   if (bp) {
     bp.innerHTML = filteredBacklog.length === 0
-      ? `<div class="sprint-planning__empty"><i data-lucide="check-circle" aria-hidden="true"></i><span class="sprint-planning__empty-text">${q?'No tasks match':'All tasks assigned'}</span></div>`
+      ? `<div class="sprint-planning__empty"><i data-lucide="check-circle" aria-hidden="true"></i><span class="sprint-planning__empty-text">${q ? 'No tasks match' : 'All tasks assigned'}</span></div>`
       : filteredBacklog.map(t => _renderPlanTaskCard(t, 'backlog')).join('');
     const bh = bp.closest('.sprint-planning__pane')?.querySelector('.sprint-planning__pane-count');
     if (bh) bh.textContent = filteredBacklog.length;
@@ -705,14 +707,14 @@ function _bindSprintBoardDragDrop() {
     card.addEventListener('dragstart', e => { dragCardId = card.dataset.taskId; card.style.opacity = '0.4'; e.dataTransfer.effectAllowed = 'move'; });
     card.addEventListener('dragend', () => {
       card.style.opacity = '';
-      document.querySelectorAll('.sprint-board-col-body').forEach(c => { c.style.borderColor='transparent'; c.style.background=''; });
+      document.querySelectorAll('.sprint-board-col-body').forEach(c => { c.style.borderColor = 'transparent'; c.style.background = ''; });
     });
   });
   document.querySelectorAll('.sprint-board-col-body').forEach(col => {
-    col.addEventListener('dragover', e => { e.preventDefault(); col.style.borderColor='var(--color-primary)'; col.style.background='#EFF6FF'; });
-    col.addEventListener('dragleave', e => { if (!col.contains(e.relatedTarget)) { col.style.borderColor='transparent'; col.style.background=''; } });
+    col.addEventListener('dragover', e => { e.preventDefault(); col.style.borderColor = 'var(--color-primary)'; col.style.background = '#EFF6FF'; });
+    col.addEventListener('dragleave', e => { if (!col.contains(e.relatedTarget)) { col.style.borderColor = 'transparent'; col.style.background = ''; } });
     col.addEventListener('drop', async e => {
-      e.preventDefault(); col.style.borderColor='transparent'; col.style.background='';
+      e.preventDefault(); col.style.borderColor = 'transparent'; col.style.background = '';
       if (!dragCardId) return;
       const newStatus = col.dataset.status;
       const task = _tasks.find(t => t.id === dragCardId);

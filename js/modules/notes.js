@@ -26,21 +26,21 @@ const NOTE_COLORS = [
 ];
 
 const AUDIT_ACTION_LABELS = {
-  note_created:            'membuat catatan ini',
-  note_edited:             'mengedit catatan',
-  note_deleted:            'menghapus catatan',
-  note_pinned:             'menyematkan catatan',
-  note_unpinned:           'melepas sematan catatan',
-  note_color_changed:      'mengubah warna catatan',
-  note_tag_added:          'menambahkan tag',
-  note_tag_removed:        'menghapus tag',
-  note_moved:              'memindahkan catatan ke',
-  note_exported:           'mengekspor catatan',
-  note_shared:             'membagikan catatan ke',
-  note_unshared:           'mencabut akses dari',
+  note_created: 'membuat catatan ini',
+  note_edited: 'mengedit catatan',
+  note_deleted: 'menghapus catatan',
+  note_pinned: 'menyematkan catatan',
+  note_unpinned: 'melepas sematan catatan',
+  note_color_changed: 'mengubah warna catatan',
+  note_tag_added: 'menambahkan tag',
+  note_tag_removed: 'menghapus tag',
+  note_moved: 'memindahkan catatan ke',
+  note_exported: 'mengekspor catatan',
+  note_shared: 'membagikan catatan ke',
+  note_unshared: 'mencabut akses dari',
   note_permission_changed: 'mengubah izin berbagi',
-  note_viewed_shared:      'melihat catatan (shared)',
-  note_edited_shared:      'mengedit catatan (shared)',
+  note_viewed_shared: 'melihat catatan (shared)',
+  note_edited_shared: 'mengedit catatan (shared)',
 };
 
 // ============================================================
@@ -55,6 +55,7 @@ let _state = {
   searchQuery: '',
   editMode: 'edit', // 'edit' | 'preview' | 'audit'
   saveTimer: null,
+  isReadOnly: false,
 };
 
 // ============================================================
@@ -97,6 +98,7 @@ function renderMarkdown(md) {
 
 function getNoteAccess(note, userId) {
   if (!note) return null;
+  if (_state.isReadOnly) return 'view';
   if (note.owner_id === userId || note.user_id === userId) return 'owner';
   if ((note.shared_with || []).includes(userId)) return note.share_permission || 'view';
   return null;
@@ -238,11 +240,11 @@ function renderLeftPanel(userId) {
       html += '</div>';
     }
     html += `<div class="notes-section"><div class="notes-section__header"><span class="notes-section__title"><i data-lucide="folder" style="width:11px;height:11px"></i> Folders</span></div>
-      <button class="notes-new-folder-btn" id="btnNewFolder"><i data-lucide="folder-plus" style="width:13px;height:13px"></i> New Folder</button>
+      ${_state.isReadOnly ? '' : `<button class="notes-new-folder-btn" id="btnNewFolder"><i data-lucide="folder-plus" style="width:13px;height:13px"></i> New Folder</button>`}
       <div id="notesFolderList">
         ${_state.folders.map((folder) => {
-          const count = (inFolders[folder.id] || []).length;
-          return `<div class="notes-folder-item ${_state.activeFolderId === folder.id ? 'is-active' : ''}" data-folder-id="${folder.id}">
+      const count = (inFolders[folder.id] || []).length;
+      return `<div class="notes-folder-item ${_state.activeFolderId === folder.id ? 'is-active' : ''}" data-folder-id="${folder.id}">
             <i data-lucide="folder" style="width:13px;height:13px;flex-shrink:0"></i>
             <span class="notes-folder-item__name">${sanitize(folder.name)}</span>
             <span style="font-size:0.7rem;color:var(--color-text-tertiary)">${count}</span>
@@ -251,7 +253,7 @@ function renderLeftPanel(userId) {
               <button class="notes-folder-item__btn notes-folder-item__btn--delete" data-folder-id="${folder.id}" title="Delete folder"><i data-lucide="x" style="width:12px;height:12px"></i></button>
             </div>
           </div>`;
-        }).join('')}
+    }).join('')}
       </div>
     </div>`;
     html += `<div class="notes-section"><div class="notes-section__header"><span class="notes-section__title"><i data-lucide="file-text" style="width:11px;height:11px"></i> All Notes</span></div>`;
@@ -273,26 +275,24 @@ function renderLeftPanel(userId) {
 // ============================================================
 
 function renderEditorToolbar(note, userId) {
-  const mode = _state.editMode;
+  const noteMode = _state.editMode;
   const access = getNoteAccess(note, userId);
   const isOwner = access === 'owner';
-  const editActive = mode === 'edit' ? 'is-active' : '';
-  const previewActive = mode === 'preview' ? 'is-active' : '';
-  const auditActive = mode === 'audit' ? 'is-active' : '';
-  const shareBtn = isOwner ? `<button class="notes-toolbar-btn" id="btnShareNote" title="Bagikan catatan"><i data-lucide="user-plus" style="width:13px;height:13px"></i> Share</button>` : '';
-  const auditBtn = isOwner ? `<button class="notes-toolbar-btn ${auditActive}" id="btnModeAudit" title="Riwayat aktivitas"><i data-lucide="history" style="width:13px;height:13px"></i> Riwayat</button>` : '';
+  const editActive = noteMode === 'edit' ? 'is-active' : '';
+  const previewActive = noteMode === 'preview' ? 'is-active' : '';
+  const ownerLabel = isOwner ? '' : `<span class="notes-share__owner-label">Dari: ${sanitize(note._ownerName || note.owner_id || '')}</span>`; // Added ownerLabel definition
   return `
     <div class="notes-editor-toolbar">
-      <div class="notes-editor-toolbar__group">
-        <button class="notes-toolbar-btn ${editActive}" id="btnModeEdit" title="Edit mode"><i data-lucide="pencil" style="width:13px;height:13px"></i> Edit</button>
-        <button class="notes-toolbar-btn ${previewActive}" id="btnModePreview" title="Preview mode"><i data-lucide="eye" style="width:13px;height:13px"></i> Preview</button>
-        ${auditBtn}
-      </div>
-      <div class="notes-editor-toolbar__group">
-        <button class="notes-toolbar-btn" id="btnExportNote" title="Export note as .md"><i data-lucide="download" style="width:13px;height:13px"></i> Export .md</button>
-        ${shareBtn}
-      </div>
-      <span class="notes-save-indicator" id="noteSaveIndicator"><i data-lucide="check" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Tersimpan</span>
+        <div class="notes-top-toolbar__left">
+          <button class="notes-toolbar-btn ${noteMode === 'edit' ? 'is-active' : ''}" id="btnModeEdit" title="Edit mode"><i data-lucide="edit-3" style="width:13px;height:13px"></i> Edit</button>
+          <button class="notes-toolbar-btn ${noteMode === 'preview' ? 'is-active' : ''}" id="btnModePreview" title="Reading mode"><i data-lucide="book-open" style="width:13px;height:13px"></i> Reading</button>
+          <button class="notes-toolbar-btn ${noteMode === 'audit' ? 'is-active' : ''}" id="btnModeAudit" title="Audit log"><i data-lucide="history" style="width:13px;height:13px"></i> History</button>
+        </div>
+        <div class="notes-top-toolbar__right">
+          ${_state.isReadOnly ? '' : `<button class="btn btn--outline btn--sm" id="btnShareNote" style="height:28px" title="Share with team"><i data-lucide="share-2" style="width:13px;height:13px"></i> Share</button>`}
+          <button class="btn btn--outline btn--sm" id="btnExportNote" style="height:28px" title="Download markdown"><i data-lucide="download" style="width:13px;height:13px"></i> Export</button>
+          ${ownerLabel}
+        </div><span class="notes-save-indicator" id="noteSaveIndicator"><i data-lucide="check" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Tersimpan</span>
       <button class="notes-toolbar-btn notes-editor-close-btn" id="btnCloseNote" title="Close note" style="margin-left:auto"><i data-lucide="x" style="width:13px;height:13px"></i></button>
     </div>
   `;
@@ -304,20 +304,20 @@ function renderBottomToolbar(note, userId) {
   const tags = note.tags || [];
   const currentColor = note.color || '#ffffff';
   const colorSwatches = NOTE_COLORS.map((c) => `<button class="notes-color-swatch ${c.hex === currentColor ? 'is-selected' : ''}" style="background:${c.hex};border-color:${c.hex === '#ffffff' ? '#e5e7eb' : c.hex}" data-color="${c.hex}" title="${c.label}" aria-label="${c.label}"></button>`).join('');
-  const tagChips = tags.map((tag) => `<span class="notes-tag-chip"><i data-lucide="tag" style="width:10px;height:10px;flex-shrink:0"></i>${sanitize(tag)}${isOwner ? `<button class="notes-tag-chip__remove" data-tag="${sanitize(tag)}" aria-label="Remove tag ${sanitize(tag)}">×</button>` : ''}</span>`).join('');
+  const tagChips = tags.map((tag) => `<span class="notes-tag-chip"><i data-lucide="tag" style="width:10px;height:10px;flex-shrink:0"></i>${sanitize(tag)}${isOwner && !_state.isReadOnly ? `<button class="notes-tag-chip__remove" data-tag="${sanitize(tag)}" aria-label="Remove tag ${sanitize(tag)}">×</button>` : ''}</span>`).join('');
   const folderOptions = [`<option value="">— Tanpa Folder (All Notes)</option>`, ..._state.folders.map((f) => `<option value="${f.id}" ${note.folder_id === f.id ? 'selected' : ''}>${sanitize(f.name)}</option>`)].join('');
-  const moveToFolderControl = isOwner ? (_state.folders.length === 0 ? `<span style="font-size:0.75rem;color:var(--color-text-tertiary)">Belum ada folder.</span>` : `<select class="notes-move-folder-select" id="noteMoveFolder" title="Pindah ke folder">${folderOptions}</select>`) : '';
-  const pinBtn = isOwner ? `<button class="notes-toolbar-btn notes-toolbar-btn--pin ${note.pinned ? 'is-pinned' : ''}" id="btnPinNote" title="${note.pinned ? 'Unpin note' : 'Pin note'}"><i data-lucide="pin" style="width:13px;height:13px"></i>${note.pinned ? 'Pinned' : 'Pin'}</button>` : '';
-  const deleteBtn = isOwner ? `<button class="notes-toolbar-btn notes-toolbar-btn--danger" id="btnDeleteNote" title="Delete note"><i data-lucide="trash-2" style="width:13px;height:13px"></i> Delete</button>` : '';
+  const moveToFolderControl = isOwner && !_state.isReadOnly ? (_state.folders.length === 0 ? `<span style="font-size:0.75rem;color:var(--color-text-tertiary)">Belum ada folder.</span>` : `<select class="notes-move-folder-select" id="noteMoveFolder" title="Pindah ke folder">${folderOptions}</select>`) : '';
+  const pinBtn = isOwner && !_state.isReadOnly ? `<button class="notes-toolbar-btn notes-toolbar-btn--pin ${note.pinned ? 'is-pinned' : ''}" id="btnPinNote" title="${note.pinned ? 'Unpin note' : 'Pin note'}"><i data-lucide="pin" style="width:13px;height:13px"></i>${note.pinned ? 'Pinned' : 'Pin'}</button>` : '';
+  const deleteBtn = isOwner && !_state.isReadOnly ? `<button class="notes-toolbar-btn notes-toolbar-btn--danger" id="btnDeleteNote" title="Delete note"><i data-lucide="trash-2" style="width:13px;height:13px"></i> Delete</button>` : '';
   return `
     <div class="notes-bottom-toolbar">
       <div class="notes-tags-area">
         <i data-lucide="tag" style="width:13px;height:13px;color:var(--color-text-tertiary);flex-shrink:0"></i>
         ${tagChips}
-        ${isOwner ? `<input type="text" class="notes-tag-input" id="noteTagInput" placeholder="Add tag…" aria-label="Add tag">` : ''}
+        ${isOwner && !_state.isReadOnly ? `<input type="text" class="notes-tag-input" id="noteTagInput" placeholder="Add tag…" aria-label="Add tag">` : ''}
       </div>
-      ${isOwner ? `<div class="notes-color-picker" title="Note color">${colorSwatches}</div>` : ''}
-      ${isOwner ? `<div class="notes-move-folder-wrap" title="Pindah ke folder"><i data-lucide="folder-input" style="width:13px;height:13px;color:var(--color-text-tertiary);flex-shrink:0"></i>${moveToFolderControl}</div>` : ''}
+      ${isOwner && !_state.isReadOnly ? `<div class="notes-color-picker" title="Note color">${colorSwatches}</div>` : ''}
+      ${isOwner && !_state.isReadOnly ? `<div class="notes-move-folder-wrap" title="Pindah ke folder"><i data-lucide="folder-input" style="width:13px;height:13px;color:var(--color-text-tertiary);flex-shrink:0"></i>${moveToFolderControl}</div>` : ''}
       ${pinBtn}${deleteBtn}
     </div>
   `;
@@ -343,7 +343,7 @@ async function renderAuditLog(note) {
     entries = all.sort((a, b) => (b.created_at > a.created_at ? 1 : -1)).slice(0, 50);
   } catch { entries = []; }
   if (entries.length === 0) return `<div class="notes-audit__empty">Belum ada riwayat aktivitas.</div>`;
-  const COLORS = ['#2563EB','#7C3AED','#16A34A','#D97706','#DC2626','#0891B2','#DB2777'];
+  const COLORS = ['#2563EB', '#7C3AED', '#16A34A', '#D97706', '#DC2626', '#0891B2', '#DB2777'];
   return `<div class="notes-audit__timeline">${entries.map((entry) => {
     const label = AUDIT_ACTION_LABELS[entry.action] || entry.action;
     const detail = entry.detail ? `<div class="notes-audit__detail">↳ ${sanitize(entry.detail)}</div>` : '';
@@ -364,17 +364,19 @@ function renderEditor(note, userId) {
   const isViewOnly = access === 'view';
   const toolbarHTML = renderEditorToolbar(note, userId);
   const bottomHTML = renderBottomToolbar(note, userId);
+  const noteMode = _state.editMode;
+  const canEdit = access === 'owner' || access === 'edit';
 
-  if (_state.editMode === 'audit' && isOwner) {
+  if (noteMode === 'audit' && isOwner) {
     return `${toolbarHTML}<div class="notes-editor-body notes-audit-body" id="notesAuditContainer"><div class="notes-audit__loading">Memuat riwayat…</div></div>${bottomHTML}`;
   }
 
   const readonlyBanner = isViewOnly ? `<div class="notes-readonly-banner"><i data-lucide="eye" style="width:14px;height:14px"></i> Catatan ini dibagikan ke kamu — hanya bisa dilihat.</div>` : '';
-  const showFormatToolbar = _state.editMode === 'edit' && !isViewOnly;
+  const showFormatToolbar = noteMode === 'edit' && !isViewOnly;
   const formatToolbarHTML = showFormatToolbar ? renderFormattingToolbar() : '';
 
   let contentHTML;
-  if (_state.editMode === 'preview' || isViewOnly) {
+  if (noteMode === 'preview' || isViewOnly) {
     contentHTML = `<div class="notes-preview" id="notePreview">${renderMarkdown(note.content)}</div>`;
   } else {
     contentHTML = `<textarea class="notes-textarea" id="noteContentTextarea" placeholder="Tulis catatan di sini... (Markdown didukung)">${sanitize(note.content || '')}</textarea>`;
@@ -383,7 +385,7 @@ function renderEditor(note, userId) {
   return `
     ${toolbarHTML}${readonlyBanner}${formatToolbarHTML}
     <div class="notes-editor-body">
-      <input type="text" class="notes-title-input" id="noteTitleInput" value="${sanitize(note.title || '')}" placeholder="Judul catatan…" aria-label="Note title"${isViewOnly ? ' readonly' : ''}>
+      <input type="text" class="notes-title-input" id="noteTitleInput" value="${sanitize(note.title || '')}" placeholder="Judul catatan…" aria-label="Note title"${isViewOnly || _state.isReadOnly ? ' readonly' : ''}>
       <hr class="notes-divider">
       <div class="notes-content-area">${contentHTML}</div>
     </div>
@@ -416,8 +418,15 @@ async function openShareModal(note, userId) {
     }).join('');
   }
 
-  const buildMemberOptions = () => otherUsers.filter((u) => !(note.shared_with || []).includes(u.id))
-    .map((u) => `<option value="${sanitize(u.id)}">${sanitize(u.full_name || u.username || u.id)} (${sanitize(u.role || '')})</option>`).join('');
+  const buildMemberCheckboxes = () => {
+    const available = otherUsers.filter((u) => !(note.shared_with || []).includes(u.id));
+    if (available.length === 0) return `<p style="font-size:0.8rem;color:var(--color-text-tertiary)">Semua member sudah punya akses.</p>`;
+    return `<div class="notes-share-modal__checkbox-list" style="max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;padding:4px 0;">${available.map((u) => {
+      const name = sanitize(u.full_name || u.username || u.id);
+      const role = sanitize(u.role || '');
+      return `<label class="notes-share-modal__checkbox-item" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:0.85rem;transition:background 0.15s;" onmouseover="this.style.background='var(--color-surface)'" onmouseout="this.style.background='transparent'"><input type="checkbox" class="share-user-checkbox" value="${sanitize(u.id)}" style="accent-color:var(--color-primary);width:16px;height:16px;flex-shrink:0;"><span style="flex:1">${name}</span><span style="font-size:0.75rem;color:var(--color-text-tertiary);">${role}</span></label>`;
+    }).join('')}</div>`;
+  };
 
   const perm = note.share_permission || 'view';
   const body = `
@@ -425,7 +434,7 @@ async function openShareModal(note, userId) {
       <div class="notes-share-modal__note-title">${sanitize(getNoteTitle(note))}</div>
       <div class="notes-share-modal__section">
         <label class="notes-share-modal__label">Bagikan ke:</label>
-        ${otherUsers.length > 0 ? `<select id="shareUserSelect" multiple size="4" class="notes-share-modal__select">${buildMemberOptions()}</select>` : `<p style="font-size:0.8rem;color:var(--color-text-tertiary)">Tidak ada member lain.</p>`}
+        <div id="shareUserCheckboxWrap">${otherUsers.length > 0 ? buildMemberCheckboxes() : `<p style="font-size:0.8rem;color:var(--color-text-tertiary)">Tidak ada member lain.</p>`}</div>
       </div>
       <div class="notes-share-modal__section">
         <label class="notes-share-modal__label">Izin akses:</label>
@@ -445,16 +454,15 @@ async function openShareModal(note, userId) {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
   document.getElementById('btnShareAdd')?.addEventListener('click', async () => {
-    const select = document.getElementById('shareUserSelect');
-    if (!select) return;
-    const selectedIds = Array.from(select.selectedOptions).map((o) => o.value);
+    const checkboxes = document.querySelectorAll('.share-user-checkbox:checked');
+    const selectedIds = Array.from(checkboxes).map((cb) => cb.value);
     if (selectedIds.length === 0) { showToast('Pilih minimal satu member.', 'warning'); return; }
     const newPerm = document.querySelector('input[name="sharePermission"]:checked')?.value || 'view';
     await shareNote(note, userId, selectedIds, newPerm);
     const cl = document.getElementById('shareCurrentList');
     if (cl) { cl.innerHTML = renderSharedList(); if (typeof lucide !== 'undefined') lucide.createIcons(); }
-    const sel = document.getElementById('shareUserSelect');
-    if (sel) for (const opt of Array.from(sel.options)) { if ((note.shared_with || []).includes(opt.value)) opt.remove(); }
+    const wrap = document.getElementById('shareUserCheckboxWrap');
+    if (wrap) wrap.innerHTML = buildMemberCheckboxes();
   });
 
   document.querySelector('#modalBody')?.addEventListener('change', async (e) => {
@@ -479,11 +487,8 @@ async function openShareModal(note, userId) {
       await unshareNote(note, userId, uid, users);
       const cl = document.getElementById('shareCurrentList');
       if (cl) { cl.innerHTML = renderSharedList(); if (typeof lucide !== 'undefined') lucide.createIcons(); }
-      const removed = users.find((u) => u.id === uid);
-      if (removed) {
-        const sel = document.getElementById('shareUserSelect');
-        if (sel) { const opt = document.createElement('option'); opt.value = removed.id; opt.textContent = `${removed.full_name || removed.username || removed.id} (${removed.role || ''})`; sel.appendChild(opt); }
-      }
+      const wrap = document.getElementById('shareUserCheckboxWrap');
+      if (wrap) wrap.innerHTML = buildMemberCheckboxes();
     }
   });
 
@@ -561,11 +566,11 @@ export async function render() {
           <button class="notes-panel-left-toggle" id="notesDrawerToggle" aria-label="Toggle notes panel">
             <i data-lucide="panel-left" style="width:18px;height:18px"></i>
           </button>
-          <h1 class="notes-page__title">Personal Notes</h1>
+          <h1 class="page-header__title">Catatan & Dokumen</h1>
         </div>
-        <div class="notes-page__header-actions">
-          <button class="btn btn--ghost btn--sm" id="btnUploadMd"><i data-lucide="file-up" aria-hidden="true"></i> Upload .md</button>
-          <input type="file" id="notesUploadMdInput" accept=".md,.txt" style="display:none">
+        <div class="page-header__actions">
+          ${_state.isReadOnly ? '' : `<button class="btn btn--primary btn--sm" id="btnNewNote"><i data-lucide="plus" aria-hidden="true"></i> New Note</button>`}
+        </div>nput type="file" id="notesUploadMdInput" accept=".md,.txt" style="display:none">
           <button class="btn btn--ghost btn--sm" id="btnImportNotes"><i data-lucide="upload" aria-hidden="true"></i> Import</button>
           <button class="btn btn--ghost btn--sm" id="btnExportNotes"><i data-lucide="download" aria-hidden="true"></i> Export Notes</button>
           <button class="btn btn--primary btn--sm" id="btnNewNote"><i data-lucide="plus" aria-hidden="true"></i> New Note</button>
@@ -597,7 +602,7 @@ export async function render() {
 
 function renderEmptyFullState(userId) {
   if (_state.notes.length === 0) {
-    return `<div class="notes-empty-state">${emptyStateSVG()}<p class="notes-empty-state__title">Belum ada catatan</p><p class="notes-empty-state__text">Buat catatan pertamamu untuk menyimpan ide, referensi, atau apapun yang penting.</p><button class="btn btn--primary" id="btnNewNoteEmpty"><i data-lucide="plus" aria-hidden="true"></i> New Note</button></div>`;
+    return `<div class="notes-empty-state">${emptyStateSVG()}<p class="notes-empty-state__title">Belum ada catatan</p><p class="notes-empty-state__text">Buat catatan pertamamu untuk menyimpan ide, referensi, atau apapun yang penting.</p>${_state.isReadOnly ? '' : `<button class="btn btn--primary" id="btnNewNoteEmpty"><i data-lucide="plus" aria-hidden="true"></i> New Note</button>`}</div>`;
   }
   return renderEditor(null, userId);
 }
@@ -849,7 +854,7 @@ function applyFormatting(fmt, userId) {
       textarea.value = value.slice(0, start) + insert + value.slice(end);
       textarea.selectionStart = start + marker.length; textarea.selectionEnd = start + marker.length + placeholder.length;
     }
-  } else if (['h1','h2','h3'].includes(fmt)) {
+  } else if (['h1', 'h2', 'h3'].includes(fmt)) {
     const prefix = fmt === 'h1' ? '# ' : fmt === 'h2' ? '## ' : '### ';
     const lineStart = value.lastIndexOf('\n', start - 1) + 1;
     const lineEnd = value.indexOf('\n', start);

@@ -907,8 +907,12 @@ async function _openTicketModal(ticketId) {
       </div>
       <div class="form-group">
         <label class="form-label">PIC Developer <span class="text-muted" style="font-weight:400;font-size:12px;">— selected devs can see this ticket (leave empty = all devs)</span></label>
-        <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);padding:8px 12px;max-height:140px;overflow-y:auto;">
-          ${developers.length === 0 ? '<span class="text-muted text-sm">No developers found</span>' : developers.map(m => `<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;"><input type="checkbox" name="picDev" value="${sanitize(m.id)}"${picDevSelected.includes(m.id) ? ' checked' : ''} style="accent-color:var(--color-primary);width:14px;height:14px;" /><span class="text-sm">${sanitize(m.full_name)}</span></label>`).join('')}
+        ${developers.length > 3 ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <input type="text" class="form-input" id="picDevSearch" placeholder="Search developer..." style="flex:1;padding:4px 8px;font-size:0.8rem;" autocomplete="off" />
+          <button type="button" class="btn btn--ghost btn--xs" id="btnToggleAllDevs" style="white-space:nowrap;font-size:0.75rem;">${picDevSelected.length === developers.length ? 'Deselect All' : 'Select All'}</button>
+        </div>` : ''}
+        <div id="picDevListWrap" style="border:1px solid var(--color-border);border-radius:var(--radius-md);padding:6px 8px;max-height:160px;overflow-y:auto;">
+          ${developers.length === 0 ? '<span class="text-muted text-sm">No developers found</span>' : `<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;">${developers.map(m => `<label class="pic-dev-item" data-name="${sanitize(m.full_name.toLowerCase())}" style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:4px;cursor:pointer;font-size:0.84rem;" onmouseover="this.style.background='var(--color-surface)'" onmouseout="this.style.background='transparent'"><input type="checkbox" name="picDev" value="${sanitize(m.id)}"${picDevSelected.includes(m.id) ? ' checked' : ''} style="accent-color:var(--color-primary);width:15px;height:15px;flex-shrink:0;" /><span>${sanitize(m.full_name)}</span></label>`).join('')}</div>`}
         </div>
       </div>
       <div class="form-row">
@@ -937,6 +941,19 @@ async function _openTicketModal(ticketId) {
     size: 'lg',
   });
   if (typeof lucide !== 'undefined') lucide.createIcons();
+  document.getElementById('picDevSearch')?.addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('.pic-dev-item').forEach(lbl => {
+      lbl.style.display = (lbl.dataset.name || '').includes(q) ? '' : 'none';
+    });
+  });
+  document.getElementById('btnToggleAllDevs')?.addEventListener('click', () => {
+    const cbs = document.querySelectorAll('input[name="picDev"]');
+    const allChecked = Array.from(cbs).every(cb => cb.checked);
+    cbs.forEach(cb => cb.checked = !allChecked);
+    const btn = document.getElementById('btnToggleAllDevs');
+    if (btn) btn.textContent = allChecked ? 'Select All' : 'Deselect All';
+  });
   document.getElementById('btnCancelTicket')?.addEventListener('click', closeModal);
   document.getElementById('btnSaveTicket')?.addEventListener('click', () => _handleSaveTicket(t || null));
   document.getElementById('mntFileInput')?.addEventListener('change', async (e) => { await _handleFileAttach(e.target.files); e.target.value = ''; });

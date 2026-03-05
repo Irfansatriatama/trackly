@@ -46,6 +46,7 @@ let _sortDir = 'desc';
 let _filterStatus = '';
 let _filterPriority = '';
 let _filterType = '';
+let _isReadOnly = false;
 let _filterAssignee = '';
 let _searchQuery = '';
 let _selectedIds = new Set();
@@ -96,6 +97,7 @@ function renderBacklogPage() {
   if (!content) return;
   const session = getSession();
   const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
+  _isReadOnly = session && ['viewer', 'client'].includes(session.role);
   const banner = buildProjectBanner(_project, 'backlog', { renderBadge, isAdminOrPM });
 
   content.innerHTML = `
@@ -108,37 +110,35 @@ function renderBacklogPage() {
           <p class="page-header__subtitle">${sanitize(_project.name)} &mdash; ${_tasks.length} task${_tasks.length !== 1 ? 's' : ''} total</p>
         </div>
         <div class="page-header__actions">
-          <button class="btn btn--primary" id="btnNewTask"><i data-lucide="plus" aria-hidden="true"></i> New Task</button>
+          ${_isReadOnly ? '' : `<button class="btn btn--primary" id="btnNewTask"><i data-lucide="plus" aria-hidden="true"></i> New Task</button>`}
         </div>
       </div>
 
       <div class="project-tab-body">
-      <div class="backlog-toolbar">
-        <div class="backlog-search">
+      <div class="backlog-toolbar" style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;">
+        <div class="backlog-search" style="flex:1;min-width:180px;">
           <i data-lucide="search" class="backlog-search__icon" aria-hidden="true"></i>
           <input type="text" class="form-input backlog-search__input" id="backlogSearch" placeholder="Search tasks..." value="${sanitize(_searchQuery)}" autocomplete="off" />
         </div>
-        <div class="backlog-filters">
-          <div class="filter-btn-wrap">
-            <button class="btn btn--secondary" id="btnOpenFilterModal">
-              <i data-lucide="filter" aria-hidden="true"></i> Filter
-            </button>
-            ${[_filterStatus, _filterPriority, _filterType, _filterAssignee].filter(Boolean).length > 0
+        <select class="form-select" id="sortField" style="width:auto;min-width:140px;">
+          ${[{ v: 'created_at', l: 'Created' }, { v: 'priority', l: 'Priority' }, { v: 'due_date', l: 'Due Date' }, { v: 'status', l: 'Status' }, { v: 'story_points', l: 'SP' }].map(o => {
+    const arrow = _sortField === o.v ? (_sortDir === 'asc' ? ' ↑' : ' ↓') : '';
+    return `<option value="${o.v}" ${_sortField === o.v ? 'selected' : ''}>Sort: ${o.l}${arrow}</option>`;
+  }).join('')}
+        </select>
+        <div class="filter-btn-wrap">
+          <button class="btn btn--secondary" id="btnOpenFilterModal">
+            <i data-lucide="filter" aria-hidden="true"></i> Filter
+          </button>
+          ${[_filterStatus, _filterPriority, _filterType, _filterAssignee].filter(Boolean).length > 0
       ? `<span class="filter-badge">${[_filterStatus, _filterPriority, _filterType, _filterAssignee].filter(Boolean).length}</span>` : ''}
-          </div>
-          <select class="form-select backlog-filter" id="sortField">
-            ${[{ v: 'created_at', l: 'Created' }, { v: 'priority', l: 'Priority' }, { v: 'due_date', l: 'Due Date' }, { v: 'status', l: 'Status' }, { v: 'story_points', l: 'SP' }].map(o => {
-        const arrow = _sortField === o.v ? (_sortDir === 'asc' ? ' ↑' : ' ↓') : '';
-        return `<option value="${o.v}" ${_sortField === o.v ? 'selected' : ''}>Sort: ${o.l}${arrow}</option>`;
-      }).join('')}
-          </select>
         </div>
       </div>
       <div class="filter-chips" id="backlogFilterChips" style="padding:0 var(--space-1) var(--space-2);">${renderBacklogFilterChips()}</div>
 
-      <div class="backlog-bulk-bar" id="bulkBar">
-        <span class="backlog-bulk-bar__count"><span id="bulkCount">0</span> selected</span>
-        <div class="backlog-bulk-bar__actions">
+      ${_isReadOnly ? '' : `<div class="backlog-bulk-bar" id="bulkBar" style="display:none;">
+        <span class="backlog-bulk-count" id="bulkCount">0 selected</span>
+        <div class="backlog-bulk-actions">
           <select class="form-select backlog-bulk-select" id="bulkStatusChange">
             <option value="">Change Status...</option>
             ${TASK_STATUS_OPTIONS.map(s => `<option value="${s.value}">${s.label}</option>`).join('')}
@@ -155,7 +155,7 @@ function renderBacklogPage() {
           <button class="btn btn--danger btn--sm" id="btnBulkDelete"><i data-lucide="trash-2" aria-hidden="true"></i> Delete</button>
           <button class="btn btn--ghost btn--sm" id="btnBulkClear">Clear</button>
         </div>
-      </div>
+      </div>`}
 
       <div id="backlogContent">${renderBacklogContent()}</div>
       </div>
@@ -183,9 +183,9 @@ function renderBacklogContent() {
   return `
     <div class="backlog-list">
       <div class="backlog-list__header">
-        <label class="backlog-check-wrapper" title="Select all">
+        ${_isReadOnly ? '' : `<label class="backlog-check-wrapper" title="Select all">
           <input type="checkbox" class="backlog-check" id="checkAll" ${allVisible ? 'checked' : ''} />
-        </label>
+        </label>`}
         <span class="backlog-col backlog-col--title">Task</span>
         <span class="backlog-col backlog-col--type">Type</span>
         <span class="backlog-col backlog-col--status">Status</span>
@@ -210,12 +210,13 @@ function renderTaskRow(task) {
   const checklistDone = (task.checklist || []).filter(c => c.done).length;
   const checklistTotal = (task.checklist || []).length;
   const sprint = _sprints.find(s => s.id === task.sprint_id);
+  const btnClass = statusOpt ? `badge--${statusOpt.variant}` : 'badge--neutral';
 
   return `
     <div class="backlog-row${isSelected ? ' is-selected' : ''}" data-task-id="${sanitize(task.id)}">
-      <label class="backlog-check-wrapper" onclick="event.stopPropagation()">
-        <input type="checkbox" class="backlog-check task-check" data-id="${sanitize(task.id)}" ${isSelected ? 'checked' : ''} />
-      </label>
+      ${_isReadOnly ? '' : `<div class="backlog-col backlog-col--check" onclick="event.stopPropagation()">
+        <input type="checkbox" class="task-check" data-id="${sanitize(task.id)}" ${isSelected ? 'checked' : ''} />
+      </div>`}
       <div class="backlog-col backlog-col--title">
         <div class="backlog-task-title-group">
           <span class="backlog-task-id text-mono">${sanitize(task.id)}</span>
@@ -231,10 +232,10 @@ function renderTaskRow(task) {
       <div class="backlog-col backlog-col--type">
         ${typeOpt ? `<span class="task-type-badge task-type-badge--${sanitize(task.type)}"><i data-lucide="${typeOpt.icon}" aria-hidden="true"></i> ${typeOpt.label}</span>` : '—'}
       </div>
-      <div class="backlog-col backlog-col--status">
-        <select class="backlog-status-select" data-id="${sanitize(task.id)}" onclick="event.stopPropagation()">
-          ${TASK_STATUS_OPTIONS.map(s => `<option value="${s.value}" ${task.status === s.value ? 'selected' : ''}>${s.label}</option>`).join('')}
-        </select>
+      <div class="backlog-col backlog-col--status" onclick="event.stopPropagation()">
+        ${_isReadOnly ? `<span class="badge ${btnClass}">${statusOpt?.label || task.status}</span>` : `<select class="backlog-status-select" data-id="${sanitize(task.id)}">
+          ${TASK_STATUS_OPTIONS.map(s => `<option value="${s.value}" ${s.value === task.status ? 'selected' : ''}>${s.label}</option>`).join('')}
+        </select>`}
       </div>
       <div class="backlog-col backlog-col--priority">
         ${priorityOpt ? `<span class="priority-badge" style="color:${priorityOpt.color};"><i data-lucide="${priorityOpt.icon}" aria-hidden="true"></i> ${priorityOpt.label}</span>` : '—'}
@@ -253,8 +254,8 @@ function renderTaskRow(task) {
         <span class="${isOverdue ? 'text-danger' : 'text-muted'}" style="font-size:var(--text-xs);">${task.due_date ? formatDate(task.due_date) : '—'}</span>
       </div>
       <div class="backlog-col backlog-col--actions" onclick="event.stopPropagation()">
-        <button class="btn btn--ghost btn--xs btn-edit-task" data-id="${sanitize(task.id)}" title="Edit"><i data-lucide="pencil" aria-hidden="true"></i></button>
-        <button class="btn btn--ghost btn--xs btn-delete-task" data-id="${sanitize(task.id)}" title="Delete"><i data-lucide="trash-2" aria-hidden="true"></i></button>
+        ${_isReadOnly ? '' : `<button class="btn btn--ghost btn--xs btn-edit-task" data-id="${sanitize(task.id)}" title="Edit"><i data-lucide="pencil" aria-hidden="true"></i></button>
+        <button class="btn btn--ghost btn--xs btn-delete-task" data-id="${sanitize(task.id)}" title="Delete"><i data-lucide="trash-2" aria-hidden="true"></i></button>`}
       </div>
     </div>`;
 }

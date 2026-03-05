@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.7.4` |
-| **Current Phase** | Phase 26 — Maintenance Board View & Report PDF Revamp |
+| **Current Version** | `v1.8.0` |
+| **Current Phase** | Phase 27 — UI Polish, Role Enforcement & Log Enhancement |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -1305,10 +1305,10 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v1.7.4                                     ║
-║  Current Phase     : Phase 26 — Maintenance Board View         ║
+║  Current Version   : v1.8.0                                     ║
+║  Current Phase     : Phase 27 — UI Polish & Log Enhancement    ║
 ║  Phase Status      : DONE                                       ║
-║  Next Phase        : Phase 27 — (TBD)                          ║
+║  Next Phase        : Phase 28 — (TBD)                          ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -1338,8 +1338,14 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ║  [x] Phase 24 — Personal Notes                     v1.5.0      ║
 ║  [x] Phase 25 — Notes Sharing & Collaboration Audit v1.6.0     ║
 ║  [x] Phase 26 — Maintenance Board View & Report Revamp v1.7.1 ║
+║  [x] Phase 27 — UI Polish, Role Enforcement & Log      v1.8.0  ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
+║                                                                 ║
+║  v1.8.0 [2026-03-05]  Phase 27: UI Polish & Role Enforcement    ║
+║    (Inline backlog toolbar, checkbox ui for assignees & shared  ║
+║    notes, searchable grid for PM/Dev PIC, Audit log show-more   ║
+║    pattern, Strict read-only state for viewer/client roles)     ║
 ║                                                                 ║
 ║  v1.7.4 [2026-03-04]  Bug Fix Phase 26 Fix 4: Maintenance Report —      ║
 ║    page header tampil identik dengan tab lain (z-index & layout fix);  ║

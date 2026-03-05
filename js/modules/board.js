@@ -15,30 +15,31 @@ import { TASK_TYPE_OPTIONS, TASK_STATUS_OPTIONS, TASK_PRIORITY_OPTIONS } from '.
 // ─── Module-level state ───────────────────────────────────────────────────────
 
 let _projectId = null;
-let _project   = null;
-let _tasks     = [];
-let _members   = [];
-let _sprints   = [];
-let _allTags   = [];
+let _project = null;
+let _tasks = [];
+let _members = [];
+let _sprints = [];
+let _allTags = [];
 
-let _filterAssignee  = '';
-let _filterPriority  = '';
-let _filterLabel     = '';
-let _filterSprint    = '';
-let _searchQuery     = '';
+let _filterAssignee = '';
+let _filterPriority = '';
+let _filterLabel = '';
+let _filterSprint = '';
+let _searchQuery = '';
 
 let _swimlaneMode = false;
+let _isReadOnly = false;
 
 const DEFAULT_COLUMNS = [
-  { id: 'backlog',     label: 'Backlog',     status: 'backlog' },
-  { id: 'todo',        label: 'To Do',       status: 'todo' },
+  { id: 'backlog', label: 'Backlog', status: 'backlog' },
+  { id: 'todo', label: 'To Do', status: 'todo' },
   { id: 'in_progress', label: 'In Progress', status: 'in_progress' },
-  { id: 'in_review',   label: 'In Review',   status: 'in_review' },
-  { id: 'done',        label: 'Done',        status: 'done' },
+  { id: 'in_review', label: 'In Review', status: 'in_review' },
+  { id: 'done', label: 'Done', status: 'done' },
 ];
 
 let _columns = [];
-let _dragTaskId  = null;
+let _dragTaskId = null;
 let _dragOverCol = null;
 
 // ─── Entry Point ──────────────────────────────────────────────────────────────
@@ -60,7 +61,7 @@ export async function render(params = {}) {
     ]);
 
     _project = project;
-    _tasks   = allTasks.filter(t => t.project_id === _projectId);
+    _tasks = allTasks.filter(t => t.project_id === _projectId);
     _members = members;
     _sprints = allSprints.filter(s => s.project_id === _projectId);
 
@@ -74,10 +75,13 @@ export async function render(params = {}) {
     _loadColumns();
     _filterAssignee = '';
     _filterPriority = '';
-    _filterLabel    = '';
-    _filterSprint   = '';
-    _searchQuery    = '';
-    _swimlaneMode   = false;
+    _filterLabel = '';
+    _filterSprint = '';
+    _searchQuery = '';
+    _swimlaneMode = false;
+
+    const sess = getSession();
+    _isReadOnly = sess && ['viewer', 'client'].includes(sess.role);
 
     _renderBoardPage();
   } catch (err) {
@@ -119,11 +123,11 @@ function _computeAllTags() {
 function _getFilteredTasks() {
   return _tasks.filter(task => {
     const q = _searchQuery.toLowerCase();
-    const matchSearch   = !q || task.title?.toLowerCase().includes(q) || task.id?.toLowerCase().includes(q) || (task.tags || []).some(t => t.toLowerCase().includes(q));
+    const matchSearch = !q || task.title?.toLowerCase().includes(q) || task.id?.toLowerCase().includes(q) || (task.tags || []).some(t => t.toLowerCase().includes(q));
     const matchAssignee = !_filterAssignee || (task.assignees || []).includes(_filterAssignee);
     const matchPriority = !_filterPriority || task.priority === _filterPriority;
-    const matchLabel    = !_filterLabel    || (task.tags || []).includes(_filterLabel);
-    const matchSprint   = !_filterSprint   || task.sprint_id === _filterSprint;
+    const matchLabel = !_filterLabel || (task.tags || []).includes(_filterLabel);
+    const matchSprint = !_filterSprint || task.sprint_id === _filterSprint;
     return matchSearch && matchAssignee && matchPriority && matchLabel && matchSprint;
   });
 }
@@ -136,6 +140,7 @@ function _renderBoardPage() {
 
   const session = getSession();
   const isAdminOrPM = session && ['admin', 'pm'].includes(session.role);
+  const _isReadOnly = session && ['viewer', 'client'].includes(session.role);
   const banner = buildProjectBanner(_project, 'board', { renderBadge, isAdminOrPM });
 
   content.innerHTML = `
@@ -151,12 +156,12 @@ function _renderBoardPage() {
           <button class="btn btn--ghost btn--sm" id="btnToggleSwimlane">
             <i data-lucide="rows" aria-hidden="true"></i> Swimlane
           </button>
-          <button class="btn btn--secondary btn--sm" id="btnAddColumn">
+          ${_isReadOnly ? '' : `<button class="btn btn--secondary btn--sm" id="btnAddColumn">
             <i data-lucide="columns" aria-hidden="true"></i> Add Column
           </button>
           <button class="btn btn--primary btn--sm" id="btnNewTask">
             <i data-lucide="plus" aria-hidden="true"></i> New Task
-          </button>
+          </button>`}
         </div>
       </div>
 
@@ -170,7 +175,7 @@ function _renderBoardPage() {
             <i data-lucide="filter" aria-hidden="true"></i> Filter
           </button>
           ${[_filterAssignee, _filterPriority, _filterLabel, _filterSprint].filter(Boolean).length > 0
-            ? `<span class="filter-badge">${[_filterAssignee, _filterPriority, _filterLabel, _filterSprint].filter(Boolean).length}</span>` : ''}
+      ? `<span class="filter-badge">${[_filterAssignee, _filterPriority, _filterLabel, _filterSprint].filter(Boolean).length}</span>` : ''}
         </div>
       </div>
       <div class="filter-chips" id="boardFilterChips" style="padding:0 var(--space-1) var(--space-3);">${_renderBoardFilterChips()}</div>
@@ -228,11 +233,11 @@ function _buildColumnHTML(col, filteredTasks) {
           <span class="board-column__label">${sanitize(col.label)}</span>
           <span class="board-column__count">${colTasks.length}</span>
         </div>
-        <div class="board-column__header-actions">
+        ${_isReadOnly ? '' : `<div class="board-column__header-actions">
           <button class="btn btn--ghost btn--xs btn-col-rename" data-col-id="${sanitize(col.id)}" title="Rename column"><i data-lucide="pencil" aria-hidden="true"></i></button>
           <button class="btn btn--ghost btn--xs btn-col-delete" data-col-id="${sanitize(col.id)}" title="Delete column"><i data-lucide="trash-2" aria-hidden="true"></i></button>
           <button class="btn btn--ghost btn--xs btn-col-add-task" data-col-status="${sanitize(col.status)}" title="Quick add task"><i data-lucide="plus" aria-hidden="true"></i></button>
-        </div>
+        </div>`}
       </div>
       <div class="board-column__body" data-col-status="${sanitize(col.status)}" id="col-body-${sanitize(col.id)}">
         ${colTasks.map(task => _buildTaskCardHTML(task)).join('')}
@@ -244,18 +249,18 @@ function _buildColumnHTML(col, filteredTasks) {
 
 function _buildTaskCardHTML(task) {
   const priorityOpt = TASK_PRIORITY_OPTIONS.find(p => p.value === task.priority);
-  const typeOpt     = TASK_TYPE_OPTIONS.find(t => t.value === task.type);
-  const assignees   = (task.assignees || []).slice(0, 3).map(uid => _members.find(m => m.id === uid)).filter(Boolean);
+  const typeOpt = TASK_TYPE_OPTIONS.find(t => t.value === task.type);
+  const assignees = (task.assignees || []).slice(0, 3).map(uid => _members.find(m => m.id === uid)).filter(Boolean);
   const extraAssign = Math.max(0, (task.assignees || []).length - 3);
-  const isOverdue   = task.due_date && new Date(task.due_date) < new Date() && !['done', 'cancelled'].includes(task.status);
-  const checkDone   = (task.checklist || []).filter(c => c.done).length;
-  const checkTotal  = (task.checklist || []).length;
-  const sprint      = _sprints.find(s => s.id === task.sprint_id);
+  const isOverdue = task.due_date && new Date(task.due_date) < new Date() && !['done', 'cancelled'].includes(task.status);
+  const checkDone = (task.checklist || []).filter(c => c.done).length;
+  const checkTotal = (task.checklist || []).length;
+  const sprint = _sprints.find(s => s.id === task.sprint_id);
   const borderColor = priorityOpt ? priorityOpt.color : '#E2E8F0';
 
   return `
     <div class="board-task-card board-task-card--${sanitize(task.priority || 'low')}"
-         draggable="true"
+         draggable="${_isReadOnly ? 'false' : 'true'}"
          data-task-id="${sanitize(task.id)}"
          style="border-left-color:${borderColor};">
       <div class="board-task-card__top">
@@ -278,9 +283,9 @@ function _buildTaskCardHTML(task) {
           ${task.due_date ? `<span class="board-task-card__due ${isOverdue ? 'text-danger' : 'text-muted'}"><i data-lucide="calendar" style="width:11px;height:11px;" aria-hidden="true"></i> ${formatDate(task.due_date)}</span>` : ''}
           <div class="avatar-stack avatar-stack--xs">
             ${assignees.map(m => {
-              const ini = getInitials(m.full_name);
-              return `<div class="avatar avatar--xs" title="${sanitize(m.full_name)}" style="${m.avatar ? '' : 'background:var(--color-primary);'}">${m.avatar ? `<img src="${m.avatar}" alt="" class="avatar__img" />` : `<span class="avatar__initials">${sanitize(ini)}</span>`}</div>`;
-            }).join('')}
+    const ini = getInitials(m.full_name);
+    return `<div class="avatar avatar--xs" title="${sanitize(m.full_name)}" style="${m.avatar ? '' : 'background:var(--color-primary);'}">${m.avatar ? `<img src="${m.avatar}" alt="" class="avatar__img" />` : `<span class="avatar__initials">${sanitize(ini)}</span>`}</div>`;
+  }).join('')}
             ${extraAssign > 0 ? `<span class="avatar avatar--xs avatar--extra">+${extraAssign}</span>` : ''}
           </div>
         </div>
@@ -319,8 +324,8 @@ function _renderSwimlanes(container, filteredTasks) {
 
   assigneeMap.forEach((tasks, uid) => {
     const member = uid === '__unassigned__' ? null : _members.find(m => m.id === uid);
-    const name   = member ? sanitize(member.full_name) : 'Unassigned';
-    const ini    = member ? sanitize(getInitials(member.full_name)) : '?';
+    const name = member ? sanitize(member.full_name) : 'Unassigned';
+    const ini = member ? sanitize(getInitials(member.full_name)) : '?';
 
     html += `<div class="swimlane-row">
       <div class="swimlane-row__label">
@@ -331,11 +336,11 @@ function _renderSwimlanes(container, filteredTasks) {
         <span class="badge badge--neutral badge--xs">${tasks.length}</span>
       </div>
       ${_columns.map(col => {
-        const colTasks = tasks.filter(t => t.status === col.status);
-        return `<div class="swimlane-row__col">
+      const colTasks = tasks.filter(t => t.status === col.status);
+      return `<div class="swimlane-row__col">
           ${colTasks.map(t => _buildTaskCardHTML(t)).join('')}
         </div>`;
-      }).join('')}
+    }).join('')}
     </div>`;
   });
 
@@ -355,13 +360,13 @@ function _renderSwimlanes(container, filteredTasks) {
 function _bindDragAndDrop() {
   document.querySelectorAll('.board-task-card[draggable="true"]').forEach(card => {
     card.addEventListener('dragstart', _handleDragStart);
-    card.addEventListener('dragend',   _handleDragEnd);
+    card.addEventListener('dragend', _handleDragEnd);
   });
 
   document.querySelectorAll('.board-column__body').forEach(body => {
-    body.addEventListener('dragover',  _handleDragOver);
+    body.addEventListener('dragover', _handleDragOver);
     body.addEventListener('dragleave', _handleDragLeave);
-    body.addEventListener('drop',      _handleDrop);
+    body.addEventListener('drop', _handleDrop);
   });
 }
 
@@ -376,7 +381,7 @@ function _handleDragEnd(e) {
   e.currentTarget.classList.remove('is-dragging');
   document.querySelectorAll('.board-column__body.is-drag-over').forEach(el => el.classList.remove('is-drag-over'));
   document.querySelectorAll('.board-column__drop-placeholder.is-visible').forEach(el => el.classList.remove('is-visible'));
-  _dragTaskId  = null;
+  _dragTaskId = null;
   _dragOverCol = null;
 }
 
@@ -517,28 +522,28 @@ function _openBoardFilterModal() {
         <label class="form-label" for="fmFilterAssignee">Assignee</label>
         <select class="form-select" id="fmFilterAssignee">
           <option value="">All Assignees</option>
-          ${_members.map(m => `<option value="${sanitize(m.id)}" ${_filterAssignee===m.id?'selected':''}>${sanitize(m.full_name)}</option>`).join('')}
+          ${_members.map(m => `<option value="${sanitize(m.id)}" ${_filterAssignee === m.id ? 'selected' : ''}>${sanitize(m.full_name)}</option>`).join('')}
         </select>
       </div>
       <div class="form-group">
         <label class="form-label" for="fmFilterPriority">Priority</label>
         <select class="form-select" id="fmFilterPriority">
           <option value="">All Priorities</option>
-          ${TASK_PRIORITY_OPTIONS.map(p => `<option value="${p.value}" ${_filterPriority===p.value?'selected':''}>${p.label}</option>`).join('')}
+          ${TASK_PRIORITY_OPTIONS.map(p => `<option value="${p.value}" ${_filterPriority === p.value ? 'selected' : ''}>${p.label}</option>`).join('')}
         </select>
       </div>
       ${_allTags.length ? `<div class="form-group">
         <label class="form-label" for="fmFilterLabel">Label</label>
         <select class="form-select" id="fmFilterLabel">
           <option value="">All Labels</option>
-          ${_allTags.map(tag => `<option value="${sanitize(tag)}" ${_filterLabel===tag?'selected':''}>${sanitize(tag)}</option>`).join('')}
+          ${_allTags.map(tag => `<option value="${sanitize(tag)}" ${_filterLabel === tag ? 'selected' : ''}>${sanitize(tag)}</option>`).join('')}
         </select>
       </div>` : ''}
       ${_sprints.length ? `<div class="form-group">
         <label class="form-label" for="fmFilterSprint">Sprint</label>
         <select class="form-select" id="fmFilterSprint">
           <option value="">All Sprints</option>
-          ${_sprints.map(s => `<option value="${sanitize(s.id)}" ${_filterSprint===s.id?'selected':''}>${sanitize(s.name)}</option>`).join('')}
+          ${_sprints.map(s => `<option value="${sanitize(s.id)}" ${_filterSprint === s.id ? 'selected' : ''}>${sanitize(s.name)}</option>`).join('')}
         </select>
       </div>` : ''}
     </div>`,
@@ -553,8 +558,8 @@ function _openBoardFilterModal() {
   document.getElementById('btnApplyBoardFilter')?.addEventListener('click', () => {
     _filterAssignee = document.getElementById('fmFilterAssignee')?.value || '';
     _filterPriority = document.getElementById('fmFilterPriority')?.value || '';
-    _filterLabel    = document.getElementById('fmFilterLabel')?.value || '';
-    _filterSprint   = document.getElementById('fmFilterSprint')?.value || '';
+    _filterLabel = document.getElementById('fmFilterLabel')?.value || '';
+    _filterSprint = document.getElementById('fmFilterSprint')?.value || '';
     closeModal(); _renderColumns(); _updateBoardFilterUI();
   });
 }
@@ -713,7 +718,7 @@ function _openQuickAddTask(status) {
     if (!title) { showToast('Title is required', 'warning'); return; }
     await _saveQuickTask({
       title,
-      type:     document.getElementById('quickTaskType')?.value || 'task',
+      type: document.getElementById('quickTaskType')?.value || 'task',
       priority: document.getElementById('quickTaskPriority')?.value || 'medium',
       status,
     });
@@ -731,28 +736,28 @@ async function _saveQuickTask({ title, priority, type, status }) {
   const now = nowISO();
   const taskData = {
     id,
-    project_id:   _projectId,
+    project_id: _projectId,
     title,
-    description:  '',
+    description: '',
     type,
     status,
     priority,
-    assignees:    [],
-    reporter:     session?.userId || null,
-    sprint_id:    null,
-    epic_id:      null,
+    assignees: [],
+    reporter: session?.userId || null,
+    sprint_id: null,
+    epic_id: null,
     story_points: null,
-    start_date:   null,
-    due_date:     null,
+    start_date: null,
+    due_date: null,
     completed_at: status === 'done' ? now : null,
-    tags:         [],
-    attachments:  [],
-    checklist:    [],
-    comments:     [],
-    time_logged:  null,
+    tags: [],
+    attachments: [],
+    checklist: [],
+    comments: [],
+    time_logged: null,
     dependencies: [],
-    created_at:   now,
-    updated_at:   now,
+    created_at: now,
+    updated_at: now,
   };
   try {
     await add('tasks', taskData);
@@ -785,9 +790,9 @@ function _openFullTaskModal(task = null, defaultStatus = null) {
 }
 
 function _buildTaskFormHTML(task, defaultStatus) {
-  const statusVal   = task?.status   || defaultStatus || 'backlog';
+  const statusVal = task?.status || defaultStatus || 'backlog';
   const priorityVal = task?.priority || 'medium';
-  const typeVal     = task?.type     || 'task';
+  const typeVal = task?.type || 'task';
 
   return `
     <div class="form-group">
@@ -820,11 +825,10 @@ function _buildTaskFormHTML(task, defaultStatus) {
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label" for="taskAssignees">Assignees</label>
-        <select class="form-select" id="taskAssignees" multiple size="3">
-          ${_members.map(m => `<option value="${sanitize(m.id)}" ${(task?.assignees || []).includes(m.id) ? 'selected' : ''}>${sanitize(m.full_name)}</option>`).join('')}
-        </select>
-        <p class="form-hint">Hold Ctrl/Cmd to select multiple</p>
+        <label class="form-label">Assignees</label>
+        <div id="taskAssigneesWrap" style="max-height:140px;overflow-y:auto;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:4px;">
+          ${_members.map(m => `<label style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:4px;cursor:pointer;font-size:0.85rem;" onmouseover="this.style.background='var(--color-surface)'" onmouseout="this.style.background='transparent'"><input type="checkbox" class="task-assignee-cb" value="${sanitize(m.id)}" ${(task?.assignees || []).includes(m.id) ? 'checked' : ''} style="accent-color:var(--color-primary);width:15px;height:15px;flex-shrink:0;"><span>${sanitize(m.full_name)}</span></label>`).join('')}
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label" for="taskSprint">Sprint</label>
@@ -864,36 +868,35 @@ async function _handleSaveTaskModal(existingTask) {
   const allTasks = await getAll('tasks');
   const isEdit = !!existingTask;
   const taskId = isEdit ? existingTask.id : generateSequentialId('TSK', allTasks);
-  const assigneeSelect = document.getElementById('taskAssignees');
-  const assignees = assigneeSelect ? [...assigneeSelect.selectedOptions].map(o => o.value) : [];
+  const assignees = [...document.querySelectorAll('.task-assignee-cb:checked')].map(cb => cb.value);
   const status = document.getElementById('taskStatus')?.value || 'backlog';
   const tagsRaw = document.getElementById('taskTags')?.value || '';
   const tags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
 
   const taskData = {
     ...(isEdit ? existingTask : {}),
-    id:            taskId,
-    project_id:    _projectId,
+    id: taskId,
+    project_id: _projectId,
     title,
-    description:   document.getElementById('taskDescription')?.value.trim() || '',
-    type:          document.getElementById('taskType')?.value || 'task',
+    description: document.getElementById('taskDescription')?.value.trim() || '',
+    type: document.getElementById('taskType')?.value || 'task',
     status,
-    priority:      document.getElementById('taskPriority')?.value || 'medium',
+    priority: document.getElementById('taskPriority')?.value || 'medium',
     assignees,
-    reporter:      isEdit ? existingTask.reporter : (getSession()?.userId || null),
-    sprint_id:     document.getElementById('taskSprint')?.value || null,
-    story_points:  parseInt(document.getElementById('taskStoryPoints')?.value, 10) || null,
-    start_date:    document.getElementById('taskStartDate')?.value || null,
-    due_date:      document.getElementById('taskDueDate')?.value || null,
-    completed_at:  status === 'done' ? (existingTask?.completed_at || now) : null,
+    reporter: isEdit ? existingTask.reporter : (getSession()?.userId || null),
+    sprint_id: document.getElementById('taskSprint')?.value || null,
+    story_points: parseInt(document.getElementById('taskStoryPoints')?.value, 10) || null,
+    start_date: document.getElementById('taskStartDate')?.value || null,
+    due_date: document.getElementById('taskDueDate')?.value || null,
+    completed_at: status === 'done' ? (existingTask?.completed_at || now) : null,
     tags,
-    checklist:     isEdit ? (existingTask.checklist || []) : [],
-    comments:      isEdit ? (existingTask.comments  || []) : [],
-    attachments:   isEdit ? (existingTask.attachments || []) : [],
-    time_logged:   isEdit ? existingTask.time_logged : null,
-    dependencies:  isEdit ? (existingTask.dependencies || []) : [],
-    created_at:    isEdit ? existingTask.created_at : now,
-    updated_at:    now,
+    checklist: isEdit ? (existingTask.checklist || []) : [],
+    comments: isEdit ? (existingTask.comments || []) : [],
+    attachments: isEdit ? (existingTask.attachments || []) : [],
+    time_logged: isEdit ? existingTask.time_logged : null,
+    dependencies: isEdit ? (existingTask.dependencies || []) : [],
+    created_at: isEdit ? existingTask.created_at : now,
+    updated_at: now,
   };
 
   try {
@@ -956,15 +959,15 @@ function _renderAssigneeChips(assignees) {
 }
 
 function _renderTaskDetail(task, panel) {
-  const typeOpt     = TASK_TYPE_OPTIONS.find(t => t.value === task.type);
-  const statusOpt   = TASK_STATUS_OPTIONS.find(s => s.value === task.status);
+  const typeOpt = TASK_TYPE_OPTIONS.find(t => t.value === task.type);
+  const statusOpt = TASK_STATUS_OPTIONS.find(s => s.value === task.status);
   const priorityOpt = TASK_PRIORITY_OPTIONS.find(p => p.value === task.priority);
-  const assignees   = (task.assignees || []).map(uid => _members.find(m => m.id === uid)).filter(Boolean);
-  const sprint      = _sprints.find(s => s.id === task.sprint_id);
-  const checkDone   = (task.checklist || []).filter(c => c.done).length;
-  const checkTotal  = (task.checklist || []).length;
-  const checkPct    = checkTotal > 0 ? Math.round((checkDone / checkTotal) * 100) : 0;
-  const isOverdue   = task.due_date && new Date(task.due_date) < new Date() && !['done', 'cancelled'].includes(task.status);
+  const assignees = (task.assignees || []).map(uid => _members.find(m => m.id === uid)).filter(Boolean);
+  const sprint = _sprints.find(s => s.id === task.sprint_id);
+  const checkDone = (task.checklist || []).filter(c => c.done).length;
+  const checkTotal = (task.checklist || []).length;
+  const checkPct = checkTotal > 0 ? Math.round((checkDone / checkTotal) * 100) : 0;
+  const isOverdue = task.due_date && new Date(task.due_date) < new Date() && !['done', 'cancelled'].includes(task.status);
 
   panel.innerHTML = `
     <div class="task-detail">
