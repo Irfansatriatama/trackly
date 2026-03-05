@@ -141,15 +141,26 @@ function renderProjectsContent() {
   const buildTree = (parents) => {
     let treeHtml = '';
     parents.forEach(p => {
-      treeHtml += renderProjectCard(p);
       renderedIds.add(p.id);
-
       const children = childProjects.filter(c => c.parent_id === p.id);
-      if (children.length > 0) {
-        treeHtml += `<div class="project-children" style="grid-column: 1 / -1; margin-left: var(--space-6); padding-left: var(--space-6); border-left: 2px dashed var(--border-color); display: grid; gap: var(--space-6); grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); margin-top: 0; margin-bottom: var(--space-4);">
+      const hasChildren = children.length > 0;
+
+      treeHtml += `<div class="project-group">
+        <div class="project-card-wrap">
+          ${hasChildren ? `
+            <button class="tree-toggle-btn" aria-label="Toggle sub-projects" title="Toggle sub-projects">
+              <i data-lucide="chevron-down" aria-hidden="true" style="width:16px;height:16px;"></i>
+            </button>
+          ` : ''}
+          ${renderProjectCard(p)}
+        </div>`;
+
+      if (hasChildren) {
+        treeHtml += `<div class="project-children">
           ${buildTree(children)}
         </div>`;
       }
+      treeHtml += `</div>`; // .project-group
     });
     return treeHtml;
   };
@@ -158,7 +169,9 @@ function renderProjectsContent() {
 
   const orphans = childProjects.filter(c => !renderedIds.has(c.id));
   if (orphans.length > 0) {
-    html += `<div class="projects-grid" style="margin-top: var(--space-6);">` + orphans.map(p => renderProjectCard(p)).join('') + `</div>`;
+    html += `<div class="projects-grid" style="margin-top: var(--space-6);">` + orphans.map(p => `
+      <div class="project-group"><div class="project-card-wrap">${renderProjectCard(p)}</div></div>
+    `).join('') + `</div>`;
   }
 
   return html;
@@ -343,9 +356,29 @@ function updateProjectsFilterUI() {
 }
 
 function handleContentAction(e) {
+  const treeToggleBtn = e.target.closest('.tree-toggle-btn');
   const editBtn = e.target.closest('.btn-edit-project');
   const deleteBtn = e.target.closest('.btn-delete-project');
-  if (editBtn) {
+
+  if (treeToggleBtn) {
+    e.preventDefault();
+    const childrenContainer = treeToggleBtn.closest('.project-group').querySelector('.project-children');
+    if (childrenContainer) {
+      const isCollapsed = childrenContainer.classList.toggle('is-collapsed');
+      treeToggleBtn.classList.toggle('is-collapsed');
+
+      // Compute actual child height to make CSS transition work if animating max-height
+      if (!isCollapsed) {
+        childrenContainer.style.maxHeight = childrenContainer.scrollHeight + "px";
+        setTimeout(() => childrenContainer.style.maxHeight = "none", 300);
+      } else {
+        childrenContainer.style.maxHeight = childrenContainer.scrollHeight + "px";
+        // Force reflow
+        void childrenContainer.offsetWidth;
+        childrenContainer.style.maxHeight = "0";
+      }
+    }
+  } else if (editBtn) {
     e.preventDefault();
     const p = _projects.find(x => x.id === editBtn.dataset.id);
     if (p) openProjectModal(p);
