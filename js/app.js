@@ -265,9 +265,17 @@ function registerAllRoutes() {
     await renderAssets({});
   });
 
-  // Members — Phase 5 full implementation
+  // Members — Phase 5 full implementation (Admin only)
   registerRoute('/members', async () => {
     if (!requireAuth()) return;
+    const { getSession: gs } = await import('./core/auth.js');
+    const s = gs();
+    if (!s || s.role !== 'admin') {
+      const { showToast: t } = await import('./components/toast.js');
+      t('Access denied. Members page is admin-only.', 'error');
+      navigate('/dashboard');
+      return;
+    }
     setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading members…</p></div></div>');
     const { render: renderMembers } = await import('./modules/members.js');
     await renderMembers({});

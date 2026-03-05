@@ -569,11 +569,10 @@ export async function render() {
           <h1 class="page-header__title">Catatan & Dokumen</h1>
         </div>
         <div class="page-header__actions">
-          ${_state.isReadOnly ? '' : `<button class="btn btn--primary btn--sm" id="btnNewNote"><i data-lucide="plus" aria-hidden="true"></i> New Note</button>`}
-        </div>nput type="file" id="notesUploadMdInput" accept=".md,.txt" style="display:none">
-          <button class="btn btn--ghost btn--sm" id="btnImportNotes"><i data-lucide="upload" aria-hidden="true"></i> Import</button>
+          <input type="file" id="notesUploadMdInput" accept=".md,.txt" style="display:none">
+          ${_state.isReadOnly ? '' : `<button class="btn btn--ghost btn--sm" id="btnImportNotes"><i data-lucide="upload" aria-hidden="true"></i> Import</button>
           <button class="btn btn--ghost btn--sm" id="btnExportNotes"><i data-lucide="download" aria-hidden="true"></i> Export Notes</button>
-          <button class="btn btn--primary btn--sm" id="btnNewNote"><i data-lucide="plus" aria-hidden="true"></i> New Note</button>
+          <button class="btn btn--primary btn--sm" id="btnNewNote"><i data-lucide="plus" aria-hidden="true"></i> New Note</button>`}
         </div>
       </div>
       <div class="notes-page__body">

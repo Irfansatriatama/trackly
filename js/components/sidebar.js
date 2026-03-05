@@ -6,31 +6,32 @@
  */
 
 import { appStore } from '../core/store.js';
+import { getSession } from '../core/auth.js';
 
 // Navigation items definition
 const NAV_ITEMS = [
   {
     section: null,
     items: [
-      { route: '/dashboard', icon: 'layout-dashboard', label: 'Dashboard',  tooltip: 'View project overview, stats, and your assigned tasks' },
-      { route: '/projects',  icon: 'folder-kanban',    label: 'Projects',   tooltip: 'Manage all projects — boards, sprints, Gantt, and more' },
+      { route: '/dashboard', icon: 'layout-dashboard', label: 'Dashboard', tooltip: 'View project overview, stats, and your assigned tasks' },
+      { route: '/projects', icon: 'folder-kanban', label: 'Projects', tooltip: 'Manage all projects — boards, sprints, Gantt, and more' },
     ],
   },
   {
     section: 'Management',
     items: [
-      { route: '/meetings', icon: 'calendar',   label: 'Meetings',  tooltip: 'Schedule and manage meetings, agendas, and notulensi', adminOnly: true },
-      { route: '/notes',    icon: 'file-text',  label: 'Personal Notes', tooltip: 'Personal notes and memos — private to you' },
-      { route: '/clients', icon: 'building-2', label: 'Clients',  tooltip: 'Manage client companies and contacts' },
-      { route: '/members', icon: 'users',       label: 'Members',  tooltip: 'Manage team members, roles, and accounts' },
-      { route: '/assets',  icon: 'package',     label: 'Assets',   tooltip: 'Track hardware, software licenses, and other assets' },
+      { route: '/meetings', icon: 'calendar', label: 'Meetings', tooltip: 'Schedule and manage meetings, agendas, and notulensi', adminOnly: true },
+      { route: '/notes', icon: 'file-text', label: 'Personal Notes', tooltip: 'Personal notes and memos — private to you' },
+      { route: '/clients', icon: 'building-2', label: 'Clients', tooltip: 'Manage client companies and contacts' },
+      { route: '/members', icon: 'users', label: 'Members', tooltip: 'Manage team members, roles, and accounts', adminOnly: true },
+      { route: '/assets', icon: 'package', label: 'Assets', tooltip: 'Track hardware, software licenses, and other assets' },
     ],
   },
   {
     section: 'System',
     items: [
-      { route: '/guide',    icon: 'book-open', label: 'User Guide', tooltip: 'In-app user guide and feature documentation' },
-      { route: '/settings', icon: 'settings',  label: 'Settings',   tooltip: 'Configure system preferences and manage data' },
+      { route: '/guide', icon: 'book-open', label: 'User Guide', tooltip: 'In-app user guide and feature documentation' },
+      { route: '/settings', icon: 'settings', label: 'Settings', tooltip: 'Configure system preferences and manage data' },
     ],
   },
 ];
@@ -40,8 +41,19 @@ const NAV_ITEMS = [
  * @returns {string}
  */
 function buildSidebarHTML() {
+  const session = getSession();
+  const userRole = session?.role || '';
+  const isAdmin = userRole === 'admin';
+  const isAdminOrPM = ['admin', 'pm'].includes(userRole);
+
   const sectionsHTML = NAV_ITEMS.map(({ section, items }) => {
-    const itemsHTML = items.map(({ route, icon, label, tooltip }) => `
+    const filteredItems = items.filter(item => {
+      if (item.adminOnly && !isAdmin) return false;
+      if (item.adminPmOnly && !isAdminOrPM) return false;
+      return true;
+    });
+    if (filteredItems.length === 0) return '';
+    const itemsHTML = filteredItems.map(({ route, icon, label, tooltip }) => `
       <a href="#${route}"
          class="sidebar-nav-item"
          data-route="${route}"
@@ -122,7 +134,7 @@ function updateToggleIcon(collapsed) {
  */
 function initToggle() {
   const toggle = document.getElementById('sidebarToggle');
-  const shell  = document.getElementById('appShell');
+  const shell = document.getElementById('appShell');
   if (!toggle || !shell) return;
 
   const collapsed = localStorage.getItem('trackly_sidebar_collapsed') === 'true';

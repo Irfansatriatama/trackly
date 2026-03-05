@@ -537,11 +537,10 @@ function openTaskModal(task) {
       </div>
       <div class="form-group">
         <label class="form-label">Assignees</label>
-        <div class="assignee-picker" id="assigneePicker">
-          ${projectMembers.length === 0 ? '<p class="text-muted" style="font-size:var(--text-sm);">No members in this project. Add members in the Members section first.</p>' : projectMembers.map(m => {
+        <div id="assigneePicker" style="max-height:140px;overflow-y:auto;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:4px;">
+          ${projectMembers.length === 0 ? '<p class="text-muted" style="font-size:var(--text-sm);padding:8px;">No members in this project.</p>' : projectMembers.map(m => {
     const isSel = (task?.assignees || []).includes(m.id);
-    const initials = (m.full_name || '?').split(' ').filter(Boolean).slice(0, 2).map(n => n[0].toUpperCase()).join('');
-    return `<label class="assignee-chip${isSel ? ' is-selected' : ''}" data-uid="${sanitize(m.id)}" title="${sanitize(m.full_name)}"><input type="checkbox" class="assignee-chip__check" value="${sanitize(m.id)}" ${isSel ? 'checked' : ''} /><div class="avatar avatar--xs" style="${m.avatar ? '' : 'background:var(--color-primary);'}">${m.avatar ? `<img src="${m.avatar}" alt="" class="avatar__img" />` : `<span class="avatar__initials">${sanitize(initials)}</span>`}</div><span class="assignee-chip__name">${sanitize(m.full_name.split(' ')[0])}</span></label>`;
+    return `<label style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:4px;cursor:pointer;font-size:0.85rem;" onmouseover="this.style.background='var(--color-surface)'" onmouseout="this.style.background='transparent'"><input type="checkbox" class="task-assignee-cb" value="${sanitize(m.id)}" ${isSel ? 'checked' : ''} style="accent-color:var(--color-primary);width:15px;height:15px;flex-shrink:0;"><span>${sanitize(m.full_name)}</span></label>`;
   }).join('')}
         </div>
       </div>
@@ -602,9 +601,7 @@ function openTaskModal(task) {
   openModal({ title: isEdit ? `Edit Task \u2014 ${sanitize(task.id)}` : 'New Task', size: 'lg', body: formHtml, footer: `<button class="btn btn--secondary" id="btnCancelTask">Cancel</button><button class="btn btn--primary" id="btnSaveTask"><i data-lucide="${isEdit ? 'save' : 'plus'}" aria-hidden="true"></i> ${isEdit ? 'Save Changes' : 'Create Task'}</button>` });
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
-  // Assignee chips
-  document.getElementById('assigneePicker')?.addEventListener('change', e => { const chip = e.target.closest('.assignee-chip'); if (chip) chip.classList.toggle('is-selected', e.target.checked); });
-
+  // Assignee chips logic removed since we use standard checkboxes now
   // Tags
   const tagInput = document.getElementById('tTagInput');
   const tagChipsEl = document.getElementById('tagInputChips');
@@ -668,7 +665,7 @@ async function handleSaveTask(existing, isEdit, tags, checklist, comments) {
   const start_date = document.getElementById('tStartDate')?.value || null;
   const due_date = document.getElementById('tDueDate')?.value || null;
   const time_logged = parseInt(document.getElementById('tTimeLogged')?.value) || 0;
-  const assignees = [...document.querySelectorAll('.assignee-chip__check:checked')].map(cb => cb.value);
+  const assignees = [...document.querySelectorAll('.task-assignee-cb:checked')].map(cb => cb.value);
   if (btn) btn.disabled = true;
   try {
     const now = nowISO();

@@ -78,6 +78,8 @@ export async function render(params = {}) {
 function renderProjectsPage() {
   const content = document.getElementById('main-content');
   if (!content) return;
+  const _session = getSession();
+  const _isReadOnly = _session && ['viewer', 'client'].includes(_session.role);
   content.innerHTML = `
     <div class="page-container page-enter">
       <div class="page-header">
@@ -86,11 +88,11 @@ function renderProjectsPage() {
           <p class="page-header__subtitle">Manage all projects and track their progress</p>
         </div>
         <div class="page-header__actions">
-          <button class="btn btn--primary" id="btnNewProject"
+          ${_isReadOnly ? '' : `<button class="btn btn--primary" id="btnNewProject"
             data-tooltip="Create a new project" data-tooltip-pos="bottom">
             <i data-lucide="folder-plus" aria-hidden="true"></i>
             New Project
-          </button>
+          </button>`}
         </div>
       </div>
       <div class="projects-toolbar">
@@ -149,20 +151,22 @@ function renderProjectCard(p) {
   const extraCount = Math.max(0, (p.members || []).length - 4);
   const coverColor = p.cover_color || '#2563EB';
   const isOverdue = p.end_date && isPast(p.end_date) && !['completed', 'cancelled'].includes(p.status);
+  const _s = getSession();
+  const _ro = _s && ['viewer', 'client'].includes(_s.role);
 
   return `
     <div class="project-card" data-id="${sanitize(p.id)}">
       <div class="project-card__cover" style="background:${sanitize(coverColor)};">
         <div class="project-card__cover-top">
           <span class="project-card__code text-mono">${sanitize(p.code || p.id)}</span>
-          <div class="project-card__cover-actions">
+          ${_ro ? '' : `<div class="project-card__cover-actions">
             <button class="btn btn--ghost btn--sm btn-edit-project project-card__action-btn" data-id="${sanitize(p.id)}" title="Edit project">
               <i data-lucide="pencil" aria-hidden="true"></i>
             </button>
             <button class="btn btn--ghost btn--sm btn-delete-project project-card__action-btn" data-id="${sanitize(p.id)}" title="Delete project">
               <i data-lucide="trash-2" aria-hidden="true"></i>
             </button>
-          </div>
+          </div>`}
         </div>
         ${client?.logo ? `<img src="${client.logo}" alt="" class="project-card__client-logo" />` : ''}
       </div>
@@ -719,11 +723,11 @@ async function renderProjectDetail(projectId) {
                 <p class="project-detail-banner__code text-mono">${sanitize(project.code || project.id)}</p>
                 ${project.description ? `<p class="project-detail-banner__desc">${sanitize(project.description)}</p>` : ''}
               </div>
-              <div class="project-detail-banner__actions">
+              ${isAdminOrPM ? `<div class="project-detail-banner__actions">
                 <button class="btn btn--outline-white" id="btnEditProjectDetail">
                   <i data-lucide="pencil" aria-hidden="true"></i> Edit Project
                 </button>
-              </div>
+              </div>` : ''}
             </div>
           </div>
         </div>

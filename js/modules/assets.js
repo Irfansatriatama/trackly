@@ -10,39 +10,40 @@ import { openModal, closeModal } from '../components/modal.js';
 import { showConfirm } from '../components/confirm.js';
 import { renderBadge } from '../components/badge.js';
 import { renderAvatar } from '../components/avatar.js';
+import { getSession } from '../core/auth.js';
 
 // ============================================================
 // CONSTANTS
 // ============================================================
 
 const CATEGORY_OPTIONS = [
-  { value: 'hardware',  label: 'Hardware',  icon: 'monitor' },
-  { value: 'software',  label: 'Software',  icon: 'package' },
-  { value: 'license',   label: 'License',   icon: 'key' },
-  { value: 'document',  label: 'Document',  icon: 'file-text' },
-  { value: 'other',     label: 'Other',     icon: 'box' },
+  { value: 'hardware', label: 'Hardware', icon: 'monitor' },
+  { value: 'software', label: 'Software', icon: 'package' },
+  { value: 'license', label: 'License', icon: 'key' },
+  { value: 'document', label: 'Document', icon: 'file-text' },
+  { value: 'other', label: 'Other', icon: 'box' },
 ];
 
 const STATUS_OPTIONS = [
-  { value: 'available',    label: 'Available' },
-  { value: 'in_use',       label: 'In Use' },
-  { value: 'maintenance',  label: 'Maintenance' },
-  { value: 'retired',      label: 'Retired' },
+  { value: 'available', label: 'Available' },
+  { value: 'in_use', label: 'In Use' },
+  { value: 'maintenance', label: 'Maintenance' },
+  { value: 'retired', label: 'Retired' },
 ];
 
 // ============================================================
 // MODULE STATE
 // ============================================================
 
-let _assets   = [];
-let _members  = [];
+let _assets = [];
+let _members = [];
 let _projects = [];
 
 let _filterCategory = '';
-let _filterStatus   = '';
+let _filterStatus = '';
 let _filterAssignee = '';
-let _filterProject  = '';
-let _searchQuery    = '';
+let _filterProject = '';
+let _searchQuery = '';
 
 // ============================================================
 // ENTRY POINT
@@ -92,10 +93,12 @@ function renderAssetsPage() {
               <i data-lucide="alert-triangle" aria-hidden="true"></i>
               <span>${warningCount} asset${warningCount > 1 ? 's' : ''} with warranty expiring within 30 days</span>
             </div>` : ''}
-          <button class="btn btn--primary" id="btnAddAsset">
+          ${(() => {
+      const s = getSession(); return s && ['viewer', 'client'].includes(s.role) ? '' : `<button class="btn btn--primary" id="btnAddAsset">
             <i data-lucide="plus" aria-hidden="true"></i>
             Add Asset
-          </button>
+          </button>`;
+    })()}
         </div>
       </div>
 
@@ -115,7 +118,7 @@ function renderAssetsPage() {
                 <i data-lucide="filter" aria-hidden="true"></i> Filter
               </button>
               ${[_filterCategory, _filterStatus, _filterAssignee, _filterProject].filter(Boolean).length > 0
-                ? `<span class="filter-badge">${[_filterCategory, _filterStatus, _filterAssignee, _filterProject].filter(Boolean).length}</span>` : ''}
+      ? `<span class="filter-badge">${[_filterCategory, _filterStatus, _filterAssignee, _filterProject].filter(Boolean).length}</span>` : ''}
             </div>
           </div>
           <div class="filter-chips" id="assetsFilterChips">${renderAssetsFilterChips()}</div>
@@ -134,10 +137,10 @@ function renderAssetsPage() {
 // ============================================================
 
 function renderStatsSummary() {
-  const total     = _assets.length;
-  const inUse     = _assets.filter(a => a.status === 'in_use').length;
+  const total = _assets.length;
+  const inUse = _assets.filter(a => a.status === 'in_use').length;
   const available = _assets.filter(a => a.status === 'available').length;
-  const expiring  = getExpiringWarrantyCount();
+  const expiring = getExpiringWarrantyCount();
 
   return `
     <div class="assets-stats-row">
@@ -215,17 +218,17 @@ function renderAssetsTable() {
 }
 
 function renderAssetRow(asset) {
-  const category  = CATEGORY_OPTIONS.find(c => c.value === asset.category) || CATEGORY_OPTIONS[4];
-  const member    = asset.assigned_to ? _members.find(m => m.id === asset.assigned_to) : null;
-  const project   = asset.project_id  ? _projects.find(p => p.id === asset.project_id) : null;
-  const warranty  = warrantyStatus(asset.warranty_expiry);
+  const category = CATEGORY_OPTIONS.find(c => c.value === asset.category) || CATEGORY_OPTIONS[4];
+  const member = asset.assigned_to ? _members.find(m => m.id === asset.assigned_to) : null;
+  const project = asset.project_id ? _projects.find(p => p.id === asset.project_id) : null;
+  const warranty = warrantyStatus(asset.warranty_expiry);
 
-  const statusBadge    = renderBadge(
+  const statusBadge = renderBadge(
     STATUS_OPTIONS.find(s => s.value === asset.status)?.label || asset.status,
     getStatusVariant(asset.status)
   );
 
-  const categoryBadge  = `
+  const categoryBadge = `
     <span class="asset-category-badge asset-category-badge--${sanitize(asset.category || 'other')}">
       <i data-lucide="${sanitize(category.icon)}" aria-hidden="true"></i>
       ${sanitize(category.label)}
@@ -277,12 +280,14 @@ function renderAssetRow(asset) {
           <button class="btn btn--ghost btn--sm btn-view-asset" data-id="${sanitize(asset.id)}" title="View details">
             <i data-lucide="eye" aria-hidden="true"></i>
           </button>
-          <button class="btn btn--ghost btn--sm btn-edit-asset" data-id="${sanitize(asset.id)}" title="Edit asset">
+          ${(() => {
+      const s = getSession(); return s && ['viewer', 'client'].includes(s.role) ? '' : `<button class="btn btn--ghost btn--sm btn-edit-asset" data-id="${sanitize(asset.id)}" title="Edit asset">
             <i data-lucide="pencil" aria-hidden="true"></i>
           </button>
           <button class="btn btn--ghost btn--sm btn-delete-asset" data-id="${sanitize(asset.id)}" title="Delete asset" style="color:var(--color-danger);">
             <i data-lucide="trash-2" aria-hidden="true"></i>
-          </button>
+          </button>`;
+    })()}
         </div>
       </td>
     </tr>`;
@@ -300,11 +305,11 @@ function getFilteredAssets() {
       || a.serial_number?.toLowerCase().includes(q)
       || a.vendor?.toLowerCase().includes(q)
       || a.description?.toLowerCase().includes(q);
-    const matchCat    = !_filterCategory || a.category === _filterCategory;
-    const matchStatus = !_filterStatus   || a.status === _filterStatus;
+    const matchCat = !_filterCategory || a.category === _filterCategory;
+    const matchStatus = !_filterStatus || a.status === _filterStatus;
     const matchAssign = !_filterAssignee
       || (_filterAssignee === '__unassigned__' ? !a.assigned_to : a.assigned_to === _filterAssignee);
-    const matchProj   = !_filterProject
+    const matchProj = !_filterProject
       || (_filterProject === '__none__' ? !a.project_id : a.project_id === _filterProject);
     return matchSearch && matchCat && matchStatus && matchAssign && matchProj;
   });
@@ -392,30 +397,30 @@ function openAssetsFilterModal() {
         <label class="form-label" for="fmFilterCategory">Category</label>
         <select class="form-select" id="fmFilterCategory">
           <option value="">All Categories</option>
-          ${CATEGORY_OPTIONS.map(c => `<option value="${c.value}" ${_filterCategory===c.value?'selected':''}>${c.label}</option>`).join('')}
+          ${CATEGORY_OPTIONS.map(c => `<option value="${c.value}" ${_filterCategory === c.value ? 'selected' : ''}>${c.label}</option>`).join('')}
         </select>
       </div>
       <div class="form-group">
         <label class="form-label" for="fmFilterStatus">Status</label>
         <select class="form-select" id="fmFilterStatus">
           <option value="">All Status</option>
-          ${STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus===s.value?'selected':''}>${s.label}</option>`).join('')}
+          ${STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus === s.value ? 'selected' : ''}>${s.label}</option>`).join('')}
         </select>
       </div>
       <div class="form-group">
         <label class="form-label" for="fmFilterAssignee">Assignee</label>
         <select class="form-select" id="fmFilterAssignee">
           <option value="">All Assignees</option>
-          <option value="__unassigned__" ${_filterAssignee==='__unassigned__'?'selected':''}>Unassigned</option>
-          ${_members.map(m => `<option value="${sanitize(m.id)}" ${_filterAssignee===m.id?'selected':''}>${sanitize(m.full_name)}</option>`).join('')}
+          <option value="__unassigned__" ${_filterAssignee === '__unassigned__' ? 'selected' : ''}>Unassigned</option>
+          ${_members.map(m => `<option value="${sanitize(m.id)}" ${_filterAssignee === m.id ? 'selected' : ''}>${sanitize(m.full_name)}</option>`).join('')}
         </select>
       </div>
       <div class="form-group">
         <label class="form-label" for="fmFilterProject">Project</label>
         <select class="form-select" id="fmFilterProject">
           <option value="">All Projects</option>
-          <option value="__none__" ${_filterProject==='__none__'?'selected':''}>No Project</option>
-          ${_projects.map(p => `<option value="${sanitize(p.id)}" ${_filterProject===p.id?'selected':''}>${sanitize(p.name)}</option>`).join('')}
+          <option value="__none__" ${_filterProject === '__none__' ? 'selected' : ''}>No Project</option>
+          ${_projects.map(p => `<option value="${sanitize(p.id)}" ${_filterProject === p.id ? 'selected' : ''}>${sanitize(p.name)}</option>`).join('')}
         </select>
       </div>
     </div>`,
@@ -429,9 +434,9 @@ function openAssetsFilterModal() {
   });
   document.getElementById('btnApplyAssetsFilter')?.addEventListener('click', () => {
     _filterCategory = document.getElementById('fmFilterCategory')?.value || '';
-    _filterStatus   = document.getElementById('fmFilterStatus')?.value || '';
+    _filterStatus = document.getElementById('fmFilterStatus')?.value || '';
     _filterAssignee = document.getElementById('fmFilterAssignee')?.value || '';
-    _filterProject  = document.getElementById('fmFilterProject')?.value || '';
+    _filterProject = document.getElementById('fmFilterProject')?.value || '';
     closeModal(); refreshContent(); updateAssetsFilterUI();
   });
 }
@@ -453,11 +458,11 @@ function updateAssetsFilterUI() {
 }
 
 function handleContentAction(e) {
-  const viewBtn   = e.target.closest('.btn-view-asset');
-  const editBtn   = e.target.closest('.btn-edit-asset');
+  const viewBtn = e.target.closest('.btn-view-asset');
+  const editBtn = e.target.closest('.btn-edit-asset');
   const deleteBtn = e.target.closest('.btn-delete-asset');
-  if (viewBtn)        { const a = _assets.find(x => x.id === viewBtn.dataset.id);   if (a) openAssetDetail(a); }
-  else if (editBtn)   { const a = _assets.find(x => x.id === editBtn.dataset.id);   if (a) openAssetModal(a); }
+  if (viewBtn) { const a = _assets.find(x => x.id === viewBtn.dataset.id); if (a) openAssetDetail(a); }
+  else if (editBtn) { const a = _assets.find(x => x.id === editBtn.dataset.id); if (a) openAssetModal(a); }
   else if (deleteBtn) { const a = _assets.find(x => x.id === deleteBtn.dataset.id); if (a) handleDeleteAsset(a); }
 }
 
@@ -536,8 +541,8 @@ function openAssetModal(asset) {
           <select class="form-select" id="aAssignedTo">
             <option value="">Not assigned to a user</option>
             ${_members.filter(m => m.status === 'active').map(m =>
-              `<option value="${sanitize(m.id)}" ${asset?.assigned_to === m.id ? 'selected' : ''}>${sanitize(m.full_name)} (${sanitize(m.position || m.role)})</option>`
-            ).join('')}
+    `<option value="${sanitize(m.id)}" ${asset?.assigned_to === m.id ? 'selected' : ''}>${sanitize(m.full_name)} (${sanitize(m.position || m.role)})</option>`
+  ).join('')}
           </select>
         </div>
         <div class="form-group">
@@ -558,8 +563,8 @@ function openAssetModal(asset) {
       <div class="avatar-upload-area">
         <div class="asset-image-preview" id="assetImagePreview">
           ${asset?.image
-            ? `<img src="${asset.image}" alt="Asset" class="asset-image-preview__img" />`
-            : `<i data-lucide="${CATEGORY_OPTIONS.find(c => c.value === asset?.category)?.icon || 'box'}" class="asset-image-preview__icon" aria-hidden="true"></i>`}
+      ? `<img src="${asset.image}" alt="Asset" class="asset-image-preview__img" />`
+      : `<i data-lucide="${CATEGORY_OPTIONS.find(c => c.value === asset?.category)?.icon || 'box'}" class="asset-image-preview__icon" aria-hidden="true"></i>`}
         </div>
         <div class="avatar-upload__controls">
           <label class="btn btn--secondary btn--sm" for="aImage" style="cursor:pointer;">
@@ -599,7 +604,7 @@ function openAssetModal(asset) {
   document.getElementById('btnRemoveAssetImage')?.addEventListener('click', () => {
     _imageBase64 = null;
     const preview = document.getElementById('assetImagePreview');
-    const cat  = document.getElementById('aCategory')?.value || 'other';
+    const cat = document.getElementById('aCategory')?.value || 'other';
     const icon = CATEGORY_OPTIONS.find(c => c.value === cat)?.icon || 'box';
     if (preview) preview.innerHTML = `<i data-lucide="${icon}" class="asset-image-preview__icon" aria-hidden="true"></i>`;
     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -625,22 +630,22 @@ function openAssetModal(asset) {
 // ============================================================
 
 async function handleSaveAsset(existing, isEdit, getImage) {
-  const btn      = document.getElementById('btnSaveAsset');
+  const btn = document.getElementById('btnSaveAsset');
   const getValue = id => document.getElementById(id)?.value.trim() || '';
 
-  const name          = getValue('aName');
-  const category      = document.getElementById('aCategory')?.value || 'other';
-  const status        = document.getElementById('aStatus')?.value || 'available';
-  const serialNumber  = getValue('aSerialNumber');
-  const description   = document.getElementById('aDescription')?.value.trim() || '';
-  const vendor        = getValue('aVendor');
-  const purchaseDate  = getValue('aPurchaseDate');
-  const priceRaw      = document.getElementById('aPurchasePrice')?.value;
+  const name = getValue('aName');
+  const category = document.getElementById('aCategory')?.value || 'other';
+  const status = document.getElementById('aStatus')?.value || 'available';
+  const serialNumber = getValue('aSerialNumber');
+  const description = document.getElementById('aDescription')?.value.trim() || '';
+  const vendor = getValue('aVendor');
+  const purchaseDate = getValue('aPurchaseDate');
+  const priceRaw = document.getElementById('aPurchasePrice')?.value;
   const purchasePrice = priceRaw !== '' && priceRaw != null ? parseFloat(priceRaw) : null;
   const warrantyExpiry = getValue('aWarrantyExpiry');
-  const assignedTo    = document.getElementById('aAssignedTo')?.value || '';
-  const projectId     = document.getElementById('aProjectId')?.value || '';
-  const notes         = document.getElementById('aNotes')?.value.trim() || '';
+  const assignedTo = document.getElementById('aAssignedTo')?.value || '';
+  const projectId = document.getElementById('aProjectId')?.value || '';
+  const notes = document.getElementById('aNotes')?.value.trim() || '';
 
   clearAllFieldErrors();
   let valid = true;
@@ -650,28 +655,28 @@ async function handleSaveAsset(existing, isEdit, getImage) {
   if (btn) btn.disabled = true;
 
   try {
-    const now     = nowISO();
-    const all     = await getAll('assets');
+    const now = nowISO();
+    const all = await getAll('assets');
     const assetId = isEdit ? existing.id : generateSequentialId('AST', all);
-    const image   = getImage();
+    const image = getImage();
 
     const assetData = {
-      id:              assetId,
+      id: assetId,
       name,
       category,
       description,
-      serial_number:   serialNumber,
-      purchase_date:   purchaseDate || null,
-      purchase_price:  purchasePrice,
+      serial_number: serialNumber,
+      purchase_date: purchaseDate || null,
+      purchase_price: purchasePrice,
       vendor,
-      assigned_to:     assignedTo || null,
-      project_id:      projectId  || null,
+      assigned_to: assignedTo || null,
+      project_id: projectId || null,
       status,
       warranty_expiry: warrantyExpiry || null,
       notes,
-      image:           image || null,
-      created_at:      existing?.created_at || now,
-      updated_at:      now,
+      image: image || null,
+      created_at: existing?.created_at || now,
+      updated_at: now,
     };
 
     if (isEdit) {
@@ -724,11 +729,11 @@ async function handleDeleteAsset(asset) {
 
 function openAssetDetail(asset) {
   const category = CATEGORY_OPTIONS.find(c => c.value === asset.category) || CATEGORY_OPTIONS[4];
-  const member   = asset.assigned_to ? _members.find(m => m.id === asset.assigned_to) : null;
-  const project  = asset.project_id  ? _projects.find(p => p.id === asset.project_id) : null;
+  const member = asset.assigned_to ? _members.find(m => m.id === asset.assigned_to) : null;
+  const project = asset.project_id ? _projects.find(p => p.id === asset.project_id) : null;
   const warranty = warrantyStatus(asset.warranty_expiry);
 
-  const statusBadge   = renderBadge(
+  const statusBadge = renderBadge(
     STATUS_OPTIONS.find(s => s.value === asset.status)?.label || asset.status,
     getStatusVariant(asset.status)
   );
@@ -748,7 +753,7 @@ function openAssetDetail(asset) {
         ${warranty.icon ? `<i data-lucide="${warranty.icon}" style="width:14px;height:14px;" aria-hidden="true"></i>` : ''}
         ${sanitize(formatDate(asset.warranty_expiry))}
         ${warranty.cls === 'asset-warranty--expiring' ? '&nbsp;<strong>— Expiring soon!</strong>' : ''}
-        ${warranty.cls === 'asset-warranty--expired'  ? '&nbsp;<strong>— Expired</strong>' : ''}
+        ${warranty.cls === 'asset-warranty--expired' ? '&nbsp;<strong>— Expired</strong>' : ''}
       </span>`
     : '<span class="text-muted">Not specified</span>';
 
@@ -776,11 +781,11 @@ function openAssetDetail(asset) {
       <div class="asset-detail__grid">
         <div class="asset-detail__section">
           <h4 class="asset-detail__section-title">Purchase Details</h4>
-          ${asset.vendor      ? `<div class="client-detail__info-row"><i data-lucide="store" aria-hidden="true"></i><span>${sanitize(asset.vendor)}</span></div>` : ''}
+          ${asset.vendor ? `<div class="client-detail__info-row"><i data-lucide="store" aria-hidden="true"></i><span>${sanitize(asset.vendor)}</span></div>` : ''}
           ${asset.purchase_date ? `<div class="client-detail__info-row"><i data-lucide="calendar" aria-hidden="true"></i><span>Purchased ${sanitize(formatDate(asset.purchase_date))}</span></div>` : ''}
           ${asset.purchase_price != null ? `<div class="client-detail__info-row"><i data-lucide="dollar-sign" aria-hidden="true"></i><span>${formatCurrency(asset.purchase_price)}</span></div>` : ''}
           ${!asset.vendor && !asset.purchase_date && asset.purchase_price == null
-            ? '<p class="text-muted" style="font-size:var(--text-sm);margin:0;">No purchase details recorded.</p>' : ''}
+      ? '<p class="text-muted" style="font-size:var(--text-sm);margin:0;">No purchase details recorded.</p>' : ''}
         </div>
 
         <div class="asset-detail__section">
@@ -796,27 +801,27 @@ function openAssetDetail(asset) {
         <div class="asset-detail__section">
           <h4 class="asset-detail__section-title">Assigned To</h4>
           ${member
-            ? `<div class="asset-assignee" style="gap:var(--space-3);">
+      ? `<div class="asset-assignee" style="gap:var(--space-3);">
                 ${renderAvatar(member, 'sm')}
                 <div>
                   <span class="asset-assignee__name" style="display:block;">${sanitize(member.full_name)}</span>
                   <span class="text-muted" style="font-size:var(--text-xs);">${sanitize(member.position || member.role)}</span>
                 </div>
               </div>`
-            : '<p class="text-muted" style="font-size:var(--text-sm);margin:0;">Not assigned to a user.</p>'}
+      : '<p class="text-muted" style="font-size:var(--text-sm);margin:0;">Not assigned to a user.</p>'}
         </div>
 
         <div class="asset-detail__section">
           <h4 class="asset-detail__section-title">Linked Project</h4>
           ${project
-            ? `<div style="display:flex;align-items:center;gap:var(--space-2);">
+      ? `<div style="display:flex;align-items:center;gap:var(--space-2);">
                 <span style="background:${sanitize(project.cover_color || 'var(--color-primary)')};width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0;"></span>
                 <div>
                   <span style="font-weight:500;">${sanitize(project.name)}</span>
                   <span class="text-muted" style="font-size:var(--text-xs);display:block;">${sanitize(project.id)}</span>
                 </div>
               </div>`
-            : '<p class="text-muted" style="font-size:var(--text-sm);margin:0;">No project linked.</p>'}
+      : '<p class="text-muted" style="font-size:var(--text-sm);margin:0;">No project linked.</p>'}
         </div>
       </div>
 
@@ -863,10 +868,10 @@ function openAssetDetail(asset) {
 
 function getStatusVariant(status) {
   return {
-    available:   'success',
-    in_use:      'info',
+    available: 'success',
+    in_use: 'info',
     maintenance: 'warning',
-    retired:     'neutral',
+    retired: 'neutral',
   }[status] || 'neutral';
 }
 

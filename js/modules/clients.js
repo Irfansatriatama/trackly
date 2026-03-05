@@ -9,9 +9,10 @@ import { showToast } from '../components/toast.js';
 import { openModal, closeModal } from '../components/modal.js';
 import { showConfirm } from '../components/confirm.js';
 import { renderBadge } from '../components/badge.js';
+import { getSession } from '../core/auth.js';
 
 const STATUS_OPTIONS = [
-  { value: 'active',   label: 'Active' },
+  { value: 'active', label: 'Active' },
   { value: 'inactive', label: 'Inactive' },
   { value: 'prospect', label: 'Prospect' },
 ];
@@ -56,10 +57,12 @@ function renderClientsPage() {
           <p class="page-header__subtitle">Manage client accounts and linked projects</p>
         </div>
         <div class="page-header__actions">
-          <button class="btn btn--primary" id="btnAddClient">
+          ${(() => {
+      const s = getSession(); return s && ['viewer', 'client'].includes(s.role) ? '' : `<button class="btn btn--primary" id="btnAddClient">
             <i data-lucide="building-2" aria-hidden="true"></i>
             Add Client
-          </button>
+          </button>`;
+    })()}
         </div>
       </div>
       <div class="clients-toolbar">
@@ -75,7 +78,7 @@ function renderClientsPage() {
               <i data-lucide="filter" aria-hidden="true"></i> Filter
             </button>
             ${[_filterStatus, _filterIndustry].filter(Boolean).length > 0
-              ? `<span class="filter-badge">${[_filterStatus, _filterIndustry].filter(Boolean).length}</span>` : ''}
+      ? `<span class="filter-badge">${[_filterStatus, _filterIndustry].filter(Boolean).length}</span>` : ''}
           </div>
           <div class="view-toggle">
             <button class="view-toggle__btn ${_viewMode === 'card' ? 'is-active' : ''}" id="btnViewCard" title="Card view">
@@ -140,12 +143,14 @@ function renderClientCard(c) {
           <button class="btn btn--ghost btn--sm btn-view-client" data-id="${sanitize(c.id)}" title="View details">
             <i data-lucide="eye" aria-hidden="true"></i>
           </button>
-          <button class="btn btn--ghost btn--sm btn-edit-client" data-id="${sanitize(c.id)}" title="Edit client">
+          ${(() => {
+      const s = getSession(); return s && ['viewer', 'client'].includes(s.role) ? '' : `<button class="btn btn--ghost btn--sm btn-edit-client" data-id="${sanitize(c.id)}" title="Edit client">
             <i data-lucide="pencil" aria-hidden="true"></i>
           </button>
           <button class="btn btn--ghost btn--sm btn-delete-client" data-id="${sanitize(c.id)}" title="Delete client" style="color:var(--color-danger);">
             <i data-lucide="trash-2" aria-hidden="true"></i>
-          </button>
+          </button>`;
+    })()}
         </div>
       </div>
     </div>`;
@@ -203,12 +208,14 @@ function renderTableRow(c) {
           <button class="btn btn--ghost btn--sm btn-view-client" data-id="${sanitize(c.id)}" title="View details">
             <i data-lucide="eye" aria-hidden="true"></i>
           </button>
-          <button class="btn btn--ghost btn--sm btn-edit-client" data-id="${sanitize(c.id)}" title="Edit client">
+          ${(() => {
+      const s = getSession(); return s && ['viewer', 'client'].includes(s.role) ? '' : `<button class="btn btn--ghost btn--sm btn-edit-client" data-id="${sanitize(c.id)}" title="Edit client">
             <i data-lucide="pencil" aria-hidden="true"></i>
           </button>
           <button class="btn btn--ghost btn--sm btn-delete-client" data-id="${sanitize(c.id)}" title="Delete" style="color:var(--color-danger);">
             <i data-lucide="trash-2" aria-hidden="true"></i>
-          </button>
+          </button>`;
+    })()}
         </div>
       </td>
     </tr>`;
@@ -268,14 +275,14 @@ function openClientsFilterModal() {
         <label class="form-label" for="fmFilterStatus">Status</label>
         <select class="form-select" id="fmFilterStatus">
           <option value="">All Status</option>
-          ${STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus===s.value?'selected':''}>${s.label}</option>`).join('')}
+          ${STATUS_OPTIONS.map(s => `<option value="${s.value}" ${_filterStatus === s.value ? 'selected' : ''}>${s.label}</option>`).join('')}
         </select>
       </div>
       <div class="form-group">
         <label class="form-label" for="fmFilterIndustry">Industry</label>
         <select class="form-select" id="fmFilterIndustry">
           <option value="">All Industries</option>
-          ${INDUSTRY_OPTIONS.map(i => `<option value="${i}" ${_filterIndustry===i?'selected':''}>${sanitize(i)}</option>`).join('')}
+          ${INDUSTRY_OPTIONS.map(i => `<option value="${i}" ${_filterIndustry === i ? 'selected' : ''}>${sanitize(i)}</option>`).join('')}
         </select>
       </div>
     </div>`,
@@ -288,7 +295,7 @@ function openClientsFilterModal() {
     closeModal(); refreshContent(); updateClientsFilterUI();
   });
   document.getElementById('btnApplyClientsFilter')?.addEventListener('click', () => {
-    _filterStatus   = document.getElementById('fmFilterStatus')?.value || '';
+    _filterStatus = document.getElementById('fmFilterStatus')?.value || '';
     _filterIndustry = document.getElementById('fmFilterIndustry')?.value || '';
     closeModal(); refreshContent(); updateClientsFilterUI();
   });
@@ -396,8 +403,8 @@ function openClientModal(client) {
       <div class="avatar-upload-area">
         <div class="client-logo-preview" id="logoPreview">
           ${client?.logo
-            ? `<img src="${client.logo}" alt="Logo" style="width:100%;height:100%;object-fit:contain;border-radius:var(--radius-md);" />`
-            : `<span class="client-logo-preview__initials">${getCompanyInitials(client?.company_name || '?')}</span>`}
+      ? `<img src="${client.logo}" alt="Logo" style="width:100%;height:100%;object-fit:contain;border-radius:var(--radius-md);" />`
+      : `<span class="client-logo-preview__initials">${getCompanyInitials(client?.company_name || '?')}</span>`}
         </div>
         <div class="avatar-upload__controls">
           <label class="btn btn--secondary btn--sm" for="cLogo" style="cursor:pointer;">
@@ -602,7 +609,7 @@ async function openClientDetail(client) {
           ${client.website ? `<div class="client-detail__info-row"><i data-lucide="globe" aria-hidden="true"></i><a href="${sanitize(client.website)}" target="_blank" rel="noopener noreferrer" class="client-card__link">${sanitize(client.website)}</a></div>` : ''}
           ${client.address ? `<div class="client-detail__info-row"><i data-lucide="map-pin" aria-hidden="true"></i><span>${sanitize(client.address)}</span></div>` : ''}
           ${!client.contact_person && !client.contact_email && !client.contact_phone && !client.website && !client.address
-            ? '<p class="text-muted" style="font-size:var(--text-sm);margin:0;">No contact information provided.</p>' : ''}
+      ? '<p class="text-muted" style="font-size:var(--text-sm);margin:0;">No contact information provided.</p>' : ''}
         </div>
 
         <div class="client-detail__section">
@@ -639,9 +646,11 @@ async function openClientDetail(client) {
     body: bodyHtml,
     footer: `
       <button class="btn btn--secondary" id="btnCloseDetail">Close</button>
-      <button class="btn btn--primary" id="btnEditFromDetail" data-id="${sanitize(client.id)}">
+      ${(() => {
+        const s = getSession(); return s && ['viewer', 'client'].includes(s.role) ? '' : `<button class="btn btn--primary" id="btnEditFromDetail" data-id="${sanitize(client.id)}">
         <i data-lucide="pencil" aria-hidden="true"></i> Edit Client
-      </button>`,
+      </button>`;
+      })()}`,
   });
 
   document.getElementById('btnCloseDetail')?.addEventListener('click', closeModal);

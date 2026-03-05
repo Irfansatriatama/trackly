@@ -1,6 +1,7 @@
 /**
  * TRACKLY — dashboard.js
- * v1.6.3: Live clock, Activity Timeline redesign, Task Status & Priority Charts (pure SVG)
+ * v2.0: Enhanced dashboard with gradient banner, animated stats, sparklines,
+ * interactive charts, team workload, completion rate ring, and recent activity.
  */
 
 import { getAll } from '../core/db.js';
@@ -12,152 +13,94 @@ import { renderBadge } from '../components/badge.js';
 let _clockInterval = null;
 
 function getStatusVariant(status) {
-  return {
-    planning: 'info', active: 'success', maintenance: 'warning', on_hold: 'neutral',
-    completed: 'success', cancelled: 'danger', todo: 'info', in_progress: 'warning',
-    in_review: 'secondary', done: 'success', backlog: 'neutral', open: 'danger',
-    resolved: 'success', closed: 'neutral'
-  }[status] || 'neutral';
+  const map = { backlog: 'muted', todo: 'info', in_progress: 'warning', in_review: 'purple', done: 'success', cancelled: 'danger', active: 'success', completed: 'primary', on_hold: 'warning', cancelled: 'danger' };
+  return map[status] || 'muted';
 }
 
 function getStatusLabel(status) {
-  const labels = {
-    planning: 'Planning', active: 'Active', maintenance: 'Maintenance',
-    on_hold: 'On Hold', completed: 'Completed', cancelled: 'Cancelled', todo: 'To Do',
-    in_progress: 'In Progress', in_review: 'In Review', done: 'Done', backlog: 'Backlog',
-    open: 'Open', resolved: 'Resolved', closed: 'Closed'
-  };
-  return labels[status] || status;
+  const map = { backlog: 'Backlog', todo: 'To Do', in_progress: 'In Progress', in_review: 'In Review', done: 'Done', cancelled: 'Cancelled', active: 'Active', completed: 'Completed', on_hold: 'On Hold', planning: 'Planning' };
+  return map[status] || status;
 }
 
-/* ─── Improvement 1: Clock ──────────────────────────────────────────────────── */
+/* ─── Clock ──────────────────────────────────────────────────────────────────── */
 
 function _stopClock() {
-  if (_clockInterval !== null) {
+  if (_clockInterval) {
     clearInterval(_clockInterval);
     _clockInterval = null;
   }
 }
 
 function _startClock() {
-  const el = document.getElementById('dashboard-clock');
+  _stopClock();
+  const el = document.querySelector('.dashboard-clock__text');
   if (!el) return;
-
   function _tick() {
-    const now = new Date();
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const dayName = days[now.getDay()];
-    const dd = String(now.getDate()).padStart(2, '0');
-    const mmm = months[now.getMonth()];
-    const yyyy = now.getFullYear();
-    const hh = String(now.getHours()).padStart(2, '0');
-    const mm = String(now.getMinutes()).padStart(2, '0');
-    const ss = String(now.getSeconds()).padStart(2, '0');
-    el.querySelector('.dashboard-clock__text').textContent =
-      `${dayName}, ${dd} ${mmm} ${yyyy}  •  ${hh}:${mm}:${ss}`;
+    const n = new Date();
+    const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const datePart = n.toLocaleDateString('en-US', opts);
+    const timePart = n.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    el.textContent = `${datePart} · ${timePart}`;
   }
-
   _tick();
   _clockInterval = setInterval(_tick, 1000);
 }
 
-/* ─── Improvement 3: SVG Charts ─────────────────────────────────────────────── */
+/* ─── SVG Charts ─────────────────────────────────────────────────────────────── */
 
-function _renderDonutChart(data, size = 120) {
-  // data: [{label, value, color}]
+function _renderDonutChart(data, size = 140) {
   const total = data.reduce((s, d) => s + d.value, 0);
-  if (total === 0) return null;
-
-  const cx = size / 2;
-  const cy = size / 2;
-  const R = size * 0.38;   // outer radius
-  const r = size * 0.22;   // inner radius (donut hole)
-  const stroke = R - r;
-  const circumference = 2 * Math.PI * (R - stroke / 2);
-  const cr = R - stroke / 2; // circle radius for stroke technique
-
-  let segments = '';
-  let offset = 0; // stroke-dashoffset starts at top (rotate -90deg)
-
-  data.forEach(d => {
-    if (d.value === 0) return;
+  if (total === 0) return '';
+  const cx = size / 2, cy = size / 2, r = size / 2 - 12, strokeW = 18;
+  const circ = 2 * Math.PI * r;
+  let offset = 0;
+  const arcs = data.map((d, i) => {
     const pct = d.value / total;
-    const dash = pct * circumference;
-    const gap = circumference - dash;
-    segments += `<circle
-      cx="${cx}" cy="${cy}" r="${cr}"
-      fill="none"
-      stroke="${d.color}"
-      stroke-width="${stroke}"
-      stroke-dasharray="${dash.toFixed(3)} ${gap.toFixed(3)}"
-      stroke-dashoffset="${(-offset * circumference / (2 * Math.PI * cr) + circumference * 0.25).toFixed(3)}"
-      transform="rotate(-90 ${cx} ${cy})"
-      style="transition:stroke-dasharray 0.4s;"
-    />`;
-    offset += pct * 2 * Math.PI * cr;
+    const dashLen = circ * pct;
+    const dashOff = circ - offset;
+    offset += dashLen;
+    return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${d.color}"
+      stroke-width="${strokeW}" stroke-dasharray="${dashLen} ${circ - dashLen}"
+      stroke-dashoffset="${dashOff}" stroke-linecap="round"
+      style="transition: stroke-dashoffset 0.8s ease ${i * 0.1}s; cursor: pointer;"
+      data-label="${sanitize(d.label)}" data-value="${d.value}">
+      <title>${sanitize(d.label)}: ${d.value}</title>
+    </circle>`;
   });
-
-  // Recalculate properly using standard dashoffset technique
-  segments = '';
-  let cumulativePct = 0;
-  const strokeR = (R + r) / 2;
-  const strokeW = R - r;
-  const circ = 2 * Math.PI * strokeR;
-
-  data.forEach(d => {
-    if (d.value === 0) return;
-    const pct = d.value / total;
-    const dashLen = pct * circ;
-    const gapLen = circ - dashLen;
-    // offset = circumference * (1 - cumulativePct) to rotate starting point
-    const dashOffset = circ * (1 - cumulativePct);
-    segments += `<circle
-      cx="${cx}" cy="${cy}" r="${strokeR.toFixed(2)}"
-      fill="none"
-      stroke="${d.color}"
-      stroke-width="${strokeW}"
-      stroke-dasharray="${dashLen.toFixed(3)} ${gapLen.toFixed(3)}"
-      stroke-dashoffset="${dashOffset.toFixed(3)}"
-      transform="rotate(-90 ${cx} ${cy})"
-    />`;
-    cumulativePct += pct;
-  });
-
-  return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" aria-hidden="true">
-    ${segments}
-  </svg>`;
+  return `<svg viewBox="0 0 ${size} ${size}" class="dashboard-donut-svg">${arcs.join('')}</svg>`;
 }
 
-function _renderBarChart(data, width = 280, height = null) {
-  // data: [{label, value, color}]
-  if (!data.length) return null;
+function _renderBarChart(data) {
   const maxVal = Math.max(...data.map(d => d.value), 1);
-  const rowH = 36;
-  const labelW = 70;
-  const countW = 30;
-  const barAreaW = width - labelW - countW - 16;
-  const h = height || (data.length * rowH + 16);
+  return data.map(d => {
+    const pct = Math.round((d.value / maxVal) * 100);
+    return `<div class="dashboard-hbar" data-label="${sanitize(d.label)}" data-value="${d.value}">
+      <div class="dashboard-hbar__label">${sanitize(d.label)}</div>
+      <div class="dashboard-hbar__track">
+        <div class="dashboard-hbar__fill" style="width:${pct}%;background:${d.color};"></div>
+      </div>
+      <div class="dashboard-hbar__value">${d.value}</div>
+    </div>`;
+  }).join('');
+}
 
-  let rows = '';
-  data.forEach((d, i) => {
-    const y = i * rowH + 8;
-    const barW = Math.max((d.value / maxVal) * barAreaW, d.value > 0 ? 4 : 0);
-    const barY = y + (rowH - 18) / 2;
-    rows += `
-      <text x="${labelW - 6}" y="${y + rowH / 2 + 4}" text-anchor="end"
-        font-size="11" fill="currentColor" font-family="inherit">${d.label}</text>
-      <rect x="${labelW}" y="${barY}" width="${barW.toFixed(1)}" height="18"
-        rx="4" fill="${d.color}" opacity="0.9"/>
-      <text x="${labelW + barW + 6}" y="${y + rowH / 2 + 4}"
-        font-size="11" fill="currentColor" font-family="inherit" font-weight="600">${d.value}</text>
-    `;
-  });
-
-  return `<svg viewBox="0 0 ${width} ${h}" width="${width}" height="${h}"
-    style="color:var(--color-text-muted);overflow:visible;" aria-hidden="true">
-    ${rows}
-  </svg>`;
+function _renderCompletionRing(completed, total) {
+  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+  const r = 36, cx = 44, cy = 44, circ = 2 * Math.PI * r;
+  const dashLen = circ * (pct / 100);
+  const color = pct >= 75 ? '#16A34A' : pct >= 50 ? '#D97706' : pct >= 25 ? '#0891B2' : '#94A3B8';
+  return `<div class="dashboard-completion-ring">
+    <svg viewBox="0 0 88 88" width="88" height="88">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--color-border)" stroke-width="7"></circle>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="7"
+        stroke-dasharray="${dashLen} ${circ - dashLen}" stroke-dashoffset="${circ / 4}"
+        stroke-linecap="round" style="transition: stroke-dasharray 1s ease;"></circle>
+    </svg>
+    <div class="dashboard-completion-ring__text">
+      <span class="dashboard-completion-ring__pct">${pct}%</span>
+      <span class="dashboard-completion-ring__label">Complete</span>
+    </div>
+  </div>`;
 }
 
 /* ─── Main render ────────────────────────────────────────────────────────────── */
@@ -166,43 +109,41 @@ export async function render(params = {}) {
   const content = document.getElementById('main-content');
   if (!content) return;
 
-  // Stop any existing clock before re-render
   _stopClock();
 
-  // Show skeleton while loading
+  // Skeleton
   content.innerHTML = `
     <div class="page-container page-enter">
-      <div class="page-header">
-        <div class="page-header__info">
-          <div class="skeleton" style="width:200px;height:32px;border-radius:var(--radius-sm);"></div>
-          <div class="skeleton" style="width:320px;height:18px;border-radius:var(--radius-sm);margin-top:6px;"></div>
-        </div>
-      </div>
-      <div class="dashboard-stats-grid">
-        ${[1, 2, 3, 4].map(() => `<div class="skeleton" style="height:96px;border-radius:var(--radius-md);"></div>`).join('')}
+      <div class="dashboard-welcome-banner skeleton" style="height:140px;border-radius:var(--radius-lg);"></div>
+      <div class="dashboard-stats-grid" style="margin-top:var(--space-6);">
+        ${[1, 2, 3, 4, 5, 6].map(() => `<div class="skeleton" style="height:96px;border-radius:var(--radius-md);"></div>`).join('')}
       </div>
     </div>`;
 
   try {
     const session = getSession();
-    const [projects, tasks, members, maintenance, sprints, activityLogs] = await Promise.all([
+    const [projects, tasks, members, maintenance, sprints, activityLogs, clients] = await Promise.all([
       getAll('projects').catch(() => []),
       getAll('tasks').catch(() => []),
       getAll('users').catch(() => []),
       getAll('maintenance').catch(() => []),
       getAll('sprints').catch(() => []),
       getAll('activity_log').catch(() => []),
+      getAll('clients').catch(() => []),
     ]);
 
     const userId = session?.userId;
+    const now = new Date();
 
     // --- Stats ---
-    const now = new Date();
     const activeProjects = projects.filter(p => p.status === 'active').length;
+    const totalTasks = tasks.length;
+    const doneTasks = tasks.filter(t => t.status === 'done').length;
     const myTasks = tasks.filter(t => Array.isArray(t.assignees) ? t.assignees.includes(userId) : t.assignees === userId);
     const overdueTasks = tasks.filter(t => t.due_date && new Date(t.due_date) < now && !['done', 'cancelled'].includes(t.status));
     const openBugs = tasks.filter(t => t.type === 'bug' && !['done', 'cancelled'].includes(t.status));
     const openMaint = maintenance.filter(m => ['open', 'in_progress'].includes(m.status));
+    const totalMembers = members.length;
 
     const activeSprint = sprints.find(s => s.status === 'active');
     const myPendingTasks = myTasks.filter(t => !['done', 'cancelled'].includes(t.status)).slice(0, 8);
@@ -215,7 +156,7 @@ export async function render(params = {}) {
     const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
     const displayName = currentUser?.full_name?.split(' ')[0] || session?.username || 'there';
 
-    // --- Improvement 3: Chart data ---
+    // --- Chart data ---
     const statusColors = {
       backlog: '#94A3B8', todo: '#0891B2', in_progress: '#D97706',
       in_review: '#7C3AED', done: '#16A34A', cancelled: '#DC2626',
@@ -236,9 +177,22 @@ export async function render(params = {}) {
     }));
 
     const donutSvg = _renderDonutChart(donutData);
-    const barSvg = _renderBarChart(barData);
+    const barHtml = _renderBarChart(barData);
+    const completionRing = _renderCompletionRing(doneTasks, totalTasks);
 
-    // --- Improvement 2: Activity Timeline ---
+    // --- Team workload ---
+    const teamWorkload = members.slice(0, 6).map(m => {
+      const memberTasks = tasks.filter(t => {
+        const assignees = Array.isArray(t.assignees) ? t.assignees : [t.assignees];
+        return assignees.includes(m.id) && !['done', 'cancelled'].includes(t.status);
+      });
+      const initials = (m.full_name || '?').split(' ').filter(Boolean).slice(0, 2).map(n => n[0].toUpperCase()).join('');
+      return { ...m, initials, taskCount: memberTasks.length };
+    }).sort((a, b) => b.taskCount - a.taskCount);
+
+    const maxWorkload = Math.max(...teamWorkload.map(m => m.taskCount), 1);
+
+    // --- Activity Timeline ---
     const recentLogs = [...activityLogs]
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 20);
@@ -248,7 +202,6 @@ export async function render(params = {}) {
       status_changed: 'refresh-cw', sprint_started: 'play-circle',
       sprint_completed: 'check-circle', assigned: 'user-check',
     };
-
     const dotColors = {
       created: 'var(--color-success)', updated: 'var(--color-primary)',
       deleted: 'var(--color-danger)', status_changed: 'var(--color-warning)',
@@ -294,41 +247,61 @@ export async function render(params = {}) {
     const SHOW_DEFAULT = 5;
     const hasMore = recentLogs.length > SHOW_DEFAULT;
 
+    // --- Upcoming deadlines ---
+    const upcomingDeadlines = tasks
+      .filter(t => t.due_date && !['done', 'cancelled'].includes(t.status))
+      .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+      .slice(0, 5);
+
+    // Read-only check
+    const isReadOnly = session && ['viewer', 'client'].includes(session.role);
+
     content.innerHTML = `
       <div class="page-container page-enter">
-        <div class="dashboard-welcome">
-          <div>
-            <h1 class="page-header__title">${sanitize(greeting)}, ${sanitize(displayName)}</h1>
-            <p id="dashboard-clock" class="dashboard-clock">
-              <i data-lucide="clock" aria-hidden="true"></i>
-              <span class="dashboard-clock__text"></span>
-            </p>
+        <!-- Welcome Banner -->
+        <div class="dashboard-welcome-banner">
+          <div class="dashboard-welcome-banner__content">
+            <div class="dashboard-welcome-banner__text">
+              <h1 class="dashboard-welcome-banner__greeting">${sanitize(greeting)}, ${sanitize(displayName)} 👋</h1>
+              <p class="dashboard-welcome-banner__subtitle">Here's what's happening with your projects today.</p>
+              <p id="dashboard-clock" class="dashboard-clock">
+                <i data-lucide="clock" aria-hidden="true"></i>
+                <span class="dashboard-clock__text"></span>
+              </p>
+            </div>
+            <div class="dashboard-welcome-banner__actions">
+              ${isReadOnly ? '' : `<a href="#/projects" class="btn btn--white">
+                <i data-lucide="folder-plus" aria-hidden="true"></i> New Project
+              </a>`}
+            </div>
           </div>
-          <div class="page-header__actions">
-            <a href="#/projects" class="btn btn--primary">
-              <i data-lucide="folder-plus" aria-hidden="true"></i> New Project
-            </a>
+          <div class="dashboard-welcome-banner__decoration">
+            <div class="dashboard-welcome-banner__circle dashboard-welcome-banner__circle--1"></div>
+            <div class="dashboard-welcome-banner__circle dashboard-welcome-banner__circle--2"></div>
+            <div class="dashboard-welcome-banner__circle dashboard-welcome-banner__circle--3"></div>
           </div>
         </div>
 
-        <!-- Stats row -->
+        <!-- Stats Grid -->
         <div class="dashboard-stats-grid" role="list" aria-label="Summary statistics">
-          ${statCard('folder', 'Active Projects', activeProjects, '#/projects', 'var(--color-primary)', '')}
-          ${statCard('alert-circle', 'Overdue Tasks', overdueTasks.length, '#/projects', 'var(--color-danger)', overdueTasks.length > 0 ? 'badge--danger' : '')}
-          ${statCard('bug', 'Open Bugs', openBugs.length, '#/projects', 'var(--color-warning)', openBugs.length > 0 ? 'badge--warning' : '')}
-          ${statCard('wrench', 'Open Maintenance', openMaint.length, '#/projects', 'var(--color-info)', '')}
+          ${statCard('folder-kanban', 'Active Projects', activeProjects, '#/projects', '#6366F1', 'var(--stat-gradient-purple)')}
+          ${statCard('list-checks', 'Total Tasks', totalTasks, '#/projects', '#0891B2', 'var(--stat-gradient-cyan)')}
+          ${statCard('alert-circle', 'Overdue', overdueTasks.length, '#/projects', '#DC2626', 'var(--stat-gradient-red)', overdueTasks.length > 0 ? 'pulse-danger' : '')}
+          ${statCard('bug', 'Open Bugs', openBugs.length, '#/projects', '#D97706', 'var(--stat-gradient-amber)', openBugs.length > 0 ? 'pulse-warning' : '')}
+          ${statCard('wrench', 'Maintenance', openMaint.length, '#/projects', '#7C3AED', 'var(--stat-gradient-violet)')}
+          ${statCard('users', 'Team Members', totalMembers, '#/members', '#0EA5E9', 'var(--stat-gradient-sky)')}
         </div>
 
-        <!-- Improvement 3: Charts row (between stats and main-grid) -->
+        <!-- Charts Row -->
         <div class="dashboard-charts-row">
-          <!-- Chart 1: Task Status Donut -->
+          <!-- Task Status Donut -->
           <div class="card dashboard-chart-card">
             <div class="card__header">
               <h2 class="card__title">
-                <i data-lucide="pie-chart" aria-hidden="true"></i> Task Status
+                <i data-lucide="pie-chart" aria-hidden="true"></i> Task Distribution
               </h2>
             </div>
-            <div class="card__body">
+            <div class="card__body dashboard-chart-card__body">
               ${donutSvg ? `
                 <div class="dashboard-chart__donut-wrap">
                   ${donutSvg}
@@ -345,27 +318,44 @@ export async function render(params = {}) {
                       <span class="dashboard-chart__legend-count">${d.value}</span>
                     </div>`).join('')}
                 </div>
-              ` : `<div class="dashboard-chart__empty">No tasks yet</div>`}
+              ` : `<div class="dashboard-chart__empty"><i data-lucide="pie-chart" aria-hidden="true"></i> No tasks yet</div>`}
             </div>
           </div>
 
-          <!-- Chart 2: Task Priority Bar -->
+          <!-- Overall Completion + Priority -->
           <div class="card dashboard-chart-card">
             <div class="card__header">
               <h2 class="card__title">
-                <i data-lucide="bar-chart-2" aria-hidden="true"></i> Active Tasks by Priority
+                <i data-lucide="target" aria-hidden="true"></i> Progress Overview
               </h2>
             </div>
-            <div class="card__body">
-              ${activeTasks.length > 0 ? `
-                <div class="dashboard-chart__bar-wrap">
-                  ${barSvg}
+            <div class="card__body dashboard-chart-card__body dashboard-chart-card__body--col">
+              <div class="dashboard-progress-overview">
+                ${completionRing}
+                <div class="dashboard-progress-overview__stats">
+                  <div class="dashboard-progress-stat">
+                    <span class="dashboard-progress-stat__value">${doneTasks}</span>
+                    <span class="dashboard-progress-stat__label">Completed</span>
+                  </div>
+                  <div class="dashboard-progress-stat">
+                    <span class="dashboard-progress-stat__value">${activeTasks.length}</span>
+                    <span class="dashboard-progress-stat__label">In Progress</span>
+                  </div>
+                  <div class="dashboard-progress-stat">
+                    <span class="dashboard-progress-stat__value">${overdueTasks.length}</span>
+                    <span class="dashboard-progress-stat__label text-danger">Overdue</span>
+                  </div>
                 </div>
-              ` : `<div class="dashboard-chart__empty">No active tasks</div>`}
+              </div>
+              <div class="dashboard-priority-bars">
+                <p class="dashboard-priority-bars__title">Active Tasks by Priority</p>
+                ${activeTasks.length > 0 ? barHtml : '<p class="text-muted" style="font-size:var(--text-xs);">No active tasks</p>'}
+              </div>
             </div>
           </div>
         </div>
 
+        <!-- Main Grid: My Tasks, Recent Projects, Team -->
         <div class="dashboard-main-grid">
           <!-- My Tasks -->
           <div class="card dashboard-widget">
@@ -386,7 +376,7 @@ export async function render(params = {}) {
                     ${myPendingTasks.map(task => {
           const proj = projects.find(p => p.id === task.project_id);
           const isOverdue = task.due_date && new Date(task.due_date) < now;
-          return `<li class="dashboard-task-item">
+          return `<li class="dashboard-task-item ${isOverdue ? 'dashboard-task-item--overdue' : ''}">
                         <div class="dashboard-task-item__priority priority-dot priority-dot--${task.priority || 'medium'}" title="${task.priority || 'medium'} priority"></div>
                         <div class="dashboard-task-item__content">
                           <p class="dashboard-task-item__title" title="${sanitize(task.title)}">${sanitize(task.title)}</p>
@@ -447,8 +437,80 @@ export async function render(params = {}) {
           </div>
         </div>
 
+        <!-- Team Workload + Upcoming Deadlines -->
+        <div class="dashboard-bottom-grid">
+          <!-- Team Workload -->
+          <div class="card dashboard-widget">
+            <div class="card__header">
+              <h2 class="card__title">
+                <i data-lucide="bar-chart-3" aria-hidden="true"></i> Team Workload
+              </h2>
+            </div>
+            <div class="card__body">
+              ${teamWorkload.length === 0
+        ? '<div class="dashboard-chart__empty">No team members yet</div>'
+        : `<div class="dashboard-team-workload">
+                  ${teamWorkload.map(m => `
+                    <div class="dashboard-team-member">
+                      <div class="avatar avatar--sm" style="background:var(--color-primary);" title="${sanitize(m.full_name || '')}">
+                        ${m.avatar ? `<img src="${m.avatar}" alt="" class="avatar__img" />` : `<span class="avatar__initials">${sanitize(m.initials)}</span>`}
+                      </div>
+                      <div class="dashboard-team-member__info">
+                        <span class="dashboard-team-member__name">${sanitize((m.full_name || '').split(' ')[0])}</span>
+                        <div class="dashboard-team-member__bar-track">
+                          <div class="dashboard-team-member__bar-fill" style="width:${Math.round((m.taskCount / maxWorkload) * 100)}%;"></div>
+                        </div>
+                      </div>
+                      <span class="dashboard-team-member__count">${m.taskCount}</span>
+                    </div>
+                  `).join('')}
+                </div>`
+      }
+            </div>
+          </div>
+
+          <!-- Upcoming Deadlines -->
+          <div class="card dashboard-widget">
+            <div class="card__header">
+              <h2 class="card__title">
+                <i data-lucide="calendar-clock" aria-hidden="true"></i> Upcoming Deadlines
+              </h2>
+            </div>
+            <div class="card__body" style="padding:0;">
+              ${upcomingDeadlines.length === 0
+        ? `<div class="empty-state" style="padding:var(--space-8) var(--space-4);">
+                    <i data-lucide="calendar-check" class="empty-state__icon" aria-hidden="true"></i>
+                    <p class="empty-state__title">No upcoming deadlines</p>
+                   </div>`
+        : `<ul class="dashboard-deadline-list">
+                    ${upcomingDeadlines.map(task => {
+          const dueDate = new Date(task.due_date);
+          const isOverdue = dueDate < now;
+          const daysLeft = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+          const urgencyClass = isOverdue ? 'danger' : daysLeft <= 3 ? 'warning' : 'muted';
+          const proj = projects.find(p => p.id === task.project_id);
+          return `<li class="dashboard-deadline-item">
+                          <div class="dashboard-deadline-item__icon dashboard-deadline-item__icon--${urgencyClass}">
+                            <i data-lucide="${isOverdue ? 'alert-triangle' : 'clock'}" aria-hidden="true"></i>
+                          </div>
+                          <div class="dashboard-deadline-item__content">
+                            <p class="dashboard-deadline-item__title">${sanitize(task.title)}</p>
+                            <p class="dashboard-deadline-item__meta">
+                              ${proj ? `<span>${sanitize(proj.name)}</span> · ` : ''}
+                              <span class="text-${urgencyClass}">${isOverdue ? `${Math.abs(daysLeft)}d overdue` : daysLeft === 0 ? 'Due today' : `${daysLeft}d left`}</span>
+                            </p>
+                          </div>
+                          <span class="dashboard-deadline-item__date">${formatDate(task.due_date)}</span>
+                        </li>`;
+        }).join('')}
+                   </ul>`
+      }
+            </div>
+          </div>
+        </div>
+
         ${activeSprint ? `
-        <div class="card" style="margin-top:var(--space-6);">
+        <div class="card dashboard-sprint-card">
           <div class="card__header">
             <h2 class="card__title">
               <i data-lucide="zap" aria-hidden="true"></i> Active Sprint
@@ -474,9 +536,9 @@ export async function render(params = {}) {
           </div>
         </div>` : ''}
 
-        <!-- Improvement 2: Activity Timeline -->
+        <!-- Activity Timeline -->
         ${recentLogs.length === 0 ? '' : `
-        <div class="card" style="margin-top:var(--space-6);">
+        <div class="card dashboard-activity-card">
           <div class="card__header">
             <h2 class="card__title">
               <i data-lucide="activity" aria-hidden="true"></i> Recent Activity
@@ -500,11 +562,36 @@ export async function render(params = {}) {
     `;
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
-
-    // Start clock after render
     _startClock();
 
-    // Bind show more/less toggle
+    // Animate stat values
+    document.querySelectorAll('.dashboard-stat-card__value[data-target]').forEach(el => {
+      const target = parseInt(el.dataset.target, 10);
+      if (target === 0) return;
+      let current = 0;
+      const step = Math.max(1, Math.ceil(target / 30));
+      const interval = setInterval(() => {
+        current = Math.min(current + step, target);
+        el.textContent = current;
+        if (current >= target) clearInterval(interval);
+      }, 30);
+    });
+
+    // Animate horizontal bar fills
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.dashboard-hbar__fill').forEach(el => {
+        const w = el.style.width;
+        el.style.width = '0%';
+        requestAnimationFrame(() => { el.style.width = w; });
+      });
+      document.querySelectorAll('.dashboard-team-member__bar-fill').forEach(el => {
+        const w = el.style.width;
+        el.style.width = '0%';
+        requestAnimationFrame(() => { el.style.width = w; });
+      });
+    });
+
+    // Activity show more/less toggle
     if (hasMore) {
       const btn = document.getElementById('activity-show-more-btn');
       const list = document.getElementById('activity-timeline-list');
@@ -541,15 +628,18 @@ export async function render(params = {}) {
   }
 }
 
-function statCard(icon, label, value, href, color, badgeClass) {
+function statCard(icon, label, value, href, color, gradient, extraClass = '') {
   return `
-    <a href="${href}" class="dashboard-stat-card card" role="listitem" aria-label="${sanitize(label)}: ${value}">
-      <div class="dashboard-stat-card__icon" style="color:${color};background:${color}1a;">
-        <i data-lucide="${icon}" aria-hidden="true"></i>
+    <a href="${href}" class="dashboard-stat-card card ${extraClass}" role="listitem" aria-label="${sanitize(label)}: ${value}">
+      <div class="dashboard-stat-card__icon-wrap" style="background:${gradient || color + '1a'};">
+        <i data-lucide="${icon}" aria-hidden="true" style="color:${color};"></i>
       </div>
       <div class="dashboard-stat-card__content">
-        <p class="dashboard-stat-card__value">${value}</p>
+        <p class="dashboard-stat-card__value" data-target="${value}">${value}</p>
         <p class="dashboard-stat-card__label">${sanitize(label)}</p>
+      </div>
+      <div class="dashboard-stat-card__arrow">
+        <i data-lucide="chevron-right" aria-hidden="true"></i>
       </div>
     </a>`;
 }

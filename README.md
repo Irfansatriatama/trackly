@@ -32,8 +32,8 @@
 | **System Name** | TRACKLY |
 | **Tagline** | Track Everything, Deliver Anything |
 | **Type** | Project Management Information System (PMIS) |
-| **Current Version** | `v1.8.0` |
-| **Current Phase** | Phase 27 — UI Polish, Role Enforcement & Log Enhancement |
+| **Current Version** | `v1.9.0` |
+| **Current Phase** | Phase 28 — Bug Fixes, UI Polish & Role Enforcement |
 | **Tech Stack** | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
 | **Storage** | `localStorage` + `IndexedDB` (client-side only, no backend) |
 | **PWA** | Yes — installable, works fully offline |
@@ -1305,10 +1305,10 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    TRACKLY — DEVELOPMENT LOG                    ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Current Version   : v1.8.0                                     ║
-║  Current Phase     : Phase 27 — UI Polish & Log Enhancement    ║
+║  Current Version   : v1.9.0                                     ║
+║  Current Phase     : Phase 28 — Bug Fixes & UI Polish          ║
 ║  Phase Status      : DONE                                       ║
-║  Next Phase        : Phase 28 — (TBD)                          ║
+║  Next Phase        : Phase 29 — (TBD)                          ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  PHASE LOG                                                      ║
 ║                                                                 ║
@@ -1339,8 +1339,14 @@ Refactored filter UI across 9 pages from inline dropdown bars to a unified modal
 ║  [x] Phase 25 — Notes Sharing & Collaboration Audit v1.6.0     ║
 ║  [x] Phase 26 — Maintenance Board View & Report Revamp v1.7.1 ║
 ║  [x] Phase 27 — UI Polish, Role Enforcement & Log      v1.8.0  ║
+║  [x] Phase 28 — Bug Fixes, UI Polish & Roles           v1.9.0  ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  CHANGE LOG                                                     ║
+║                                                                 ║
+║  v1.9.0 [2026-03-05]  Phase 28: Bug Fixes & UI Polish           ║
+║    (Notes HTML fix, strict view-only roles for viewer/client,   ║
+║    Members page admin-only, Dashboard UI revamp with interactive║
+║    charts and sections, unified scrollable assignee checkboxes) ║
 ║                                                                 ║
 ║  v1.8.0 [2026-03-05]  Phase 27: UI Polish & Role Enforcement    ║
 ║    (Inline backlog toolbar, checkbox ui for assignees & shared  ║
