@@ -195,6 +195,16 @@ export function nowISO() {
 }
 
 /**
+ * Returns the current timestamp in a format ready for backend migration.
+ * Currently uses ISO strings for IndexedDB.
+ * During Firebase migration, this can be swapped with serverTimestamp().
+ * @returns {string|Object}
+ */
+export function getTimestamp() {
+  return new Date().toISOString();
+}
+
+/**
  * Check if a date is in the past.
  * @param {string|Date} date
  * @returns {boolean}
@@ -590,6 +600,7 @@ export default {
   formatDate,
   formatRelativeDate,
   nowISO,
+  getTimestamp,
   isPast,
   isWithinDays,
   formatCurrency,

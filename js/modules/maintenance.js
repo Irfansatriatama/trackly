@@ -327,7 +327,7 @@ function _renderTicketRow(t) {
   const canEdit = session && (['admin', 'pm'].includes(session.role) || (session.role === 'developer' && (t.pic_dev_ids || []).includes(session.userId)));
   return `
     <tr class="mnt-table__row" data-id="${sanitize(t.id)}">
-      <td><span class="text-mono text-sm">${sanitize(t.id)}</span></td>
+      <td><span class="text-mono text-sm">${sanitize(t.ticket_number || t.id)}</span></td>
       <td>
         <button class="mnt-ticket-title btn-link-style btn-view-ticket" data-id="${sanitize(t.id)}">${sanitize(t.title)}</button>
         ${t.attachments && t.attachments.length > 0 ? `<span style="margin-left:4px;font-size:11px;color:var(--color-text-muted);"><i data-lucide="paperclip" style="width:11px;height:11px;vertical-align:middle;"></i> ${t.attachments.length}</span>` : ''}
@@ -448,7 +448,7 @@ function _renderBoardCard(t) {
         </span>
         <span class="mnt-board-card__dev">👤 ${devName}</span>
       </div>
-      <div class="mnt-board-card__id">${sanitize(t.id)}</div>
+      <div class="mnt-board-card__id">${sanitize(t.ticket_number || t.id)}</div>
     </div>`;
 }
 
@@ -745,7 +745,7 @@ function _openTicketDetail(ticketId) {
   const body = `
     <div class="mnt-detail">
       <div class="mnt-detail__header">
-        <span class="text-mono text-sm text-muted">${sanitize(t.id)}</span>
+        <span class="text-mono text-sm text-muted">${sanitize(t.ticket_number || t.id)}</span>
         <div class="mnt-detail__badges">${typeBadge} ${severityBadge} ${priorityBadge} ${statusBadge}</div>
       </div>
       <div class="mnt-pipeline">${pipelineHtml}</div>
@@ -1015,6 +1015,7 @@ async function _handleSaveTicket(existing) {
     notes: document.getElementById('mntNotes')?.value.trim() || '',
     resolution_notes: document.getElementById('mntResolutionNotes')?.value.trim() || '',
     attachments: _pendingAttachments,
+    ticket_number: existing?.ticket_number || await _generateTicketNumber(),
     created_at: existing?.created_at || nowISO(),
     updated_at: nowISO(),
     activity_log: [...(existing?.activity_log || [])],
@@ -1080,6 +1081,35 @@ function _parseNum(val) {
 }
 function _todayStr() { return new Date().toISOString().substring(0, 10); }
 function _getLabelFor(options, value) { return options.find(o => o.value === value)?.label || value || '—'; }
+
+async function _generateTicketNumber() {
+  const projectTickets = _tickets.filter(t => t.project_id === _projectId);
+  const maxSeq = projectTickets.reduce((max, t) => {
+    if (!t.ticket_number) return max;
+    const parts = t.ticket_number.split('-');
+    const seq = parseInt(parts[parts.length - 1], 10);
+    return isNaN(seq) ? max : Math.max(max, seq);
+  }, 0);
+  const nextSeqStr = String(maxSeq + 1).padStart(4, '0');
+
+  const getInitials = (name) => {
+    if (!name) return 'UNK';
+    return name.split(' ').map(w => w[0]).filter(c => /[a-zA-Z]/.test(c)).join('').substring(0, 2).toUpperCase();
+  };
+
+  const projInitials = getInitials(_project.name);
+  if (_project.parent_id) {
+    try {
+      const parent = await getById('projects', _project.parent_id);
+      const parentInitials = getInitials(parent.name);
+      return `${parentInitials}-${projInitials}-${nextSeqStr}`;
+    } catch {
+      return `${projInitials}-${nextSeqStr}`;
+    }
+  }
+  return `${projInitials}-${nextSeqStr}`;
+}
+
 function _getTypeVariant(type) { return { bug: 'danger', adjustment: 'warning', enhancement: 'primary', user_request: 'info', incident: 'danger' }[type] || 'neutral'; }
 function _getPriorityVariant(p) { return { low: 'neutral', medium: 'warning', high: 'danger', critical: 'danger' }[p] || 'neutral'; }
 function _getStatusVariant(s) {

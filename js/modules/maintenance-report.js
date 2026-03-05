@@ -414,7 +414,7 @@ function _renderReportTable() {
         <thead>
           <tr>
             <th style="width:40px;text-align:center;">No</th>
-            <th style="width:100px;">Ticket ID</th>
+            <th style="width:110px;">Ticket No</th>
             <th>Task Title</th>
             <th style="width:120px;">PIC Pemohon</th>
             <th style="width:130px;">Status</th>
@@ -430,7 +430,7 @@ function _renderReportTable() {
     const picClientName = picClientUser ? picClientUser.full_name : (t.pic_client || '—');
     return `<tr class="${idx % 2 === 1 ? 'rpt-row-alt' : ''}">
               <td style="text-align:center;">${idx + 1}</td>
-              <td class="text-mono" style="font-size:12px;">${sanitize(t.id || '')}</td>
+              <td class="text-mono" style="font-size:12px;">${sanitize(t.ticket_number || t.id || '')}</td>
               <td>${sanitize(t.title || '')}</td>
               <td>${sanitize(picClientName)}</td>
               <td>${sanitize(_getLabelFor(TICKET_STATUS_OPTIONS, t.status))}</td>
@@ -453,7 +453,7 @@ function _buildExportRows() {
     const picClientName = picClientUser ? picClientUser.full_name : (t.pic_client || '');
     return {
       'No': idx + 1,
-      'Ticket ID': t.id || '',
+      'Ticket No': t.ticket_number || t.id || '',
       'Task Title': t.title || '',
       'PIC Pemohon': picClientName,
       'Status': _getLabelFor(TICKET_STATUS_OPTIONS, t.status),

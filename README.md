@@ -856,7 +856,8 @@ Tasks:
 - [x] First-run detection: on app start, if IndexedDB `users` store is empty, redirect to `#/setup` instead of `#/login`
 - [x] Build first-run wizard page: step 1 — welcome screen; step 2 — create Admin account form (full name, username, email, password, confirm password); step 3 — success + "Go to Dashboard" button
 - [x] Seed the first Admin user into IndexedDB on wizard completion
-- [x] Implement `sw.js` — cache-first service worker that caches all static assets (`index.html`, all CSS, all JS, fonts, icons) on install
+- [x] Implement- **js/sw.js**: Basic service worker
+  - [ ] Adjust caching strategies for dynamic content from Firestore
 - [x] Register service worker in `index.html`
 - [x] Add PWA install prompt logic — detect `beforeinstallprompt` event, show a dismissible banner with "Install App" button
 - [x] Test: disconnect internet → reload page → app still works fully
@@ -2041,5 +2042,24 @@ When given a `.zip` from a previous phase and asked to continue to the next phas
 
 ---
 
+## 20. Backend Migration Guidelines (Firebase/Vercel)
+
+Trackly is currently a pure local/offline MVP utilizing `IndexedDB`. A migration to **Firebase (Firestore + Auth)** hosted on **Vercel** is planned.
+
+### What is Already Prepared:
+1. **Dynamic Ticket Number Generation (`ticket_number`)**: Implemented locally (using project initials) so that the UI does not rely on global DB sequential IDs, reducing the chance of Firestore race conditions on sequential IDs.
+2. **Abstracted DB Layer (`js/core/db.js`)**: **ALL** database operations (`getAll`, `getById`, `add`, `update`, `remove`) are properly abstracted in `db.js`. No `localStorage` or `IndexedDB` calls exist directly in the UI modules. **Migration only requires replacing the contents of `db.js` with Firebase SDK calls.**
+3. **Server Timestamp Preparation (`getTimestamp()`)**: An abstraction function is introduced in `utils.js` replacing `nowISO()`. This allows an easy drop-in replacement using `FieldValue.serverTimestamp()` during migration.
+4. **Roles & Permissions (RBAC)**: Currently handled purely in JS logic (hiding buttons/tabs). This structure directly maps to what needs to be written for **Firestore Security Rules**.
+
+### Critical Steps for Migration (Next Phase):
+1. **Firebase Authentication:** Replace `js/core/auth.js` to use `signInWithEmailAndPassword`. Remove user passwords from local storage.
+2. **Firestore Initialization:** Replace `indexedDB` logic in `db.js` with Firestore collections mapping 1:1 with current stores (`users`, `projects`, `maintenance`, etc.).
+3. **Data Hydration/Migration Script:** Create a one-time admin script to read from local IndexedDB and upload existing Trackly data to Firestore.
+4. **Real-time Listeners (Optional but Recommended):** Upgrade `db.js` `getAll` fetching to utilize Firestore `onSnapshot` for real-time board updates across users. 
+5. **Firestore Security Rules:** Ensure Viewers cannot write to the DB and Developer edits are restricted using their `session.userId`. This is crucial since client-side UI hiding is not secure enough for a live database.
+
+---
+
 *TRACKLY — Track Everything, Deliver Anything*  
-*v1.0.0 | 17 of 20 phases complete | Internal IT Consultant PMIS*
+*v1.10.0 | Pre-Migration Phase | Internal IT Consultant PMIS*
