@@ -281,19 +281,23 @@ function renderEditorToolbar(note, userId) {
   const ownerLabel = isOwner ? '' : `<span class="notes-share__owner-label">Dari: ${sanitize(note._ownerName || note.owner_id || '')}</span>`;
   return `
     <div class="notes-editor-toolbar">
-        <div class="notes-top-toolbar__left">
-          <button class="notes-toolbar-btn ${noteMode === 'edit' ? 'is-active' : ''}" id="btnModeEdit" title="Edit mode"><i data-lucide="edit-3" style="width:13px;height:13px"></i> Edit</button>
-          <button class="notes-toolbar-btn ${noteMode === 'preview' ? 'is-active' : ''}" id="btnModePreview" title="Reading mode"><i data-lucide="book-open" style="width:13px;height:13px"></i> Reading</button>
-          <button class="notes-toolbar-btn ${noteMode === 'audit' ? 'is-active' : ''}" id="btnModeAudit" title="Audit log"><i data-lucide="history" style="width:13px;height:13px"></i> History</button>
-        </div>
-        <div class="notes-top-toolbar__right">
-          <button class="btn btn--outline btn--sm" id="btnFullscreenNote" style="height:28px" title="Toggle Fullscreen"><i data-lucide="maximize" style="width:13px;height:13px"></i></button>
-          <button class="btn btn--outline btn--sm" id="btnCopyNote" style="height:28px" title="Copy Markdown"><i data-lucide="copy" style="width:13px;height:13px"></i> Copy</button>
-          ${_state.isReadOnly ? '' : `<button class="btn btn--outline btn--sm" id="btnShareNote" style="height:28px" title="Share with team"><i data-lucide="share-2" style="width:13px;height:13px"></i> Share</button>`}
-          <button class="btn btn--outline btn--sm" id="btnExportNote" style="height:28px" title="Download markdown"><i data-lucide="download" style="width:13px;height:13px"></i> Export</button>
-          ${ownerLabel}
-        </div><span class="notes-save-indicator" id="noteSaveIndicator"><i data-lucide="check" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Tersimpan</span>
-      <button class="notes-toolbar-btn notes-editor-close-btn" id="btnCloseNote" title="Close note" style="margin-left:auto"><i data-lucide="x" style="width:13px;height:13px"></i></button>
+      <div class="notes-segment-control">
+        <button class="notes-segment-btn ${noteMode === 'edit' ? 'is-active' : ''}" id="btnModeEdit" title="Edit mode"><i data-lucide="edit-3" style="width:13px;height:13px"></i> Edit</button>
+        <button class="notes-segment-btn ${noteMode === 'preview' ? 'is-active' : ''}" id="btnModePreview" title="Reading mode"><i data-lucide="book-open" style="width:13px;height:13px"></i> Reading</button>
+        <button class="notes-segment-btn ${noteMode === 'audit' ? 'is-active' : ''}" id="btnModeAudit" title="Audit log"><i data-lucide="history" style="width:13px;height:13px"></i> History</button>
+      </div>
+      
+      <div class="notes-toolbar-spacer"></div>
+      
+      <div class="notes-toolbar-actions">
+        ${ownerLabel}
+        <span class="notes-save-indicator" id="noteSaveIndicator"><i data-lucide="check" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Tersimpan</span>
+        <button class="btn btn--outline btn--sm" id="btnFullscreenNote" style="height:28px" title="Toggle Fullscreen"><i data-lucide="maximize" style="width:13px;height:13px"></i></button>
+        <button class="btn btn--outline btn--sm" id="btnCopyNote" style="height:28px" title="Copy Markdown"><i data-lucide="copy" style="width:13px;height:13px"></i> Copy</button>
+        ${_state.isReadOnly ? '' : `<button class="btn btn--outline btn--sm" id="btnShareNote" style="height:28px" title="Share with team"><i data-lucide="share-2" style="width:13px;height:13px"></i> Share</button>`}
+        <button class="btn btn--outline btn--sm" id="btnExportNote" style="height:28px" title="Download markdown"><i data-lucide="download" style="width:13px;height:13px"></i> Export</button>
+        <button class="notes-toolbar-btn notes-editor-close-btn" id="btnCloseNote" title="Close note" style="margin-left:8px"><i data-lucide="x" style="width:13px;height:13px"></i></button>
+      </div>
     </div>
   `;
 }

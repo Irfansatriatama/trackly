@@ -340,6 +340,55 @@
   gap: 0.25rem;
 }
 
+/* Spacer & Actions */
+.notes-toolbar-spacer {
+  margin-left: auto;
+}
+
+.notes-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Segmented Control for Modes */
+.notes-segment-control {
+  display: inline-flex;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-md, 6px);
+  padding: 0.15rem;
+  gap: 0.1rem;
+}
+
+.notes-segment-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #374151);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.notes-segment-btn:hover {
+  color: var(--color-text-primary, #111827);
+  background: var(--color-hover, rgba(0, 0, 0, 0.04));
+}
+
+.notes-segment-btn.is-active {
+  background: var(--color-surface-secondary, #f3f4f6);
+  color: var(--color-text-primary, #111827);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
 .notes-toolbar-btn {
   display: flex;
   align-items: center;
