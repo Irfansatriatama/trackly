@@ -157,9 +157,6 @@ function renderMemberRow(m) {
           <button class="btn btn--ghost btn--sm btn-edit-member" data-id="${sanitize(m.id)}" title="Edit member">
             <i data-lucide="pencil" aria-hidden="true"></i>
           </button>
-          <button class="btn btn--ghost btn--sm btn-change-password" data-id="${sanitize(m.id)}" title="Change password">
-            <i data-lucide="key-round" aria-hidden="true"></i>
-          </button>
           ${m.status === 'active'
       ? `<button class="btn btn--ghost btn--sm btn-deactivate-member" data-id="${sanitize(m.id)}" title="Deactivate" style="color:var(--color-danger);"><i data-lucide="user-x"></i></button>`
       : `<button class="btn btn--ghost btn--sm btn-activate-member" data-id="${sanitize(m.id)}" title="Activate" style="color:var(--color-success);"><i data-lucide="user-check"></i></button>`
@@ -263,11 +260,9 @@ function updateMembersFilterUI() {
 
 function handleTableAction(e) {
   const editBtn = e.target.closest('.btn-edit-member');
-  const cpBtn = e.target.closest('.btn-change-password');
   const deactivateBtn = e.target.closest('.btn-deactivate-member');
   const activateBtn = e.target.closest('.btn-activate-member');
   if (editBtn) { const m = _members.find(x => x.id === editBtn.dataset.id); if (m) openMemberModal(m); }
-  else if (cpBtn) { const m = _members.find(x => x.id === cpBtn.dataset.id); if (m) openChangePasswordModal(m); }
   else if (deactivateBtn) { const m = _members.find(x => x.id === deactivateBtn.dataset.id); if (m) handleDeactivate(m); }
   else if (activateBtn) { const m = _members.find(x => x.id === activateBtn.dataset.id); if (m) handleActivate(m); }
 }
@@ -531,6 +526,18 @@ async function handleSaveMember(existing, isEdit, getAvatar) {
       logActivity({ project_id: null, entity_type: 'member', entity_id: memberId, entity_name: fullName, action: 'updated' });
       showToast(`${fullName}'s profile has been updated.`, 'success');
     } else {
+      const pass = document.getElementById('mPassword')?.value || '';
+      if (pass) {
+        try {
+          const { createFirebaseUser } = await import('../core/auth.js');
+          await createFirebaseUser(email, pass);
+        } catch (authErr) {
+          showToast('Failed to create login credential: ' + authErr.message, 'error');
+          if (btn) btn.disabled = false;
+          return; // Abort if Firebase Auth creation fails
+        }
+      }
+
       await add('users', memberData);
       _members.push(memberData);
       logActivity({ project_id: null, entity_type: 'member', entity_id: memberData.id, entity_name: fullName, action: 'created' });

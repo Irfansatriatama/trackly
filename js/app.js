@@ -6,9 +6,9 @@
 
 import { initRouter, registerRoute, setNotFound, navigate } from './core/router.js';
 import { isAuthenticated, clearSession, getSession, createSession, verifyPassword } from './core/auth.js';
-import { openDB, getAll, count } from './core/db.js';
+import { openDB, getAll, getById, count } from './core/db.js';
 import { appStore } from './core/store.js';
-import { debug } from './core/utils.js';
+import { debug, showToast } from './core/utils.js';
 import { initSidebar } from './components/sidebar.js';
 import { initTopbar } from './components/topbar.js';
 
@@ -95,6 +95,29 @@ function requireAuth() {
     return false;
   }
   return true;
+}
+
+/**
+ * Validates against Firestore if the currently logged-in user is still active.
+ */
+async function verifyActiveStatus() {
+  const session = getSession();
+  if (session) {
+    try {
+      const userDoc = await getById('users', session.userId);
+      if (!userDoc || userDoc.status === 'inactive') {
+        clearSession();
+        navigate('/login');
+        if (typeof window.showToast === 'function') {
+          window.showToast('Your account has been deactivated by an admin.', 'error');
+        } else {
+          alert('Your account has been deactivated by an admin.');
+        }
+      }
+    } catch (e) {
+      debug('Failed to verify user status in Firestore:', e);
+    }
+  }
 }
 
 // ============================================================
@@ -566,7 +589,7 @@ async function renderLogin() {
  * Called after a successful authentication check.
  * @param {Object} [userObj] - optional user object; if null, reads from session
  */
-function mountAppShell(userObj) {
+async function mountAppShell(userObj) {
   const app = document.getElementById('app');
   if (!app) return;
 
@@ -582,6 +605,8 @@ function mountAppShell(userObj) {
       </main>
     </div>
   `;
+
+  await verifyActiveStatus();
 
   const handleLogout = () => {
     clearSession();

@@ -3,7 +3,7 @@
  * Session management via localStorage and Firebase Auth.
  */
 
-import { auth } from './firebase-init.js';
+import { app, auth } from './firebase-init.js';
 import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 
 const SESSION_KEY = 'trackly_session';
@@ -25,6 +25,22 @@ export async function verifyPassword(password, hash) {
  */
 export async function loginWithEmail(email, password) {
   return signInWithEmailAndPassword(auth, email, password);
+}
+
+/**
+ * Create user in Firebase Auth via REST API (Admin client-side bypass)
+ */
+export async function createFirebaseUser(email, password) {
+  const apiKey = app.options.apiKey;
+  const endpoint = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`;
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, returnSecureToken: false })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || 'Firebase Auth Error');
+  return data;
 }
 
 /**
@@ -100,4 +116,4 @@ export function refreshSession() {
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
 }
 
-export default { hashPassword, verifyPassword, loginWithEmail, logoutFirebase, createSession, getSession, isAuthenticated, clearSession, refreshSession };
+export default { hashPassword, verifyPassword, loginWithEmail, createFirebaseUser, logoutFirebase, createSession, getSession, isAuthenticated, clearSession, refreshSession };
