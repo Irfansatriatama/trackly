@@ -694,28 +694,28 @@ async function saveMeeting(existing, isEdit) {
 async function deleteMeeting(meetingId) {
   const meeting = await getById('meetings', meetingId);
   if (!meeting) return;
-  const confirmed = await showConfirm({
+  showConfirm({
     title: 'Delete Meeting',
-    message: `Are you sure you want to delete "${meeting.title}"? This cannot be undone.`,
+    message: `Are you sure you want to delete "${sanitize(meeting.title)}"? This cannot be undone.`,
     confirmLabel: 'Delete',
-    danger: true,
+    confirmVariant: 'danger',
+    onConfirm: async () => {
+      try {
+        await remove('meetings', meetingId);
+        await logActivity({
+          entity_type: 'meeting',
+          entity_id: meetingId,
+          entity_name: meeting.title,
+          action: 'deleted',
+          project_id: meeting.project_ids?.[0] || null,
+        });
+        showToast('Meeting deleted.', 'success');
+        await refreshCalendarPage();
+      } catch (err) {
+        showToast('Failed to delete meeting.', 'error');
+      }
+    },
   });
-  if (!confirmed) return;
-
-  try {
-    await remove('meetings', meetingId);
-    await logActivity({
-      entity_type: 'meeting',
-      entity_id: meetingId,
-      entity_name: meeting.title,
-      action: 'deleted',
-      project_id: meeting.project_ids?.[0] || null,
-    });
-    showToast('Meeting deleted.', 'success');
-    await refreshCalendarPage();
-  } catch (err) {
-    showToast('Failed to delete meeting.', 'error');
-  }
 }
 
 // ─── Meeting Detail Page ──────────────────────────────────────────────────────

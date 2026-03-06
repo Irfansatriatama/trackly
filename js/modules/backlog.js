@@ -290,7 +290,7 @@ function bindPageEvents() {
   document.getElementById('backlogSearch')?.addEventListener('input', e => { _searchQuery = e.target.value; refreshContent(); });
   document.getElementById('btnOpenFilterModal')?.addEventListener('click', openBacklogFilterModal);
   document.getElementById('backlogFilterChips')?.addEventListener('click', handleBacklogChipRemove);
-  document.getElementById('sortField')?.addEventListener('change', e => {
+  document.getElementById('sortField')?.addEventListener('change', async e => {
     const newField = e.target.value;
     if (newField === _sortField) { _sortDir = _sortDir === 'asc' ? 'desc' : 'asc'; }
     else { _sortField = newField; _sortDir = 'desc'; }
