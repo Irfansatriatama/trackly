@@ -123,4 +123,4 @@ export function refreshSession() {
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
 }
 
-export default { hashPassword, verifyPassword, loginWithEmail, createFirebaseUser, logoutFirebase, createSession, getSession, isAuthenticated, clearSession, refreshSession };
+export default { hashPassword, verifyPassword, loginWithUsername, createFirebaseUser, logoutFirebase, createSession, getSession, isAuthenticated, clearSession, refreshSession };
