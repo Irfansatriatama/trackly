@@ -256,12 +256,6 @@ function renderSettingsPage() {
         <button class="settings-tab is-active" role="tab" aria-selected="true" data-tab="general">
           <i data-lucide="sliders" aria-hidden="true"></i> General
         </button>
-        <button class="settings-tab" role="tab" aria-selected="false" data-tab="data">
-          <i data-lucide="database" aria-hidden="true"></i> Data
-        </button>
-        <button class="settings-tab" role="tab" aria-selected="false" data-tab="pwa">
-          <i data-lucide="smartphone" aria-hidden="true"></i> PWA
-        </button>
         <button class="settings-tab" role="tab" aria-selected="false" data-tab="about">
           <i data-lucide="info" aria-hidden="true"></i> About
         </button>
@@ -401,19 +395,21 @@ function renderSettingsPage() {
         <div class="card__body">
           <div class="about-header">
             <img src="assets/logo.svg" alt="TRACKLY logo" class="about-logo" />
-            <div>
+              <div>
               <h2 class="about-title">TRACKLY</h2>
               <p class="about-tagline text-muted">Track Everything, Deliver Anything</p>
               <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-2);">
-                <span class="badge badge--info">v1.3.1</span>
-                <span class="badge badge--success">Phase 16 of 17</span>
-                <span class="badge badge--primary">PWA Ready</span>
+                <span class="badge badge--info">v1.4.0</span>
+                <span class="badge badge--success">Cloud Edition</span>
+                <span class="badge badge--secondary">Firebase + Cloudinary</span>
               </div>
             </div>
           </div>
           <div class="about-meta">
             <div class="about-meta-item"><span class="about-meta-label">Tech Stack</span><span class="about-meta-value">HTML5, CSS3, Vanilla JS (ES6+)</span></div>
-            <div class="about-meta-item"><span class="about-meta-label">Storage</span><span class="about-meta-value">localStorage + IndexedDB (client-side only)</span></div>
+            <div class="about-meta-item"><span class="about-meta-label">Database</span><span class="about-meta-value">Firebase Firestore (Cloud)</span></div>
+            <div class="about-meta-item"><span class="about-meta-label">Storage</span><span class="about-meta-value">Cloudinary (file & media uploads)</span></div>
+            <div class="about-meta-item"><span class="about-meta-label">Hosting</span><span class="about-meta-value">Vercel</span></div>
             <div class="about-meta-item"><span class="about-meta-label">Icons</span><span class="about-meta-value">Lucide Icons via CDN</span></div>
             <div class="about-meta-item"><span class="about-meta-label">Charts</span><span class="about-meta-value">Chart.js 4.4 via CDN</span></div>
             <div class="about-meta-item"><span class="about-meta-label">Fonts</span><span class="about-meta-value">Inter + JetBrains Mono (Google Fonts)</span></div>

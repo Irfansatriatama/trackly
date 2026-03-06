@@ -1,7 +1,10 @@
 /**
  * TRACKLY — guide.js
- * Phase 17: In-app User Guide — rendered as structured HTML.
- * Covers all major features, roles, and workflows.
+ * In-app User Guide — updated to reflect current feature set.
+ * Firebase backend, Cloudinary storage, Vercel deployment.
+ * Sections: Overview, Roles, Getting Started, Projects, Tasks, Board,
+ * Sprints, Gantt, Maintenance, Reports, Members, Clients, Assets,
+ * Meetings, Discussion, Notifications, Notes, Settings.
  */
 
 import { getSession } from '../core/auth.js';
@@ -34,7 +37,7 @@ function buildGuideHTML() {
       <div class="page-header">
         <div class="page-header__info">
           <h1 class="page-header__title">User Guide</h1>
-          <p class="page-header__subtitle">Everything you need to know about using TRACKLY</p>
+          <p class="page-header__subtitle">Panduan lengkap penggunaan TRACKLY</p>
         </div>
         <div class="page-header__actions">
           <a href="#/dashboard" class="btn btn--ghost">
@@ -57,16 +60,16 @@ function buildGuideHTML() {
             <li><a href="#guide-board"><i data-lucide="layout-dashboard" aria-hidden="true"></i> 6. Kanban Board</a></li>
             <li><a href="#guide-sprints"><i data-lucide="zap" aria-hidden="true"></i> 7. Sprint Management</a></li>
             <li><a href="#guide-gantt"><i data-lucide="bar-chart-2" aria-hidden="true"></i> 8. Gantt Chart</a></li>
-            <li><a href="#guide-maintenance"><i data-lucide="tool" aria-hidden="true"></i> 9. Maintenance</a></li>
+            <li><a href="#guide-maintenance"><i data-lucide="wrench" aria-hidden="true"></i> 9. Maintenance</a></li>
             <li><a href="#guide-reports"><i data-lucide="pie-chart" aria-hidden="true"></i> 10. Reports</a></li>
             <li><a href="#guide-members"><i data-lucide="users" aria-hidden="true"></i> 11. Members</a></li>
             <li><a href="#guide-clients"><i data-lucide="building-2" aria-hidden="true"></i> 12. Clients</a></li>
             <li><a href="#guide-assets"><i data-lucide="package" aria-hidden="true"></i> 13. Assets</a></li>
-            <li><a href="#guide-settings"><i data-lucide="settings" aria-hidden="true"></i> 14. Settings &amp; Data</a></li>
-            <li><a href="#guide-pwa"><i data-lucide="smartphone" aria-hidden="true"></i> 15. PWA &amp; Offline Use</a></li>
-            <li><a href="#guide-meetings"><i data-lucide="calendar" aria-hidden="true"></i> 16. Meetings &amp; Notulensi</a></li>
-            <li><a href="#guide-discussion"><i data-lucide="message-circle" aria-hidden="true"></i> 17. Project Discussion</a></li>
-            <li><a href="#guide-notes"><i data-lucide="notebook-pen" aria-hidden="true"></i> 18. Personal Notes</a></li>
+            <li><a href="#guide-meetings"><i data-lucide="calendar" aria-hidden="true"></i> 14. Meetings &amp; Notulensi</a></li>
+            <li><a href="#guide-discussion"><i data-lucide="message-circle" aria-hidden="true"></i> 15. Project Discussion</a></li>
+            <li><a href="#guide-notifications"><i data-lucide="bell" aria-hidden="true"></i> 16. Notifications</a></li>
+            <li><a href="#guide-notes"><i data-lucide="notebook-pen" aria-hidden="true"></i> 17. Personal Notes</a></li>
+            <li><a href="#guide-settings"><i data-lucide="settings" aria-hidden="true"></i> 18. Settings</a></li>
           </ul>
         </div>
       </div>
@@ -79,29 +82,26 @@ function buildGuideHTML() {
             1. Overview
           </h2>
           <p>
-            TRACKLY is a fully client-side Project Management Information System (PMIS) designed for IT
-            consultant firms. It manages the complete project lifecycle — from initial setup, sprint planning,
-            and board tracking, all the way through to post-delivery maintenance reporting and billing.
+            TRACKLY adalah Project Management Information System (PMIS) berbasis cloud yang dirancang untuk perusahaan konsultan IT.
+            Aplikasi ini membantu mengelola siklus hidup proyek secara end-to-end — mulai dari perencanaan sprint, pelacakan board,
+            hingga laporan maintenance dan penagihan klien.
           </p>
           <p>
-            All data is stored locally in your browser using IndexedDB, making TRACKLY fully functional
-            without a server, internet connection, or database setup. You can also install it as a
-            Progressive Web App (PWA) for a native app experience on any device.
+            Semua data disimpan di <strong>Firebase Firestore</strong> (cloud database real-time), file dan media
+            dikelola melalui <strong>Cloudinary</strong>, dan aplikasi di-deploy via <strong>Vercel</strong>.
           </p>
-          <div class="guide-tip">
-            <i data-lucide="lightbulb" aria-hidden="true"></i>
-            <p>TRACKLY works best when served over HTTP or HTTPS. Opening <code>index.html</code> directly as a file:// URL will disable IndexedDB and Service Workers.</p>
-          </div>
-          <h3>Key Capabilities</h3>
+          <h3>Fitur Utama</h3>
           <ul>
-            <li>Multi-project management with Kanban boards and Gantt charts</li>
-            <li>Sprint planning with velocity tracking and retrospective notes</li>
-            <li>Maintenance ticket tracking and client invoice generation</li>
-            <li>Asset management with warranty expiry alerts</li>
-            <li>5 report types with PDF export via the browser print function</li>
-            <li>Role-based access control (Admin, PM, Developer, Viewer)</li>
-            <li>Full offline support via Service Worker caching</li>
-            <li>JSON data export and import for backup and restore</li>
+            <li>Multi-project management dengan Kanban board dan Gantt chart</li>
+            <li>Sprint planning dengan velocity tracking dan catatan retrospektif</li>
+            <li>Maintenance ticket tracking dengan SLA fields dan invoice generator</li>
+            <li>Asset management dengan peringatan warranty expiry</li>
+            <li>5 jenis laporan dengan ekspor PDF, Excel, dan CSV</li>
+            <li>Role-based access control (Admin, PM, Member, Viewer, Client)</li>
+            <li>Sistem notifikasi 2-tier yang bertarget berdasarkan role dan assignment</li>
+            <li>Meetings &amp; notulensi dengan action items yang bisa dikonversi ke task</li>
+            <li>Project discussion feed dengan reply, pin, dan attachment</li>
+            <li>Personal notes dengan Markdown editor, folder, share, dan audit log</li>
           </ul>
         </div>
       </div>
@@ -114,56 +114,64 @@ function buildGuideHTML() {
             2. Roles &amp; Permissions
           </h2>
           <p>
-            TRACKLY uses a four-tier role system. Every user has a global role, and Admins or PMs
-            can also assign project-specific roles that override the global role for a given project.
+            TRACKLY menggunakan sistem role berlapis. Setiap user memiliki role global, dan Admin atau PM dapat
+            menetapkan role spesifik per-project yang menimpa role global untuk project tersebut.
           </p>
 
           <div class="guide-role-grid">
             <div class="guide-role-card">
               <div class="guide-role-card__badge">${renderBadge('Admin', 'danger')}</div>
               <ul class="guide-role-card__perms">
-                <li>Full system access</li>
-                <li>Manage all users</li>
-                <li>Create &amp; delete projects</li>
-                <li>Access Settings</li>
-                <li>Export/import data</li>
+                <li>Akses penuh ke seluruh sistem</li>
+                <li>Kelola semua user</li>
+                <li>Buat &amp; hapus project</li>
+                <li>Akses Settings</li>
+                <li>Terima semua notifikasi penting</li>
               </ul>
             </div>
             <div class="guide-role-card">
               <div class="guide-role-card__badge">${renderBadge('PM', 'secondary')}</div>
               <ul class="guide-role-card__perms">
-                <li>Create &amp; manage projects</li>
-                <li>Manage sprints &amp; tasks</li>
-                <li>View maintenance &amp; reports</li>
-                <li>Manage members &amp; clients</li>
-                <li>Generate invoices</li>
+                <li>Buat &amp; kelola project</li>
+                <li>Kelola sprint &amp; task</li>
+                <li>Lihat maintenance &amp; laporan</li>
+                <li>Kelola member &amp; client</li>
+                <li>Generate invoice</li>
               </ul>
             </div>
             <div class="guide-role-card">
-              <div class="guide-role-card__badge">${renderBadge('Developer', 'info')}</div>
+              <div class="guide-role-card__badge">${renderBadge('Member', 'info')}</div>
               <ul class="guide-role-card__perms">
-                <li>View assigned projects</li>
-                <li>Update task status</li>
-                <li>Log time on tasks</li>
-                <li>Add comments</li>
-                <li>View board &amp; backlog</li>
+                <li>Lihat project yang ditugaskan</li>
+                <li>Update status task</li>
+                <li>Terima notifikasi assignment</li>
+                <li>Tambah komentar &amp; checklist</li>
+                <li>Akses discussion &amp; notes</li>
               </ul>
             </div>
             <div class="guide-role-card">
               <div class="guide-role-card__badge">${renderBadge('Viewer', 'neutral')}</div>
               <ul class="guide-role-card__perms">
-                <li>View project status</li>
-                <li>View task details</li>
-                <li>Read-only access</li>
-                <li>Cannot create/edit</li>
-                <li>Cannot delete</li>
+                <li>Lihat status project</li>
+                <li>Lihat detail task (read-only)</li>
+                <li>Tidak menerima notifikasi operasional</li>
+                <li>Tidak bisa create/edit/delete</li>
+              </ul>
+            </div>
+            <div class="guide-role-card">
+              <div class="guide-role-card__badge">${renderBadge('Client', 'warning')}</div>
+              <ul class="guide-role-card__perms">
+                <li>Lihat tiket maintenance yang ditandai untuknya</li>
+                <li>Tidak melihat data internal tim</li>
+                <li>Tidak menerima notifikasi operasional</li>
+                <li>Akses sangat terbatas</li>
               </ul>
             </div>
           </div>
 
           <div class="guide-tip">
             <i data-lucide="info" aria-hidden="true"></i>
-            <p>The first account created via the setup wizard is always an Admin. Subsequent users can be assigned any role by the Admin or PM from the Members page.</p>
+            <p>User baru dibuat oleh Admin atau PM melalui halaman Members. Login menggunakan <strong>username</strong> dan password (bukan email).</p>
           </div>
         </div>
       </div>
@@ -175,20 +183,16 @@ function buildGuideHTML() {
             <i data-lucide="play-circle" aria-hidden="true"></i>
             3. Getting Started
           </h2>
-          <p>Follow these steps to get up and running with a new TRACKLY instance:</p>
+          <p>Ikuti langkah-langkah ini untuk mulai menggunakan TRACKLY:</p>
           <ol>
-            <li><strong>First Run:</strong> On first launch, TRACKLY detects no users and shows the Setup Wizard. Complete all 3 steps to create your Admin account.</li>
-            <li><strong>Add Members:</strong> Go to <a href="#/members">Members</a> and invite your team. Assign each person a role (Developer, PM, or Viewer).</li>
-            <li><strong>Add Clients:</strong> Go to <a href="#/clients">Clients</a> and add your client companies so you can link them to projects.</li>
-            <li><strong>Create Projects:</strong> Go to <a href="#/projects">Projects</a> and click <strong>New Project</strong>. Fill in the project name, dates, client, and assign team members.</li>
-            <li><strong>Add Tasks:</strong> Open a project and navigate to the Backlog tab. Create tasks with priorities, estimates, and assignees.</li>
-            <li><strong>Start a Sprint:</strong> Go to the Sprint tab, create a sprint with start/end dates, and drag tasks from the backlog into the sprint.</li>
-            <li><strong>Track Progress:</strong> Use the Board (Kanban) tab to move tasks across columns as work progresses.</li>
+            <li><strong>Login:</strong> Gunakan username dan password yang diberikan oleh Admin. Sesi aktif selama 8 jam (30 hari jika "Remember me" dicentang).</li>
+            <li><strong>Tambah Member:</strong> Buka <a href="#/members">Members</a> dan buat akun baru. Tentukan role (Member, PM, Viewer, atau Client).</li>
+            <li><strong>Tambah Client:</strong> Buka <a href="#/clients">Clients</a> dan daftarkan perusahaan klien agar bisa ditautkan ke project.</li>
+            <li><strong>Buat Project:</strong> Buka <a href="#/projects">Projects</a> dan klik <strong>New Project</strong>. Isi nama, tanggal, client, dan assign anggota tim.</li>
+            <li><strong>Buat Task:</strong> Buka project → tab Backlog. Buat task dengan prioritas, estimasi, dan assignee.</li>
+            <li><strong>Mulai Sprint:</strong> Buka tab Sprint, buat sprint dengan tanggal, dan pindahkan task dari backlog ke sprint.</li>
+            <li><strong>Pantau Progress:</strong> Gunakan tab Board (Kanban) untuk memindahkan task antar kolom sesuai progres pekerjaan.</li>
           </ol>
-          <div class="guide-tip">
-            <i data-lucide="lightbulb" aria-hidden="true"></i>
-            <p>Export your data regularly from <strong>Settings &rarr; Data &rarr; Export Data</strong> as a JSON backup. This is the only way to back up your data since everything is stored locally.</p>
-          </div>
         </div>
       </div>
 
@@ -199,31 +203,33 @@ function buildGuideHTML() {
             <i data-lucide="folder-kanban" aria-hidden="true"></i>
             4. Projects
           </h2>
-          <p>Projects are the top-level entity in TRACKLY. Each project has its own board, backlog, sprints, Gantt chart, maintenance module, and reports.</p>
-          <h3>Creating a Project</h3>
-          <p>Click <strong>New Project</strong> on the Projects page. You must provide at minimum a project name. You can also set:</p>
+          <p>Project adalah entitas utama di TRACKLY. Setiap project memiliki board, backlog, sprint, Gantt chart, maintenance, discussion, dan laporan tersendiri.</p>
+          <h3>Membuat Project</h3>
+          <p>Klik <strong>New Project</strong> di halaman Projects. Field yang tersedia:</p>
           <ul>
-            <li><strong>Status:</strong> Planning, Active, Maintenance, On Hold, Completed, or Cancelled</li>
-            <li><strong>Phase:</strong> Development, UAT, Deployment, Running, or Maintenance</li>
-            <li><strong>Client:</strong> Link a client from your Clients list</li>
-            <li><strong>Budget:</strong> Set an estimated budget to track against actual costs</li>
-            <li><strong>Cover Color:</strong> Pick a color to visually identify the project card</li>
-            <li><strong>Members:</strong> Assign team members with optional project-specific role overrides</li>
+            <li><strong>Status:</strong> Planning, Active, Maintenance, On Hold, Completed, atau Cancelled</li>
+            <li><strong>Phase:</strong> Development, UAT, Deployment, Running, atau Maintenance</li>
+            <li><strong>Client:</strong> Tautkan ke client yang sudah terdaftar</li>
+            <li><strong>Budget:</strong> Set estimasi budget untuk dipantau vs aktual</li>
+            <li><strong>Cover Color:</strong> Pilih warna untuk identifikasi visual project card</li>
+            <li><strong>Members:</strong> Assign anggota tim ke project</li>
           </ul>
-          <h3>Project Sub-pages</h3>
-          <p>Click on any project card to open the project detail page with these tabs:</p>
+          <h3>Sub-halaman Project</h3>
+          <p>Klik project card untuk membuka halaman detail dengan tab berikut:</p>
           <ul>
-            <li><strong>Overview:</strong> Summary stats, team panel, budget progress, and project details</li>
-            <li><strong>Board:</strong> Kanban board for managing task flow</li>
-            <li><strong>Backlog:</strong> Full task list with filters and bulk actions</li>
-            <li><strong>Sprint:</strong> Sprint planning and active sprint management</li>
-            <li><strong>Gantt:</strong> Timeline view of tasks and milestones</li>
-            <li><strong>Maintenance:</strong> (Visible for Running/Maintenance phase projects) Ticket tracker</li>
-            <li><strong>Reports:</strong> Project-specific reports and charts</li>
+            <li><strong>Overview:</strong> Statistik ringkasan, panel tim, progres budget, dan detail project</li>
+            <li><strong>Board:</strong> Kanban board untuk mengelola alur task</li>
+            <li><strong>Backlog:</strong> Daftar task lengkap dengan filter dan bulk actions</li>
+            <li><strong>Sprint:</strong> Perencanaan dan manajemen sprint aktif</li>
+            <li><strong>Gantt:</strong> Timeline task dan milestone</li>
+            <li><strong>Maintenance:</strong> (Muncul saat phase Running/Maintenance) Pelacak tiket</li>
+            <li><strong>Discussion:</strong> Forum diskusi internal tim project</li>
+            <li><strong>Reports:</strong> Laporan dan chart per project</li>
+            <li><strong>Log:</strong> Audit trail semua aktivitas project</li>
           </ul>
           <div class="guide-tip">
             <i data-lucide="info" aria-hidden="true"></i>
-            <p>The <strong>Maintenance</strong> tab only appears when the project phase is set to <em>Running</em> or <em>Maintenance</em>. Update the project phase from the Overview tab.</p>
+            <p>Tab <strong>Maintenance</strong> hanya muncul ketika phase project diset ke <em>Running</em> atau <em>Maintenance</em>. Update phase dari tab Overview.</p>
           </div>
         </div>
       </div>
@@ -235,23 +241,28 @@ function buildGuideHTML() {
             <i data-lucide="check-square" aria-hidden="true"></i>
             5. Tasks &amp; Backlog
           </h2>
-          <p>Tasks are the core unit of work in TRACKLY. Each task belongs to a project and can optionally be assigned to a sprint.</p>
-          <h3>Task Fields</h3>
+          <p>Task adalah unit kerja utama di TRACKLY. Setiap task milik sebuah project dan bisa di-assign ke sprint.</p>
+          <h3>Field Task</h3>
           <ul>
-            <li><strong>Title:</strong> Required. Short description of the work item.</li>
-            <li><strong>Type:</strong> Story, Task, Bug, Enhancement, or Epic</li>
-            <li><strong>Priority:</strong> Low, Medium, High, or Critical</li>
+            <li><strong>Title:</strong> Wajib diisi. Deskripsi singkat pekerjaan.</li>
+            <li><strong>Type:</strong> Story, Task, Bug, Enhancement, atau Epic</li>
+            <li><strong>Priority:</strong> Low, Medium, High, atau Critical</li>
             <li><strong>Status:</strong> Backlog, To Do, In Progress, In Review, Done, Cancelled</li>
-            <li><strong>Assignees:</strong> One or more team members</li>
-            <li><strong>Story Points:</strong> Effort estimate for sprint velocity tracking</li>
-            <li><strong>Dates:</strong> Start date and due date</li>
-            <li><strong>Tags:</strong> Free-form labels for categorization</li>
-            <li><strong>Checklist:</strong> Sub-items within a task</li>
-            <li><strong>Comments:</strong> Threaded discussion thread</li>
-            <li><strong>Description:</strong> Markdown-formatted description</li>
+            <li><strong>Assignees:</strong> Satu atau lebih anggota tim — assignee akan menerima notifikasi personal saat di-assign</li>
+            <li><strong>Reporter:</strong> User yang membuat/melaporkan task</li>
+            <li><strong>Story Points:</strong> Estimasi effort untuk velocity tracking</li>
+            <li><strong>Dates:</strong> Start date dan due date</li>
+            <li><strong>Tags:</strong> Label bebas untuk kategorisasi</li>
+            <li><strong>Checklist:</strong> Sub-item dalam task</li>
+            <li><strong>Comments:</strong> Thread diskusi pada task</li>
+            <li><strong>Description:</strong> Deskripsi format Markdown</li>
           </ul>
           <h3>Bulk Actions</h3>
-          <p>On the Backlog page, use the checkboxes to select multiple tasks. You can then bulk-update status, priority, sprint assignment, or delete them.</p>
+          <p>Di halaman Backlog, gunakan checkbox untuk memilih beberapa task sekaligus. Lalu bisa bulk-update status, priority, sprint assignment, atau hapus semuanya.</p>
+          <div class="guide-tip">
+            <i data-lucide="lightbulb" aria-hidden="true"></i>
+            <p>Saat kamu men-assign task ke member, mereka langsung menerima notifikasi: <em>"[Nama] menugaskan kamu pada task X"</em>.</p>
+          </div>
         </div>
       </div>
 
@@ -262,18 +273,18 @@ function buildGuideHTML() {
             <i data-lucide="layout-dashboard" aria-hidden="true"></i>
             6. Kanban Board
           </h2>
-          <p>The Kanban Board gives a visual overview of all tasks in the project, organized into columns by status.</p>
+          <p>Kanban Board memberikan tampilan visual semua task dalam project, diorganisir dalam kolom berdasarkan status.</p>
           <h3>Drag and Drop</h3>
-          <p>Drag any task card to a different column to instantly update its status. The card's status is synchronized to the task record automatically.</p>
+          <p>Drag kartu task ke kolom berbeda untuk langsung mengubah statusnya. Status tersinkronisasi otomatis ke record task.</p>
           <h3>Custom Columns</h3>
-          <p>Each project can have its own column configuration. Click the <strong>+</strong> button to add a column, hover over a column header to rename or delete it.</p>
+          <p>Setiap project bisa punya konfigurasi kolom sendiri. Klik <strong>Add Column</strong> untuk menambah kolom, hover di header kolom untuk rename atau hapus.</p>
           <h3>Swimlane View</h3>
-          <p>Toggle the Swimlane mode (by Assignee) to group task cards horizontally by the person they are assigned to — useful for workload visibility.</p>
-          <h3>Filters</h3>
-          <p>Use the filter bar at the top of the board to filter cards by assignee, priority, label, or sprint.</p>
+          <p>Toggle mode Swimlane (berdasarkan Assignee) untuk mengelompokkan kartu task secara horizontal per orang — berguna untuk memantau beban kerja tim.</p>
+          <h3>Filter</h3>
+          <p>Gunakan filter bar di bagian atas board untuk filter berdasarkan assignee, priority, label, atau sprint.</p>
           <div class="guide-tip">
             <i data-lucide="lightbulb" aria-hidden="true"></i>
-            <p>Click on any task card to open the full task detail panel where you can edit all fields, add comments, and manage the checklist.</p>
+            <p>Klik kartu task manapun untuk membuka panel detail lengkap di mana kamu bisa mengedit semua field, menambahkan komentar, dan mengelola checklist.</p>
           </div>
         </div>
       </div>
@@ -285,17 +296,17 @@ function buildGuideHTML() {
             <i data-lucide="zap" aria-hidden="true"></i>
             7. Sprint Management
           </h2>
-          <p>Sprints are time-boxed iterations. TRACKLY supports sprint planning, active sprint tracking, velocity charts, and retrospectives.</p>
-          <h3>Creating a Sprint</h3>
-          <p>On the Sprint tab, click <strong>New Sprint</strong>. Set a name (e.g., "Sprint 1"), start date, end date, and an optional goal.</p>
+          <p>Sprint adalah iterasi berbatas waktu. TRACKLY mendukung perencanaan sprint, pelacakan sprint aktif, velocity chart, dan retrospektif.</p>
+          <h3>Membuat Sprint</h3>
+          <p>Di tab Sprint, klik <strong>New Sprint</strong>. Set nama (misal: "Sprint 1"), tanggal mulai, tanggal selesai, dan goal opsional.</p>
           <h3>Sprint Planning</h3>
-          <p>Use the two-pane planning view to drag tasks from the Backlog into the sprint. Story points are summed in real time to help you avoid over-commitment.</p>
-          <h3>Starting and Completing a Sprint</h3>
-          <p>Click <strong>Start Sprint</strong> to activate it (only one sprint can be active at a time). When the sprint ends, click <strong>Complete Sprint</strong>. You will be asked what to do with incomplete tasks — move them to backlog or carry them into the next sprint.</p>
+          <p>Gunakan tampilan dua panel untuk drag task dari Backlog ke sprint. Story points dijumlahkan real-time agar tidak overcommit.</p>
+          <h3>Mulai dan Selesaikan Sprint</h3>
+          <p>Klik <strong>Start Sprint</strong> untuk mengaktifkan (hanya satu sprint bisa aktif). Saat sprint selesai, klik <strong>Complete Sprint</strong> — kamu akan ditanya apa yang dilakukan dengan task yang belum selesai (pindah ke backlog atau ke sprint berikutnya).</p>
           <h3>Velocity Chart</h3>
-          <p>The velocity bar chart shows completed story points per sprint — helpful for estimating future capacity.</p>
-          <h3>Retrospective Notes</h3>
-          <p>After completing a sprint, add retrospective notes (what went well, what to improve) directly on the sprint card.</p>
+          <p>Bar chart velocity menampilkan story points yang selesai per sprint — berguna untuk estimasi kapasitas mendatang.</p>
+          <h3>Catatan Retrospektif</h3>
+          <p>Setelah sprint selesai, tambahkan catatan retrospektif (apa yang berjalan baik, apa yang perlu diperbaiki) langsung di kartu sprint.</p>
         </div>
       </div>
 
@@ -306,18 +317,18 @@ function buildGuideHTML() {
             <i data-lucide="bar-chart-2" aria-hidden="true"></i>
             8. Gantt Chart
           </h2>
-          <p>The Gantt chart provides a timeline view of all tasks grouped by sprint or phase, showing start and end dates as horizontal bars.</p>
-          <h3>Zoom Levels</h3>
-          <p>Switch between <strong>Day</strong>, <strong>Week</strong>, and <strong>Month</strong> zoom to adjust the timeline resolution.</p>
-          <h3>Drag to Resize and Move</h3>
-          <p>Drag the left or right edge of a task bar to change its start or end date. Drag the bar itself to shift the entire task in time.</p>
-          <h3>Today Line</h3>
-          <p>A vertical blue line marks the current date for quick reference.</p>
-          <h3>Export to PNG</h3>
-          <p>Click the <strong>Export PNG</strong> button to download the current Gantt view as an image file.</p>
+          <p>Gantt chart memberikan tampilan timeline semua task yang dikelompokkan berdasarkan sprint atau fase, ditampilkan sebagai bar horizontal.</p>
+          <h3>Zoom Level</h3>
+          <p>Ganti antara <strong>Day</strong>, <strong>Week</strong>, dan <strong>Month</strong> untuk menyesuaikan resolusi timeline.</p>
+          <h3>Drag untuk Resize dan Pindah</h3>
+          <p>Drag tepi kiri atau kanan bar task untuk mengubah tanggal mulai/selesai. Drag bar itu sendiri untuk menggeser keseluruhan task dalam waktu.</p>
+          <h3>Garis Hari Ini</h3>
+          <p>Garis vertikal biru menandai tanggal hari ini sebagai referensi cepat.</p>
+          <h3>Export PNG</h3>
+          <p>Klik tombol <strong>Export PNG</strong> untuk mengunduh tampilan Gantt saat ini sebagai file gambar.</p>
           <div class="guide-tip">
             <i data-lucide="info" aria-hidden="true"></i>
-            <p>Tasks must have both a start date and a due date to appear on the Gantt chart. Tasks without dates are excluded from the timeline view.</p>
+            <p>Task harus memiliki start date dan due date agar muncul di Gantt chart. Task tanpa tanggal tidak ditampilkan.</p>
           </div>
         </div>
       </div>
@@ -327,43 +338,43 @@ function buildGuideHTML() {
         <div class="card__body">
           <h2 class="guide-section__title">
             <i data-lucide="wrench" aria-hidden="true"></i>
-            9. Maintenance (Enhanced)
+            9. Maintenance
           </h2>
-          <p>The Maintenance module tracks post-delivery support tickets for projects in the <em>Running</em> or <em>Maintenance</em> phase. Phase 21 adds SLA-focused fields, multi-dev assignment, client visibility, and file attachments.</p>
+          <p>Modul Maintenance melacak tiket support pasca-delivery untuk project dalam fase <em>Running</em> atau <em>Maintenance</em>. Dilengkapi field SLA, assignment multi-developer, kontrol visibilitas klien, dan lampiran file.</p>
 
-          <h3>New Fields (Phase 21)</h3>
+          <h3>Field Tiket</h3>
           <ul>
-            <li><strong>Severity</strong> — <em>Major</em> or <em>Minor</em>: classifies the impact of the issue, separate from Priority. Major = business-impacting; Minor = cosmetic or low-impact. Displayed as an orange (Major) or grey (Minor) badge in the list and detail panel.</li>
-            <li><strong>Assigned Date</strong> — The date the ticket was formally assigned to a developer. Useful for SLA tracking.</li>
-            <li><strong>Due Date</strong> — Target completion date for the ticket. Shown prominently in the detail panel (highlighted in red).</li>
-            <li><strong>Ordered By</strong> — The PM or Admin who commissioned this ticket. Selected from a dropdown of PM/Admin users.</li>
-            <li><strong>PIC Dev (Multi-select)</strong> — One or more developers assigned to this ticket. If at least one developer is selected, <strong>only those developers can see this ticket</strong>. If left empty, all developers can see it. This enforces per-developer ticket visibility.</li>
-            <li><strong>PIC Client</strong> — The name of the client-side PIC (Person in Charge). Viewers (client role) can only see tickets where PIC Client is filled in. This controls what the client sees.</li>
-            <li><strong>Attachments</strong> — Upload evidence files (screenshots, logs, documents). Each file is stored as base64 (max 5MB per file). Attachments appear in the detail panel with filename, file size, and a download link. No attachments are included in exports.</li>
+            <li><strong>Severity</strong> — <em>Major</em> atau <em>Minor</em>: mengklasifikasikan dampak masalah. Major = berdampak pada bisnis; Minor = kosmetik atau dampak rendah.</li>
+            <li><strong>Assigned Date</strong> — Tanggal tiket secara resmi di-assign ke developer. Berguna untuk tracking SLA.</li>
+            <li><strong>Due Date</strong> — Target tanggal penyelesaian tiket.</li>
+            <li><strong>Ordered By</strong> — PM atau Admin yang memerintahkan tiket ini.</li>
+            <li><strong>PIC Dev (Multi-select)</strong> — Satu atau lebih developer yang di-assign ke tiket. Jika dipilih, <strong>hanya developer tersebut yang dapat melihat tiket</strong>. Jika kosong, semua developer bisa melihatnya.</li>
+            <li><strong>PIC Client</strong> — Nama PIC dari sisi klien. Viewer/Client hanya bisa melihat tiket yang PIC Client-nya diisi.</li>
+            <li><strong>Attachments</strong> — Upload file bukti (screenshot, log, dokumen). Masing-masing maks 5MB.</li>
           </ul>
 
-          <h3>Visibility Rules</h3>
+          <h3>Aturan Visibilitas</h3>
           <ul>
-            <li><strong>Admin / PM</strong>: See all tickets regardless of PIC Dev or PIC Client settings.</li>
-            <li><strong>Developer</strong>: If a ticket has no PIC Dev selected, it is visible to all developers. Once any developer is selected in PIC Dev, only those developers can see the ticket.</li>
-            <li><strong>Viewer / Client</strong>: Can only see tickets where the PIC Client field is non-empty. This allows PM to control which tickets are visible to the client contact.</li>
+            <li><strong>Admin / PM:</strong> Melihat semua tiket.</li>
+            <li><strong>Member/Developer:</strong> Jika tiket tidak memiliki PIC Dev, terlihat semua developer. Jika ada PIC Dev, hanya developer yang dipilih yang bisa melihat.</li>
+            <li><strong>Viewer / Client:</strong> Hanya tiket yang PIC Client-nya diisi.</li>
           </ul>
 
-          <h3>Ticket Pipeline</h3>
-          <p>Tickets flow through: <strong>Open → In Progress → Resolved → Closed</strong>. Use the quick-advance button in the detail panel to move to the next status, or use the Reject button to reject a ticket.</p>
+          <h3>Pipeline Tiket</h3>
+          <p>Tiket mengalir: <strong>Open → In Progress → Resolved → Closed</strong>. Gunakan tombol advance cepat di panel detail, atau tombol Reject untuk menolak tiket.</p>
 
-          <h3>Maintenance Report &amp; Invoice</h3>
-          <p>Click <strong>Generate Report</strong> from the Maintenance page (available to PM and Admin). Set a date range, then use the export buttons in the header:</p>
+          <h3>Laporan Maintenance &amp; Invoice</h3>
+          <p>Klik <strong>Generate Report</strong> dari halaman Maintenance (tersedia untuk PM dan Admin). Set rentang tanggal, lalu gunakan tombol export:</p>
           <ul>
-            <li><strong>Export PDF</strong> — Opens the browser print dialog. Includes all new fields (Severity, Due Date, Assigned Date, Ordered By, PIC Client) in both the report table and invoice line items. All dates use Indonesian format (e.g., 15 Maret 2025).</li>
-            <li><strong>Export Excel (.xlsx)</strong> — Downloads a full Excel spreadsheet of all tickets in the date range. Text-only — no attachments. Columns: No, ID Ticket, Judul, Tipe, Severity, Priority, Status, Dilaporkan Oleh, PIC Dev, PIC Client, Dipesan Oleh, Tgl Assign, Tgl Due, Est. Jam, Aktual Jam, Estimasi Biaya (IDR), Catatan Resolusi. All dates in Indonesian format.</li>
-            <li><strong>Export CSV</strong> — Downloads the same data as a comma-separated values file. UTF-8 with BOM for proper Excel compatibility.</li>
-            <li><strong>Generate Invoice</strong> — Switch to invoice builder view. Choose billing mode (Hourly Rate / Flat / Custom). New fields (Severity, PIC Client, Ordered By, Due Date) are shown on each invoice line item.</li>
+            <li><strong>Export PDF</strong> — Membuka dialog print browser. Semua field (Severity, Due Date, Assigned Date, Ordered By, PIC Client) disertakan.</li>
+            <li><strong>Export Excel (.xlsx)</strong> — Mengunduh spreadsheet Excel lengkap semua tiket dalam rentang tanggal.</li>
+            <li><strong>Export CSV</strong> — Data yang sama dalam format CSV, UTF-8 dengan BOM.</li>
+            <li><strong>Generate Invoice</strong> — Beralih ke tampilan invoice builder. Pilih mode billing (Hourly Rate / Flat / Custom).</li>
           </ul>
 
           <div class="guide-warning">
             <i data-lucide="alert-triangle" aria-hidden="true"></i>
-            <p>The Maintenance tab is hidden unless the project phase is set to <em>Running</em> or <em>Maintenance</em>. Update the project phase from the Overview tab.</p>
+            <p>Tab Maintenance disembunyikan kecuali phase project diset ke <em>Running</em> atau <em>Maintenance</em>. Update phase dari tab Overview.</p>
           </div>
         </div>
       </div>
@@ -375,19 +386,19 @@ function buildGuideHTML() {
             <i data-lucide="pie-chart" aria-hidden="true"></i>
             10. Reports
           </h2>
-          <p>TRACKLY includes five built-in report types accessible from the Reports tab of any project.</p>
+          <p>TRACKLY menyertakan lima jenis laporan bawaan yang bisa diakses dari tab Reports setiap project.</p>
           <ul>
-            <li><strong>Project Progress:</strong> Tasks by status, priority, and type — with doughnut and bar charts, plus a sprint summary table.</li>
-            <li><strong>Team Workload:</strong> Tasks and hours logged per team member — stacked bar chart and detail table.</li>
-            <li><strong>Sprint Burndown:</strong> Ideal vs actual story point burndown line chart for any completed or active sprint.</li>
-            <li><strong>Maintenance Summary:</strong> Ticket breakdown by type and status — doughnut charts and a full ticket list.</li>
-            <li><strong>Asset Inventory:</strong> Asset count by category and status — pie and bar charts with full asset table.</li>
+            <li><strong>Project Progress:</strong> Task berdasarkan status, priority, dan tipe — dengan doughnut dan bar chart, plus tabel ringkasan sprint.</li>
+            <li><strong>Team Workload:</strong> Task dan jam yang dicatat per anggota tim — stacked bar chart dan tabel detail.</li>
+            <li><strong>Sprint Burndown:</strong> Line chart burndown ideal vs aktual story points untuk sprint manapun.</li>
+            <li><strong>Maintenance Summary:</strong> Breakdown tiket berdasarkan tipe dan status — doughnut chart dan daftar tiket lengkap.</li>
+            <li><strong>Asset Inventory:</strong> Jumlah aset berdasarkan kategori dan status — pie dan bar chart dengan tabel aset lengkap.</li>
           </ul>
-          <h3>PDF Export</h3>
-          <p>All reports can be exported to PDF. Click the <strong>Print / Export PDF</strong> button, then use your browser's Save as PDF option in the print dialog.</p>
+          <h3>Export PDF</h3>
+          <p>Semua laporan bisa diekspor ke PDF. Klik tombol <strong>Print / Export PDF</strong>, lalu gunakan fitur Save as PDF di dialog print browser.</p>
           <div class="guide-tip">
             <i data-lucide="lightbulb" aria-hidden="true"></i>
-            <p>Use the date range filter at the top of each report to narrow down data to a specific period.</p>
+            <p>Gunakan filter rentang tanggal di bagian atas setiap laporan untuk membatasi data ke periode tertentu.</p>
           </div>
         </div>
       </div>
@@ -399,16 +410,17 @@ function buildGuideHTML() {
             <i data-lucide="users" aria-hidden="true"></i>
             11. Members
           </h2>
-          <p>The Members page (Admin/PM only) lets you manage all user accounts in the system.</p>
+          <p>Halaman Members (Admin/PM only) berfungsi mengelola semua akun user dalam sistem.</p>
           <ul>
-            <li>Create new members with full profile details including avatar, position, and department</li>
-            <li>Assign global roles (Admin, PM, Developer, Viewer)</li>
-            <li>Deactivate users to block login access</li>
-            <li>Search and filter by role or status</li>
+            <li>Buat member baru dengan detail profil lengkap termasuk avatar, posisi, dan departemen</li>
+            <li>Assign role global (Admin, PM, Member, Viewer, Client)</li>
+            <li>Nonaktifkan user untuk memblokir akses login</li>
+            <li>Search dan filter berdasarkan role atau status</li>
+            <li>Edit username dan password member langsung dari halaman ini</li>
           </ul>
           <div class="guide-warning">
             <i data-lucide="alert-triangle" aria-hidden="true"></i>
-            <p>Deactivating a user prevents them from logging in, but their task assignments and history are preserved. Their data is not deleted.</p>
+            <p>Menonaktifkan user mencegah mereka login, tetapi assignment task dan histori mereka tetap tersimpan. Data tidak dihapus.</p>
           </div>
         </div>
       </div>
@@ -420,14 +432,14 @@ function buildGuideHTML() {
             <i data-lucide="building-2" aria-hidden="true"></i>
             12. Clients
           </h2>
-          <p>The Clients page (Admin/PM only) manages your client company records.</p>
+          <p>Halaman Clients (Admin/PM only) mengelola record perusahaan klien.</p>
           <ul>
-            <li>Add clients with company name, contact person, email, phone, website, and address</li>
-            <li>Upload a company logo (stored as base64 in the browser)</li>
-            <li>Track client status: Active, Inactive, or Prospect</li>
-            <li>View which projects are linked to each client</li>
+            <li>Tambah client dengan nama perusahaan, kontak, email, telepon, website, dan alamat</li>
+            <li>Upload logo perusahaan (disimpan di Cloudinary)</li>
+            <li>Pantau status client: Active, Inactive, atau Prospect</li>
+            <li>Lihat project mana yang terhubung ke setiap client</li>
           </ul>
-          <p>Clients are linked to projects via the project creation/edit form. Once linked, the client name and logo appear on the project card and in reports.</p>
+          <p>Client ditautkan ke project melalui form create/edit project. Nama dan logo client muncul di project card dan dalam laporan.</p>
         </div>
       </div>
 
@@ -438,200 +450,177 @@ function buildGuideHTML() {
             <i data-lucide="package" aria-hidden="true"></i>
             13. Assets
           </h2>
-          <p>The Assets page tracks hardware, software, licenses, and other resources used by your team and projects.</p>
+          <p>Halaman Assets melacak hardware, software, lisensi, dan sumber daya lain yang digunakan tim dan project.</p>
           <ul>
-            <li><strong>Categories:</strong> Hardware, Software, License, Document, Other</li>
+            <li><strong>Kategori:</strong> Hardware, Software, License, Document, Other</li>
             <li><strong>Status:</strong> Available, In Use, Under Maintenance, Retired</li>
-            <li>Assign assets to a specific team member or project</li>
-            <li>Set warranty expiry dates — assets expiring within 30 days are highlighted in orange</li>
-            <li>Upload asset images for visual reference</li>
+            <li>Assign aset ke anggota tim atau project tertentu</li>
+            <li>Set tanggal kedaluarsa garansi — aset yang kedaluarsa dalam 30 hari disorot oranye</li>
+            <li>Upload gambar aset sebagai referensi visual</li>
           </ul>
           <div class="guide-tip">
             <i data-lucide="lightbulb" aria-hidden="true"></i>
-            <p>Use the Asset Inventory report (from any project's Reports tab) to get a printable overview of all assets with their current status.</p>
+            <p>Gunakan laporan Asset Inventory (dari tab Reports project mana pun) untuk mendapatkan ikhtisar semua aset yang bisa dicetak.</p>
           </div>
         </div>
       </div>
 
-      <!-- Section 14: Settings & Data -->
-      <div class="guide-section card" id="guide-settings">
-        <div class="card__body">
-          <h2 class="guide-section__title">
-            <i data-lucide="settings" aria-hidden="true"></i>
-            14. Settings &amp; Data
-          </h2>
-          <p>Settings (Admin/PM only) are divided into four tabs:</p>
-          <h3>General</h3>
-          <p>Configure your system name, timezone, date format, and currency. Also set the default hourly rate and tax percentage used in invoice generation.</p>
-          <h3>Data Management</h3>
-          <p>Export all data as a JSON file for backup, or import a previously exported JSON to restore data. You can also clear all application data (with confirmation) to reset TRACKLY to a clean state.</p>
-          <div class="guide-warning">
-            <i data-lucide="alert-triangle" aria-hidden="true"></i>
-            <p><strong>Clear All Data</strong> is irreversible. All projects, tasks, members, and other records will be permanently deleted. Always export a backup before clearing.</p>
-          </div>
-          <h3>PWA</h3>
-          <p>View the installation status of TRACKLY as a Progressive Web App and trigger the install prompt if available.</p>
-          <h3>About / Changelog</h3>
-          <p>View the current version, full changelog history, and links to documentation.</p>
-        </div>
-      </div>
-
-      <!-- Section 15: PWA & Offline -->
-      <div class="guide-section card" id="guide-pwa">
-        <div class="card__body">
-          <h2 class="guide-section__title">
-            <i data-lucide="smartphone" aria-hidden="true"></i>
-            15. PWA &amp; Offline Use
-          </h2>
-          <p>TRACKLY is a Progressive Web App (PWA). Once visited, all assets are cached by the Service Worker and the app works fully offline.</p>
-          <h3>Installing TRACKLY</h3>
-          <ul>
-            <li><strong>Chrome / Edge (Desktop):</strong> Look for the install icon in the address bar, or use the browser menu → "Install TRACKLY"</li>
-            <li><strong>Chrome (Android):</strong> Tap the "Install App" banner that appears at the bottom of the screen</li>
-            <li><strong>Safari (iOS):</strong> Tap the Share button → "Add to Home Screen"</li>
-          </ul>
-          <h3>Offline Behavior</h3>
-          <p>Once installed, all pages, scripts, and styles are served from the Service Worker cache. You can create projects, add tasks, and manage all data without an internet connection.</p>
-          <div class="guide-warning">
-            <i data-lucide="alert-triangle" aria-hidden="true"></i>
-            <p>Data is stored <em>only</em> in the browser where TRACKLY was set up. It does not sync across devices or browsers. Use the <strong>Export Data</strong> feature in Settings to create backups.</p>
-          </div>
-          <h3>Clearing Cache</h3>
-          <p>To force a refresh of all cached assets, unregister the Service Worker from your browser's developer tools (Application → Service Workers → Unregister), then reload the page.</p>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <!-- Section 16: Meetings & Notulensi -->
+      <!-- Section 14: Meetings & Notulensi -->
       <div class="guide-section card" id="guide-meetings">
         <div class="card__body">
           <h2 class="guide-section__title">
             <i data-lucide="calendar" aria-hidden="true"></i>
-            16. Meetings &amp; Notulensi
+            14. Meetings &amp; Notulensi
           </h2>
-          <p>The Meetings module (Admin/PM only) lets you schedule, manage, and document all team and client meetings in one place. Access it from the sidebar under Management.</p>
-          <h3>Calendar View</h3>
-          <p>The Meetings page shows a mini-calendar on the left and the day's meeting list on the right. Click any date to see its meetings. Toggle between Month view (date grid) and Week view (7-day strip) using the buttons in the page header.</p>
-          <h3>Creating a Meeting</h3>
-          <p>Click "New Meeting" to open the meeting form. Fill in the title, type, date, time range, and location. Use the Agenda tab to add checklist-style agenda items, and the Attendees &amp; Projects tab to link team members and related projects.</p>
-          <h3>Meeting Types</h3>
-          <p>Available types are: Internal, Client Meeting, Sprint Review, Retrospective, and Other. Each type is shown with a distinct color bar on the meeting card.</p>
-          <h3>Meeting Detail Page</h3>
-          <p>Click "View" on any meeting card to open its detail page. Here you can see the full agenda, attendees, linked projects, and status. Use the status advance button to move the meeting through: Scheduled → Ongoing → Done. You can also cancel a meeting from this page.</p>
-          <h3>Agenda Checklist</h3>
-          <p>During or after the meeting, check off agenda items directly on the detail page. The progress bar at the top tracks how many items have been completed.</p>
-          <h3>Notulensi (Meeting Notes)</h3>
-          <p>The Notulensi panel has two modes. In Text Editor mode, write meeting notes using Markdown and toggle a live preview. In File Attachment mode, upload supporting documents (PDF, DOCX, images) up to 5MB each. Files are stored as base64 and can be downloaded later.</p>
+          <p>Modul Meetings memungkinkan kamu menjadwalkan, mengelola, dan mendokumentasikan semua meeting tim dan klien di satu tempat. Akses dari sidebar.</p>
+
+          <h3>Visibilitas Meeting</h3>
+          <p>Hanya user yang diundang ke meeting (sebagai attendee) yang bisa melihat kartu dan detail meeting. User yang tidak diundang tidak akan melihat meeting tersebut — kecuali Admin dan PM yang selalu bisa melihat semua meeting.</p>
+
+          <h3>Tampilan Kalender</h3>
+          <p>Halaman Meetings menampilkan mini-kalender di kiri dan daftar meeting hari itu di kanan. Toggle antara tampilan Bulan dan Minggu menggunakan tombol di header halaman.</p>
+
+          <h3>Membuat Meeting</h3>
+          <p>Klik "New Meeting" untuk membuka form. Isi judul, tipe, tanggal, rentang waktu, dan lokasi. Gunakan tab Agenda untuk menambahkan item agenda gaya checklist, dan tab Attendees &amp; Projects untuk menghubungkan anggota tim dan project terkait.</p>
+
+          <h3>Tipe Meeting</h3>
+          <p>Tipe yang tersedia: Internal, Client Meeting, Sprint Review, Retrospective, dan Other.</p>
+
+          <h3>Halaman Detail Meeting</h3>
+          <p>Klik "View" di kartu meeting untuk membuka halaman detailnya. Gunakan tombol advance untuk memindahkan meeting: Scheduled → Ongoing → Done. Kamu juga bisa membatalkan meeting dari sini.</p>
+
+          <h3>Notulensi</h3>
+          <p>Panel Notulensi memiliki dua mode: Text Editor (Markdown + live preview) dan File Attachment (upload dokumen pendukung maks 5MB per file).</p>
+
           <h3>Action Items</h3>
-          <p>Add follow-up tasks using the Action Items section. Each item has a description, assignee, and due date. Click "Create Task" to convert any action item into a real task in the selected project's backlog — the task will be pre-filled with the action item text, assignee, and due date.</p>
-          <div class="guide-tip">
-            <i data-lucide="lightbulb" aria-hidden="true"></i>
-            <p>All meeting actions (create, update, status change, cancel) are recorded in the Audit Trail.</p>
-          </div>
+          <p>Tambahkan follow-up task di section Action Items. Klik "Create Task" untuk mengkonversi action item menjadi task nyata di backlog project yang dipilih — pre-filled dengan teks, assignee, dan due date.</p>
         </div>
       </div>
 
-      <!-- Section 17: Project Discussion -->
+      <!-- Section 15: Project Discussion -->
       <div class="guide-section card" id="guide-discussion">
         <div class="card__body">
           <h2 class="guide-section__title">
             <i data-lucide="message-circle" aria-hidden="true"></i>
-            17. Project Discussion
+            15. Project Discussion
           </h2>
-          <p>Every project has a Discussion tab (visible to Admin, PM, and Developer) for posting team updates, questions, decisions, and blockers in one place.</p>
-          <h3>Creating a Post</h3>
-          <p>Click "New Post" to open the post form. Choose a type (Update, Question, Decision, Blocker, or General), optionally add a title, write your content using Markdown, and attach files up to 5MB each. Click "Post" to publish.</p>
-          <h3>Post Types</h3>
-          <p>Each post is color-coded by type: Blockers are shown in red, Decisions in purple, Questions in blue, Updates in green, and General posts in neutral grey. This makes it easy to scan the feed for critical items at a glance.</p>
+          <p>Setiap project memiliki tab Discussion (terlihat oleh Admin, PM, dan Member) untuk memposting update tim, pertanyaan, keputusan, dan blocker di satu tempat.</p>
+
+          <h3>Membuat Post</h3>
+          <p>Klik "New Post", pilih tipe (Update, Question, Decision, Blocker, atau General), tulis konten menggunakan Markdown, dan lampirkan file opsional maks 5MB. Klik "Post" untuk publish.</p>
+
+          <h3>Tipe Post</h3>
+          <p>Setiap post diberi kode warna: Blocker = merah, Decision = ungu, Question = biru, Update = hijau, General = abu-abu.</p>
+
           <h3>Pinned Posts</h3>
-          <p>Admin and PM can pin important posts to keep them at the top of the feed. Click the pin icon on any post card to pin or unpin it. Pinned posts appear in a highlighted section above the regular feed, regardless of their original post date.</p>
-          <h3>Replies</h3>
-          <p>Click the reply button on any post to expand the inline reply thread. Write your reply in the text area and click "Reply" to submit. Posts with more than 3 replies show only the latest three by default — click "Show all N replies" to see the full thread.</p>
-          <h3>Editing and Deleting</h3>
-          <p>Authors can edit or delete their own posts at any time. Admin and PM can delete any post. Hover over a post card to reveal the edit and delete buttons in the top-right corner.</p>
-          <h3>File Attachments</h3>
-          <p>You can attach images, PDFs, and documents to any post. Files are stored in the browser and accessible via download link directly from the post card. Each file is limited to 5MB.</p>
-          <h3>Feed Pagination</h3>
-          <p>The discussion feed shows the 20 most recent (non-pinned) posts per page. Use the Previous and Next buttons at the bottom of the feed to navigate older posts.</p>
+          <p>Admin dan PM bisa pin post penting. Post yang di-pin muncul di section tersendiri di atas feed reguler.</p>
+
+          <h3>Reply</h3>
+          <p>Klik tombol reply di post manapun. Post dengan lebih dari 3 reply hanya menampilkan 3 terbaru — klik "Show all" untuk melihat semua.</p>
+
+          <h3>Edit dan Hapus</h3>
+          <p>Author bisa edit atau hapus post mereka. Admin dan PM bisa hapus post siapapun.</p>
+
+          <h3>Paginasi Feed</h3>
+          <p>Feed menampilkan 20 post terbaru per halaman. Gunakan tombol Previous/Next untuk navigasi post lama.</p>
+        </div>
+      </div>
+
+      <!-- Section 16: Notifications -->
+      <div class="guide-section card" id="guide-notifications">
+        <div class="card__body">
+          <h2 class="guide-section__title">
+            <i data-lucide="bell" aria-hidden="true"></i>
+            16. Notifications
+          </h2>
+          <p>Sistem notifikasi TRACKLY menggunakan pendekatan <strong>2-tier</strong> yang memastikan setiap user hanya menerima notifikasi yang relevan bagi mereka.</p>
+
+          <h3>Tier 1 — Notifikasi Personal</h3>
+          <p>Dikirim langsung ke individu spesifik:</p>
+          <ul>
+            <li>Kamu di-assign ke task → notif personal: <em>"[Nama] menugaskan kamu pada task X"</em></li>
+            <li>Task yang kamu jadikan assignee diedit/dihapus → kamu mendapat notif</li>
+            <li>Kamu diundang ke meeting → kamu mendapat notif</li>
+          </ul>
+
+          <h3>Tier 2 — Notifikasi Broadcast</h3>
+          <p>Dikirim ke grup berdasarkan role:</p>
+          <ul>
+            <li><strong>Task / Sprint / Discussion</strong> → Admin, PM, Member project (Viewer &amp; Client <em>tidak</em> menerima)</li>
+            <li><strong>Maintenance</strong> → Admin + PM saja</li>
+            <li><strong>Manajemen member</strong> → Admin saja</li>
+            <li><strong>Project / Client / Asset / Invoice</strong> → Admin + PM saja</li>
+          </ul>
+
+          <h3>Melihat Notifikasi</h3>
+          <p>Klik ikon lonceng di topbar untuk membuka panel notifikasi. Notifikasi yang belum dibaca ditandai dengan titik biru. Gunakan tab "All" dan "Unread" untuk menyaring tampilan.</p>
+
           <div class="guide-tip">
-            <i data-lucide="lightbulb" aria-hidden="true"></i>
-            <p>All post creation, deletion, and pinning actions are recorded in the project Audit Trail (Log tab), visible to Admin and PM.</p>
+            <i data-lucide="info" aria-hidden="true"></i>
+            <p>Viewer dan Client tidak menerima notifikasi operasional apapun (task, sprint, maintenance). Ini dirancang agar mereka tidak dibanjiri informasi yang tidak relevan.</p>
           </div>
         </div>
       </div>
 
-      <!-- Section 18: Personal Notes -->
+      <!-- Section 17: Personal Notes -->
       <div class="guide-section card" id="guide-notes">
         <div class="card__body">
           <h2 class="guide-section__title">
             <i data-lucide="notebook-pen" aria-hidden="true"></i>
-            18. Personal Notes
+            17. Personal Notes
           </h2>
-          <p>Personal Notes adalah modul catatan pribadi per-user, tersedia untuk semua role. Catatan bersifat personal dan tidak ditampilkan ke user lain — kecuali jika kamu memilih untuk membagikannya (Phase 25).</p>
-          <p>Akses dari sidebar: <strong>Personal Notes</strong>. Tersedia untuk Admin, PM, Developer, dan Viewer.</p>
+          <p>Personal Notes adalah modul catatan pribadi per-user, tersedia untuk semua role. Catatan bersifat personal dan tidak ditampilkan ke user lain — kecuali jika kamu memilih untuk membagikannya.</p>
 
           <h3>Layout</h3>
-          <p>Halaman Personal Notes menggunakan dua panel: panel kiri (daftar catatan, folder, search) dan panel kanan (editor Markdown). Di layar kecil, panel kiri menjadi drawer overlay yang bisa ditoggle.</p>
+          <p>Halaman menggunakan dua panel: panel kiri (daftar catatan, folder, search) dan panel kanan (editor Markdown).</p>
 
           <h3>Membuat Catatan Baru</h3>
-          <p>Klik tombol <strong>New Note</strong> di kanan atas. Editor akan terbuka — isi judul dan konten. Catatan disimpan otomatis (autosave 800ms setelah berhenti mengetik).</p>
+          <p>Klik <strong>New Note</strong>. Isi judul dan konten. Catatan disimpan otomatis (autosave 800ms setelah berhenti mengetik).</p>
 
           <h3>Editor Markdown</h3>
-          <p>Konten catatan mendukung Markdown. Gunakan toolbar formatting untuk bold, italic, dan heading (H1–H3), atau gunakan shortcut keyboard <strong>Ctrl+B</strong> (bold) dan <strong>Ctrl+I</strong> (italic). Toggle antara mode Edit dan mode Preview menggunakan tombol di toolbar atas.</p>
+          <p>Supports Markdown. Gunakan toolbar untuk bold, italic, dan heading, atau shortcut <strong>Ctrl+B</strong> / <strong>Ctrl+I</strong>. Toggle antara mode Edit dan Preview.</p>
 
           <h3>Pin, Warna, dan Tag</h3>
           <ul>
-            <li><strong>Pin:</strong> Catatan yang di-pin muncul di section Pinned di atas daftar. Klik tombol "Pin" di bottom toolbar.</li>
-            <li><strong>Warna:</strong> Pilih salah satu dari 7 warna pastel di bottom toolbar untuk memberi warna pada catatan. Warna ditampilkan sebagai titik berwarna di panel kiri.</li>
-            <li><strong>Tag:</strong> Ketik tag di input "Add tag…" dan tekan Enter atau koma. Tag bisa dihapus dengan tombol × di setiap chip.</li>
+            <li><strong>Pin:</strong> Catatan yang di-pin muncul di section Pinned di atas daftar.</li>
+            <li><strong>Warna:</strong> Pilih salah satu dari 7 warna pastel.</li>
+            <li><strong>Tag:</strong> Ketik tag dan tekan Enter atau koma. Hapus dengan ×.</li>
           </ul>
 
           <h3>Folder</h3>
-          <p>Klik <strong>New Folder</strong> untuk membuat folder baru. Pindahkan catatan ke folder menggunakan dropdown "Pindah ke folder" di bottom toolbar. Folder bisa di-rename (klik ikon pensil) atau dihapus (klik ×) — menghapus folder akan memindahkan semua catatan di dalamnya ke All Notes.</p>
+          <p>Klik <strong>New Folder</strong> untuk membuat folder. Pindahkan catatan via dropdown di toolbar. Hapus folder akan memindahkan semua catatan di dalamnya ke All Notes.</p>
+
+          <h3>Berbagi Catatan</h3>
+          <p>Klik <strong>Share</strong> di toolbar. Set permission: <em>Hanya lihat</em> (read-only) atau <em>Bisa edit</em>. Cabut akses kapan saja dari modal share.</p>
 
           <h3>Export &amp; Import</h3>
           <ul>
-            <li><strong>Export .md:</strong> Tombol "Export .md" di toolbar editor — download catatan aktif sebagai file Markdown.</li>
-            <li><strong>Export Notes:</strong> Tombol di header — export semua catatan ke JSON (backup lengkap) atau Markdown gabungan.</li>
-            <li><strong>Import:</strong> Import file JSON hasil export sebelumnya. Catatan dengan ID yang sama akan di-skip.</li>
-            <li><strong>Upload .md:</strong> Upload file .md atau .txt dari komputer — langsung menjadi catatan baru.</li>
+            <li><strong>Export .md:</strong> Download catatan aktif sebagai file Markdown.</li>
+            <li><strong>Export Notes:</strong> Export semua catatan ke JSON atau Markdown gabungan.</li>
+            <li><strong>Import:</strong> Import file JSON hasil export sebelumnya.</li>
+            <li><strong>Upload .md:</strong> Upload file .md atau .txt — langsung jadi catatan baru.</li>
           </ul>
 
-          <h3>Berbagi Catatan (Phase 25)</h3>
-          <p>Owner catatan bisa membagikan catatan ke member lain dengan klik tombol <strong>Share</strong> di toolbar editor. Modal share memungkinkan:</p>
-          <ul>
-            <li>Pilih satu atau beberapa member dari dropdown</li>
-            <li>Set permission: <strong>Hanya lihat</strong> (read-only) atau <strong>Bisa edit</strong> (dapat menyimpan perubahan)</li>
-            <li>Lihat daftar siapa saja yang sudah punya akses, lengkap dengan badge permission</li>
-            <li>Cabut akses dari user tertentu dengan tombol × di daftar akses</li>
-            <li>Ubah permission untuk semua shared user sekaligus via radio button</li>
-          </ul>
+          <h3>Riwayat Aktivitas</h3>
+          <p>Owner catatan bisa melihat semua aktivitas pada catatan tersebut di tab <strong>Riwayat</strong> — timeline vertikal dengan avatar user, deskripsi aksi, dan waktu relatif.</p>
+        </div>
+      </div>
+
+      <!-- Section 18: Settings -->
+      <div class="guide-section card" id="guide-settings">
+        <div class="card__body">
+          <h2 class="guide-section__title">
+            <i data-lucide="settings" aria-hidden="true"></i>
+            18. Settings
+          </h2>
+          <p>Settings (Admin/PM only) tersedia dalam dua tab:</p>
+          <h3>General</h3>
+          <p>Konfigurasi nama sistem, timezone, format tanggal, dan mata uang. Set juga default hourly rate dan persentase pajak yang digunakan dalam pembuatan invoice.</p>
+          <h3>About / Changelog</h3>
+          <p>Lihat versi saat ini, riwayat changelog lengkap, tech stack yang digunakan, dan informasi aplikasi.</p>
           <div class="guide-tip">
             <i data-lucide="info" aria-hidden="true"></i>
-            <p>Tombol Share hanya muncul untuk owner catatan. Catatan yang dibagikan dengan permission <em>Hanya lihat</em> akan menampilkan banner info dan textarea menjadi read-only.</p>
-          </div>
-
-          <h3>Catatan yang Dibagikan ke Kamu</h3>
-          <p>Catatan dari user lain yang dibagikan kepadamu muncul di section <strong>"Dibagikan ke Saya"</strong> di panel kiri. Setiap catatan shared ditandai dengan:</p>
-          <ul>
-            <li>Badge biru "Shared" di samping judul</li>
-            <li>Label "Dari: [nama owner]" di bawah timestamp</li>
-          </ul>
-          <p>Catatan milikmu yang sudah dibagikan ke orang lain ditandai dengan ikon share di panel kiri.</p>
-
-          <h3>Riwayat Aktivitas (Audit Log)</h3>
-          <p>Owner catatan bisa melihat semua aktivitas yang pernah terjadi pada catatan tersebut. Klik tab <strong>Riwayat</strong> di toolbar editor (hanya muncul untuk owner). Audit log ditampilkan sebagai timeline vertikal dengan:</p>
-          <ul>
-            <li>Avatar/inisial user yang melakukan aksi</li>
-            <li>Deskripsi aksi yang terjadi (membuat, mengedit, berbagi, dll.)</li>
-            <li>Waktu relatif (misal: "3 menit lalu")</li>
-            <li>Detail tambahan jika ada (nama folder tujuan, tag yang ditambah, dsb.)</li>
-          </ul>
-          <p>Aksi yang dicatat: membuat, mengedit, menghapus, pin/unpin, ubah warna, tambah/hapus tag, pindah folder, export, share, cabut akses, ubah permission, dan view/edit oleh shared user.</p>
-
-          <div class="guide-tip">
-            <i data-lucide="lightbulb" aria-hidden="true"></i>
-            <p>Aksi dari user lain (non-owner) yang melihat atau mengedit catatan kamu juga tercatat di Riwayat, sehingga kamu bisa tahu kapan dan oleh siapa catatan kamu diakses.</p>
+            <p>Karena TRACKLY kini menggunakan Firebase Firestore sebagai database cloud, fitur Export/Import/Reset Data dan PWA tidak tersedia. Pengelolaan data dilakukan langsung melalui Firebase Console.</p>
           </div>
         </div>
       </div>
@@ -639,8 +628,8 @@ function buildGuideHTML() {
       <!-- Footer -->
       <div class="card" style="margin-bottom: var(--space-8);">
         <div class="card__body" style="text-align:center; color:var(--color-text-muted); font-size:var(--text-sm);">
-          <p>TRACKLY v1.6.0 &mdash; Track Everything, Deliver Anything</p>
-          <p>Need more help? Contact your system administrator or refer to the README in the project repository.</p>
+          <p>TRACKLY &mdash; Track Everything, Deliver Anything</p>
+          <p>Butuh bantuan lebih lanjut? Hubungi administrator sistem kamu.</p>
         </div>
       </div>
 
