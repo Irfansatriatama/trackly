@@ -461,9 +461,12 @@ async function renderLogin() {
     if (!emailInput) {
       setFieldError('loginEmail', 'Email is required.');
       valid = false;
-    } else if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(emailInput)) {
-      setFieldError('loginEmail', 'Enter a valid email address.');
-      valid = false;
+    } else if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(emailInput) && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(emailInput.replace(/\\\\/g, '\\'))) {
+      // Reverting to basic HTML5 compatible regex to avoid escaping issues in string replacement
+      if (!/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$/.test(emailInput)) {
+        setFieldError('loginEmail', 'Enter a valid email address.');
+        valid = false;
+      }
     }
     if (!password) {
       setFieldError('password', 'Password is required.');
