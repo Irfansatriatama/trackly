@@ -393,9 +393,9 @@ function renderSettingsPage() {
 
       <div class="settings-panel card is-hidden" id="tab-about">
         <div class="card__body">
-          <div class="about-header">
-            <img src="assets/logo.svg" alt="TRACKLY logo" class="about-logo" />
-              <div>
+          <div class="about-header" style="display:flex;align-items:center;gap:var(--space-5);">
+            <img src="assets/logo.svg" alt="TRACKLY logo" class="about-logo" style="width:64px;height:64px;flex-shrink:0;" />
+            <div>
               <h2 class="about-title">TRACKLY</h2>
               <p class="about-tagline text-muted">Track Everything, Deliver Anything</p>
               <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;margin-top:var(--space-2);">

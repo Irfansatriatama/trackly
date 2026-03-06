@@ -6,14 +6,14 @@
 import { appStore } from '../core/store.js';
 
 const ROUTE_TITLES = {
-  '/dashboard':     'Dashboard',
-  '/projects':      'Projects',
-  '/meetings':      'Meetings',
-  '/clients':       'Clients',
-  '/members':       'Members',
-  '/assets':        'Assets',
-  '/settings':      'Settings',
-  '/notes':         'Personal Notes',
+  '/dashboard': 'Dashboard',
+  '/projects': 'Projects',
+  '/meetings': 'Meetings',
+  '/clients': 'Clients',
+  '/members': 'Members',
+  '/assets': 'Assets',
+  '/settings': 'Settings',
+  '/notes': 'Personal Notes',
   '/notifications': 'Notification Center',
 };
 
@@ -23,7 +23,7 @@ function getTitleFromPath(path) {
   if (segments[0] === 'projects') {
     const sub = segments[2];
     if (sub) {
-      const subTitles = { board:'Kanban Board', backlog:'Backlog', sprint:'Sprint', gantt:'Gantt Chart', discussion:'Discussion', maintenance:'Maintenance', reports:'Reports', log:'Activity Log' };
+      const subTitles = { board: 'Kanban Board', backlog: 'Backlog', sprint: 'Sprint', gantt: 'Gantt Chart', discussion: 'Discussion', maintenance: 'Maintenance', reports: 'Reports', log: 'Activity Log' };
       return subTitles[sub] || 'Project';
     }
     return 'Project Detail';
@@ -38,8 +38,9 @@ function getInitials(name) {
 
 function buildTopbarHTML(user) {
   const initials = user ? getInitials(user.full_name || user.username || 'User') : 'U';
-  const userName  = user ? (user.full_name || user.username || 'User') : 'User';
-  const userRole  = user ? (user.role || 'member') : 'member';
+  const userName = user ? (user.full_name || user.username || 'User') : 'User';
+  const userRole = user ? (user.role || 'member') : 'member';
+  const isAdmin = userRole === 'admin';
 
   return `
     <div class="topbar__left">
@@ -102,6 +103,11 @@ function buildTopbarHTML(user) {
           <i data-lucide="settings" aria-hidden="true"></i>
           Settings
         </a>
+        ${!isAdmin ? `
+        <button class="topbar__dropdown-item" id="topbarChangePasswordBtn" role="menuitem">
+          <i data-lucide="key" aria-hidden="true"></i>
+          Change Password
+        </button>` : ''}
         <div class="topbar__dropdown-divider"></div>
         <button class="topbar__dropdown-item" id="topbarLogoutBtn" role="menuitem">
           <i data-lucide="log-out" aria-hidden="true"></i>
@@ -149,20 +155,20 @@ function relativeTimeID(isoStr) {
 
 function getNotifHref(notif) {
   const { entity_type, entity_id, project_id } = notif;
-  if (entity_type === 'task' && project_id)        return `#/projects/${project_id}/backlog`;
-  if (entity_type === 'sprint' && project_id)      return `#/projects/${project_id}/sprint`;
-  if (entity_type === 'meeting' && entity_id)      return `#/meetings/${entity_id}`;
+  if (entity_type === 'task' && project_id) return `#/projects/${project_id}/backlog`;
+  if (entity_type === 'sprint' && project_id) return `#/projects/${project_id}/sprint`;
+  if (entity_type === 'meeting' && entity_id) return `#/meetings/${entity_id}`;
   if (entity_type === 'maintenance' && project_id) return `#/projects/${project_id}/maintenance`;
-  if (entity_type === 'discussion' && project_id)  return `#/projects/${project_id}/discussion`;
-  if (entity_type === 'member')  return `#/members`;
-  if (entity_type === 'client')  return `#/clients`;
-  if (entity_type === 'asset')   return `#/assets`;
+  if (entity_type === 'discussion' && project_id) return `#/projects/${project_id}/discussion`;
+  if (entity_type === 'member') return `#/members`;
+  if (entity_type === 'client') return `#/clients`;
+  if (entity_type === 'asset') return `#/assets`;
   if (entity_type === 'project' && project_id) return `#/projects/${project_id}`;
   return null;
 }
 
 async function renderNotifDropdownList() {
-  const listEl    = document.getElementById('notifList');
+  const listEl = document.getElementById('notifList');
   const markAllBtn = document.getElementById('notifMarkAllBtn');
   if (!listEl) return;
 
@@ -172,7 +178,7 @@ async function renderNotifDropdownList() {
     const session = getSession();
     if (!session) return;
 
-    const all  = await getAll('notifications');
+    const all = await getAll('notifications');
     const mine = all
       .filter((n) => n.user_id === session.userId)
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -191,7 +197,7 @@ async function renderNotifDropdownList() {
     }
 
     listEl.innerHTML = mine.map((n) => {
-      const ini  = (n.actor_name || '?').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+      const ini = (n.actor_name || '?').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
       const href = getNotifHref(n) || '';
       return `
         <div class="notif-item ${n.read ? '' : 'is-unread'}" data-id="${n.id}" data-href="${href}" role="button" tabindex="0">
@@ -208,7 +214,7 @@ async function renderNotifDropdownList() {
 
     listEl.querySelectorAll('.notif-item').forEach((el) => {
       const handler = async () => {
-        const nid  = el.dataset.id;
+        const nid = el.dataset.id;
         const href = el.dataset.href;
         el.classList.remove('is-unread');
         el.querySelector('.notif-item__dot')?.remove();
@@ -233,7 +239,7 @@ async function renderNotifDropdownList() {
 
 function closeNotifDropdown() {
   const btn = document.getElementById('notifBellBtn');
-  const dd  = document.getElementById('notifDropdown');
+  const dd = document.getElementById('notifDropdown');
   if (!dd) return;
   dd.classList.remove('is-open');
   dd.setAttribute('aria-hidden', 'true');
@@ -241,8 +247,8 @@ function closeNotifDropdown() {
 }
 
 function initNotifBell() {
-  const btn        = document.getElementById('notifBellBtn');
-  const dd         = document.getElementById('notifDropdown');
+  const btn = document.getElementById('notifBellBtn');
+  const dd = document.getElementById('notifDropdown');
   const markAllBtn = document.getElementById('notifMarkAllBtn');
   if (!btn || !dd) return;
 
@@ -261,10 +267,10 @@ function initNotifBell() {
     e.stopPropagation();
     try {
       const { getAll, update } = await import('../core/db.js');
-      const { getSession }     = await import('../core/auth.js');
+      const { getSession } = await import('../core/auth.js');
       const session = getSession();
       if (!session) return;
-      const all    = await getAll('notifications');
+      const all = await getAll('notifications');
       const unread = all.filter((n) => n.user_id === session.userId && !n.read);
       for (const n of unread) { n.read = true; await update('notifications', n); }
       await renderNotifDropdownList();
@@ -281,7 +287,7 @@ function initNotifBell() {
 }
 
 function initDropdown(onLogout) {
-  const btn      = document.getElementById('topbarUserBtn');
+  const btn = document.getElementById('topbarUserBtn');
   const dropdown = document.getElementById('topbarDropdown');
   if (!btn || !dropdown) return;
 
@@ -303,6 +309,15 @@ function initDropdown(onLogout) {
   const logoutBtn = document.getElementById('topbarLogoutBtn');
   if (logoutBtn && typeof onLogout === 'function') {
     logoutBtn.addEventListener('click', () => { close(); onLogout(); });
+  }
+
+  const changePassBtn = document.getElementById('topbarChangePasswordBtn');
+  if (changePassBtn) {
+    changePassBtn.addEventListener('click', async () => {
+      close();
+      const { openChangePasswordModal } = await import('../modules/profile.js');
+      openChangePasswordModal();
+    });
   }
 }
 

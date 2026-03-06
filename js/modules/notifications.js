@@ -20,20 +20,20 @@ function relativeTimeID(isoStr) {
 
 function getNotifHref(notif) {
   const { entity_type, entity_id, project_id } = notif;
-  if (entity_type === 'task' && project_id)        return `#/projects/${project_id}/backlog`;
-  if (entity_type === 'sprint' && project_id)      return `#/projects/${project_id}/sprint`;
-  if (entity_type === 'meeting' && entity_id)      return `#/meetings/${entity_id}`;
+  if (entity_type === 'task' && project_id) return `#/projects/${project_id}/backlog`;
+  if (entity_type === 'sprint' && project_id) return `#/projects/${project_id}/sprint`;
+  if (entity_type === 'meeting' && entity_id) return `#/meetings/${entity_id}`;
   if (entity_type === 'maintenance' && project_id) return `#/projects/${project_id}/maintenance`;
-  if (entity_type === 'discussion' && project_id)  return `#/projects/${project_id}/discussion`;
-  if (entity_type === 'member')  return `#/members`;
-  if (entity_type === 'client')  return `#/clients`;
-  if (entity_type === 'asset')   return `#/assets`;
+  if (entity_type === 'discussion' && project_id) return `#/projects/${project_id}/discussion`;
+  if (entity_type === 'member') return `#/members`;
+  if (entity_type === 'client') return `#/clients`;
+  if (entity_type === 'asset') return `#/assets`;
   if (entity_type === 'project' && project_id) return `#/projects/${project_id}`;
   return null;
 }
 
 function renderNotifItem(n) {
-  const ini  = (n.actor_name || '?').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+  const ini = (n.actor_name || '?').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
   const href = getNotifHref(n) || '';
   return `
     <div class="notif-page-item ${n.read ? '' : 'is-unread'}" data-id="${n.id}" data-href="${href}" role="button" tabindex="0">
@@ -100,13 +100,13 @@ export async function render() {
 
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
-  let currentTab  = 'all';
+  let currentTab = 'all';
   let currentPage = 1;
-  let allNotifs   = [];
+  let allNotifs = [];
 
   async function loadData() {
     const all = await getAll('notifications');
-    allNotifs  = all
+    allNotifs = all
       .filter((n) => n.user_id === session.userId)
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 100);
@@ -114,20 +114,20 @@ export async function render() {
   }
 
   function renderPage() {
-    const listEl      = document.getElementById('notifPageList');
-    const paginEl     = document.getElementById('notifPagePagination');
-    const markAllBtn  = document.getElementById('notifPageMarkAllBtn');
+    const listEl = document.getElementById('notifPageList');
+    const paginEl = document.getElementById('notifPagePagination');
+    const markAllBtn = document.getElementById('notifPageMarkAllBtn');
     if (!listEl) return;
 
     const filtered = currentTab === 'unread'
       ? allNotifs.filter((n) => !n.read)
       : allNotifs;
 
-    const total      = filtered.length;
+    const total = filtered.length;
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
     if (currentPage > totalPages) currentPage = totalPages;
 
-    const start    = (currentPage - 1) * PAGE_SIZE;
+    const start = (currentPage - 1) * PAGE_SIZE;
     const paginated = filtered.slice(start, start + PAGE_SIZE);
 
     // Mark all button
@@ -141,7 +141,7 @@ export async function render() {
       // Wire item clicks
       listEl.querySelectorAll('.notif-page-item').forEach((el) => {
         const handler = async () => {
-          const nid  = el.dataset.id;
+          const nid = el.dataset.id;
           const href = el.dataset.href;
           el.classList.remove('is-unread');
           el.querySelector('.notif-item__dot')?.remove();
@@ -202,13 +202,23 @@ export async function render() {
 
   // Mark all
   document.getElementById('notifPageMarkAllBtn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('notifPageMarkAllBtn');
+    if (btn) btn.disabled = true;
     try {
       const unread = allNotifs.filter((n) => !n.read);
-      for (const n of unread) { n.read = true; await update('notifications', n); }
+      for (const n of unread) {
+        n.read = true;
+        await update('notifications', n);
+      }
       refreshNotifBadge();
-      renderPage();
+      // Re-fetch from Firestore so the in-memory list is in sync with the server
+      await loadData();
     } catch (_) { /* silent */ }
+    finally {
+      if (btn) btn.disabled = false;
+    }
   });
+
 
   await loadData();
 }

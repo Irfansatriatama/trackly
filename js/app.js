@@ -321,6 +321,14 @@ function registerAllRoutes() {
     await renderGuide({});
   });
 
+  // Project Feature Guide — Backlog / Board / Sprint / Gantt
+  registerRoute('/project-guide', async () => {
+    if (!requireAuth()) return;
+    setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading guide...</p></div></div>');
+    const { render: renderProjectGuide } = await import('./modules/project-guide.js');
+    await renderProjectGuide({});
+  });
+
   // Notification Center — Phase 23
   registerRoute('/notifications', async () => {
     if (!requireAuth()) return;
