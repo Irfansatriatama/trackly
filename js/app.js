@@ -8,7 +8,7 @@ import { initRouter, registerRoute, setNotFound, navigate } from './core/router.
 import { isAuthenticated, clearSession, getSession, createSession, verifyPassword } from './core/auth.js';
 import { openDB, getAll, getById, count } from './core/db.js';
 import { appStore } from './core/store.js';
-import { debug, showToast } from './core/utils.js';
+import { debug } from './core/utils.js';
 import { initSidebar } from './components/sidebar.js';
 import { initTopbar } from './components/topbar.js';
 
