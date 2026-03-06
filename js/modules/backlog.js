@@ -10,6 +10,8 @@ import { openModal, closeModal } from '../components/modal.js';
 import { showConfirm } from '../components/confirm.js';
 import { renderBadge } from '../components/badge.js';
 import { getSession } from '../core/auth.js';
+import { startAutoRefresh, stopAutoRefresh } from '../core/auto-refresh.js';
+import { downloadTasksCSV } from '../core/export.js';
 
 export const TASK_TYPE_OPTIONS = [
   { value: 'story', label: 'Story', icon: 'book-open' },
@@ -80,6 +82,14 @@ export async function render(params = {}) {
     _filterStatus = ''; _filterPriority = ''; _filterType = ''; _filterAssignee = '';
     _searchQuery = ''; _selectedIds.clear(); _detailTaskId = null;
     await renderBacklogPage();
+    // Auto-refresh: reload data + re-render content every 60s
+    startAutoRefresh(async () => {
+      const [allTasks, allSprints] = await Promise.all([getAll('tasks'), getAll('sprints')]);
+      _tasks = allTasks.filter(t => t.project_id === _projectId);
+      _sprints = allSprints.filter(s => s.project_id === _projectId);
+      _computeAllTags();
+      refreshContent();
+    }, 60000);
   } catch (err) {
     debug('Backlog render error:', err);
     document.getElementById('main-content').innerHTML = `<div class="page-container page-enter"><div class="empty-state"><i data-lucide="alert-circle" class="empty-state__icon"></i><p class="empty-state__title">Failed to load backlog</p><p class="empty-state__text">${sanitize(String(err.message))}</p></div></div>`;
@@ -136,6 +146,9 @@ async function renderBacklogPage() {
         </div>
         <button class="btn btn--ghost backlog-group-toggle${_groupByEpic ? ' is-active' : ''}" id="btnGroupByEpic" title="${_groupByEpic ? 'Show flat list' : 'Group by Epic'}">
           <i data-lucide="layers" aria-hidden="true"></i> ${_groupByEpic ? 'Flat List' : 'Group by Epic'}
+        </button>
+        <button class="btn btn--ghost" id="btnExportCSV" title="Export current list as CSV">
+          <i data-lucide="download" aria-hidden="true"></i> CSV
         </button>
       </div>
       <div class="filter-chips" id="backlogFilterChips" style="padding:0 var(--space-1) var(--space-2);">${renderBacklogFilterChips()}</div>
@@ -353,6 +366,7 @@ function bindPageEvents() {
   document.getElementById('btnOpenFilterModal')?.addEventListener('click', openBacklogFilterModal);
   document.getElementById('backlogFilterChips')?.addEventListener('click', handleBacklogChipRemove);
   document.getElementById('btnGroupByEpic')?.addEventListener('click', () => { _groupByEpic = !_groupByEpic; refreshContent(); });
+  document.getElementById('btnExportCSV')?.addEventListener('click', handleExportCSV);
   document.getElementById('sortField')?.addEventListener('change', async e => {
     const newField = e.target.value;
     if (newField === _sortField) { _sortDir = _sortDir === 'asc' ? 'desc' : 'asc'; }
@@ -746,15 +760,27 @@ function openTaskModal(task, prefillParentTaskId = null) {
   document.getElementById('btnAddChecklistItem')?.addEventListener('click', () => { const inp = document.getElementById('checklistAddInput'); const text = inp?.value.trim(); if (text) { _checklist.push({ text, done: false }); inp.value = ''; refreshChecklistItems(); } });
   document.getElementById('checklistAddInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btnAddChecklistItem')?.click(); } });
 
-  // Comments
+  // Comments + @Mention
   if (isEdit) {
-    document.getElementById('btnAddComment')?.addEventListener('click', () => {
-      const inp = document.getElementById('commentAddInput'); const text = inp?.value.trim(); if (!text) return;
-      const s = getSession(); const author = _members.find(m => m.id === s?.userId);
+    const commentTextarea = document.getElementById('commentAddInput');
+    bindMentionAutocomplete(commentTextarea, _members);
+
+    document.getElementById('btnAddComment')?.addEventListener('click', async () => {
+      const inp = document.getElementById('commentAddInput');
+      const text = inp?.value.trim();
+      if (!text) return;
+      const s = getSession();
+      const author = _members.find(m => m.id === s?.userId);
       _comments.push({ id: `CMT-${Date.now()}`, author_id: s?.userId || null, author_name: author?.full_name || 'Unknown', text, created_at: nowISO() });
       inp.value = '';
-      const listEl = document.getElementById('commentsList'); if (listEl) { listEl.innerHTML = _comments.map(c => renderCommentView(c)).join(''); }
+      const listEl = document.getElementById('commentsList');
+      if (listEl) { listEl.innerHTML = _comments.map(c => renderCommentView(c)).join(''); }
       if (typeof lucide !== 'undefined') lucide.createIcons();
+      // Send mention notifications (non-blocking)
+      const mentioned = extractMentionedMembers(text, _members);
+      if (mentioned.length > 0 && task) {
+        sendMentionNotifications(mentioned, author, task, _projectId).catch(() => { });
+      }
     });
   }
 
@@ -816,7 +842,138 @@ function renderChecklistItemEdit(item, idx) {
 }
 
 function renderCommentView(c) {
-  return `<div class="comment-item"><div class="comment-item__header"><span class="comment-item__author">${sanitize(c.author_name || 'Unknown')}</span><span class="comment-item__time text-muted">${formatDate(c.created_at, 'datetime')}</span></div><p class="comment-item__text">${sanitize(c.text)}</p></div>`;
+  // Parse @mentions → styled badge
+  const textWithMentions = sanitize(c.text || '').replace(
+    /@(\S+)/g,
+    '<span class="mention-badge">@$1</span>'
+  );
+  return `<div class="comment-item"><div class="comment-item__header"><span class="comment-item__author">${sanitize(c.author_name || 'Unknown')}</span><span class="comment-item__time text-muted">${formatDate(c.created_at, 'datetime')}</span></div><p class="comment-item__text">${textWithMentions}</p></div>`;
+}
+
+// ─── Export CSV ───────────────────────────────────────────────────────────────
+
+function handleExportCSV() {
+  const filtered = getFilteredTasks();
+  if (filtered.length === 0) { showToast('No tasks to export.', 'warning'); return; }
+  const now = new Date().toISOString().slice(0, 10);
+  downloadTasksCSV(filtered, _members, _sprints, `backlog-${_projectId}-${now}.csv`);
+  showToast(`Exported ${filtered.length} tasks as CSV.`, 'success');
+}
+
+// ─── @Mention Autocomplete ────────────────────────────────────────────────────
+
+/**
+ * Bind @mention autocomplete to a textarea.
+ * Detects "@" at caret, shows floating dropdown of matching members.
+ */
+function bindMentionAutocomplete(textarea, members) {
+  if (!textarea) return;
+
+  const dropdown = document.createElement('div');
+  dropdown.className = 'mention-dropdown';
+  dropdown.style.cssText = 'display:none;position:absolute;left:0;right:0;z-index:200;';
+  const wrapper = textarea.parentNode;
+  if (wrapper) { wrapper.style.position = 'relative'; wrapper.appendChild(dropdown); }
+
+  let _mentionStart = -1;
+
+  function getMentionQuery() {
+    const text = textarea.value;
+    const caret = textarea.selectionStart;
+    let i = caret - 1;
+    while (i >= 0 && text[i] !== '@' && text[i] !== ' ' && text[i] !== '\n') i--;
+    if (i >= 0 && text[i] === '@') { _mentionStart = i; return text.slice(i + 1, caret).toLowerCase(); }
+    _mentionStart = -1;
+    return null;
+  }
+
+  function close() { dropdown.style.display = 'none'; dropdown.innerHTML = ''; }
+
+  function pickMember(handle) {
+    const text = textarea.value;
+    const caret = textarea.selectionStart;
+    textarea.value = text.slice(0, _mentionStart) + '@' + handle + ' ' + text.slice(caret);
+    textarea.selectionStart = textarea.selectionEnd = _mentionStart + handle.length + 2;
+    close();
+    textarea.focus();
+  }
+
+  textarea.addEventListener('input', () => {
+    const query = getMentionQuery();
+    if (query === null) { close(); return; }
+    const hits = members.filter(m =>
+      m.full_name.toLowerCase().includes(query) ||
+      (m.username || '').toLowerCase().includes(query)
+    ).slice(0, 8);
+    if (!hits.length) { close(); return; }
+    dropdown.innerHTML = hits.map(m => {
+      const handle = sanitize(m.username || m.full_name.replace(/\s+/g, '_'));
+      return `<div class="mention-suggestion" data-handle="${handle}">
+        <span class="mention-suggestion__name">${sanitize(m.full_name)}</span>
+        <span class="mention-suggestion__handle text-muted">@${handle}</span>
+      </div>`;
+    }).join('');
+    dropdown.style.display = 'block';
+    dropdown.querySelectorAll('.mention-suggestion').forEach(el => {
+      el.addEventListener('mousedown', e => { e.preventDefault(); pickMember(el.dataset.handle); });
+    });
+  });
+
+  textarea.addEventListener('keydown', e => {
+    if (dropdown.style.display === 'none') return;
+    const items = [...dropdown.querySelectorAll('.mention-suggestion')];
+    const active = dropdown.querySelector('.mention-suggestion.is-active');
+    let idx = active ? items.indexOf(active) : -1;
+    if (e.key === 'ArrowDown') { e.preventDefault(); idx = (idx + 1) % items.length; }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); idx = (idx - 1 + items.length) % items.length; }
+    else if (e.key === 'Enter' && active) { e.preventDefault(); pickMember(active.dataset.handle); return; }
+    else if (e.key === 'Escape') { close(); return; }
+    else return;
+    items.forEach(i => i.classList.remove('is-active'));
+    items[idx]?.classList.add('is-active');
+  });
+
+  textarea.addEventListener('blur', () => setTimeout(close, 150));
+}
+
+/**
+ * Extract member objects mentioned in comment text via @handle.
+ */
+function extractMentionedMembers(text, members) {
+  const matches = (text || '').match(/@(\S+)/g);
+  if (!matches) return [];
+  const seen = new Set();
+  return matches.map(m => {
+    const handle = m.slice(1).toLowerCase();
+    return members.find(u =>
+      (u.username || '').toLowerCase() === handle ||
+      u.full_name.toLowerCase().replace(/\s+/g, '_') === handle
+    );
+  }).filter(u => u && !seen.has(u.id) && seen.add(u.id));
+}
+
+/**
+ * Write notification records to Firestore for each mentioned user.
+ */
+async function sendMentionNotifications(mentionedMembers, commenter, task, projectId) {
+  const selfId = getSession()?.userId;
+  for (const member of mentionedMembers) {
+    if (member.id === selfId) continue;
+    try {
+      await add('notifications', {
+        id: `NOTIF-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        user_id: member.id,
+        type: 'mention',
+        title: 'You were mentioned in a comment',
+        message: `${sanitize(commenter?.full_name || 'Someone')} mentioned you on task "${sanitize(task.title)}"`,
+        link: `#/projects/${projectId}/backlog`,
+        entity_type: 'task',
+        entity_id: task.id,
+        read: false,
+        created_at: nowISO(),
+      });
+    } catch (e) { debug('Mention notification write failed:', e); }
+  }
 }
 
 async function handleSaveTask(existing, isEdit, tags, checklist, comments, links = []) {

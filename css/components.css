@@ -5222,3 +5222,120 @@ a:focus-visible {
   height: 12px;
   flex-shrink: 0;
 }
+
+/* ================================================================
+   @MENTION — badges + autocomplete dropdown
+   ================================================================ */
+
+.mention-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #DBEAFE;
+  color: #1D4ED8;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.mention-dropdown {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 300;
+}
+
+.mention-suggestion {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  transition: background 80ms;
+}
+
+.mention-suggestion:hover,
+.mention-suggestion.is-active {
+  background: var(--color-surface);
+}
+
+.mention-suggestion__name {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.mention-suggestion__handle {
+  font-size: 11px;
+}
+
+/* ================================================================
+   AUTO-REFRESH INDICATOR
+   ================================================================ */
+
+#autoRefreshIndicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9000;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  box-shadow: var(--shadow-md);
+  user-select: none;
+  pointer-events: auto;
+  transition: opacity 200ms;
+}
+
+#autoRefreshIndicator:hover {
+  opacity: 1 !important;
+  box-shadow: var(--shadow-lg);
+}
+
+#arLastUpdated {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+#arRefreshNow:hover {
+  color: var(--color-primary) !important;
+}
+
+/* ================================================================
+   REPORT NUM COLOR VARIANTS (time tracking)
+   ================================================================ */
+
+.rpt-num--info {
+  color: #1D4ED8;
+  font-weight: 600;
+}
+
+/* ================================================================
+   PRINT IMPROVEMENTS
+   ================================================================ */
+
+@media print {
+  #autoRefreshIndicator {
+    display: none !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .mention-badge {
+    background: none !important;
+    font-weight: bold;
+  }
+}

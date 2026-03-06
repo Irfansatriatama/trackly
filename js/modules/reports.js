@@ -14,22 +14,23 @@
 import { getAll, getById } from '../core/db.js';
 import { formatDate, sanitize, debug } from '../core/utils.js';
 import { getSession } from '../core/auth.js';
+import { downloadCSV, downloadTimeTrackingCSV, downloadTaskTimeCSV, printPage } from '../core/export.js';
 
 // ─── Module State ─────────────────────────────────────────────────────────────
 
-let _projectId    = null;
-let _project      = null;
-let _client       = null;
-let _tasks        = [];
-let _sprints      = [];
-let _members      = [];
-let _maintenance  = [];
-let _assets       = [];
-let _settings     = {};
+let _projectId = null;
+let _project = null;
+let _client = null;
+let _tasks = [];
+let _sprints = [];
+let _members = [];
+let _maintenance = [];
+let _assets = [];
+let _settings = {};
 let _activeReport = 'progress';
 let _chartInstances = {};
 let _dateFrom = '';
-let _dateTo   = '';
+let _dateTo = '';
 
 // ─── Chart.js CDN Loader ──────────────────────────────────────────────────────
 
@@ -102,13 +103,13 @@ async function loadData() {
       getAll('clients'),
     ]);
 
-  _project     = project;
-  _tasks       = allTasks.filter(t => t.project_id === _projectId);
-  _sprints     = allSprints.filter(s => s.project_id === _projectId);
-  _members     = members;
+  _project = project;
+  _tasks = allTasks.filter(t => t.project_id === _projectId);
+  _sprints = allSprints.filter(s => s.project_id === _projectId);
+  _members = members;
   _maintenance = allMaint.filter(m => m.project_id === _projectId);
-  _assets      = allAssets.filter(a => a.project_id === _projectId);
-  _settings    = Object.fromEntries(allSettings.map(s => [s.key, s.value]));
+  _assets = allAssets.filter(a => a.project_id === _projectId);
+  _settings = Object.fromEntries(allSettings.map(s => [s.key, s.value]));
 
   if (_project && _project.client_id) {
     _client = allClients.find(c => c.id === _project.client_id) || null;
@@ -140,7 +141,7 @@ function renderPage() {
           <p class="page-header__subtitle">Analytics and insights for ${projName}</p>
         </div>
         <div class="page-header__actions">
-          <button class="btn btn--outline" onclick="window.print()">
+          <button class="btn btn--outline" id="btnPrintReport">
             <i data-lucide="printer"></i>
             Export PDF
           </button>
@@ -162,6 +163,9 @@ function renderPage() {
         </button>
         <button class="rpt-tab" data-report="assets">
           <i data-lucide="package"></i> Asset Inventory
+        </button>
+        <button class="rpt-tab" data-report="timetracking">
+          <i data-lucide="clock"></i> Time Tracking
         </button>
       </div>
 
@@ -200,35 +204,41 @@ function renderPage() {
 
   document.getElementById('btnApplyFilter').addEventListener('click', () => {
     _dateFrom = document.getElementById('rptDateFrom').value;
-    _dateTo   = document.getElementById('rptDateTo').value;
+    _dateTo = document.getElementById('rptDateTo').value;
     destroyCharts();
     renderActiveReport();
   });
 
   document.getElementById('btnClearFilter').addEventListener('click', () => {
     _dateFrom = '';
-    _dateTo   = '';
+    _dateTo = '';
     document.getElementById('rptDateFrom').value = '';
-    document.getElementById('rptDateTo').value   = '';
+    document.getElementById('rptDateTo').value = '';
     destroyCharts();
     renderActiveReport();
+  });
+
+  document.getElementById('btnPrintReport')?.addEventListener('click', () => {
+    const titles = { progress: 'Project Progress', workload: 'Team Workload', burndown: 'Sprint Burndown', maintenance: 'Maintenance Summary', assets: 'Asset Inventory', timetracking: 'Time Tracking' };
+    printPage(titles[_activeReport] || 'Report');
   });
 
   renderActiveReport();
 }
 
 function destroyCharts() {
-  Object.values(_chartInstances).forEach(c => { try { c.destroy(); } catch(_) {} });
+  Object.values(_chartInstances).forEach(c => { try { c.destroy(); } catch (_) { } });
   _chartInstances = {};
 }
 
 function renderActiveReport() {
   switch (_activeReport) {
-    case 'progress':    renderProgressReport();    break;
-    case 'workload':    renderWorkloadReport();    break;
-    case 'burndown':    renderBurndownReport();    break;
+    case 'progress': renderProgressReport(); break;
+    case 'workload': renderWorkloadReport(); break;
+    case 'burndown': renderBurndownReport(); break;
     case 'maintenance': renderMaintenanceReport(); break;
-    case 'assets':      renderAssetsReport();      break;
+    case 'assets': renderAssetsReport(); break;
+    case 'timetracking': renderTimeTrackingReport(); break;
   }
 }
 
@@ -236,7 +246,7 @@ function inDateRange(dateStr) {
   if (!dateStr) return true;
   const d = new Date(dateStr);
   if (_dateFrom && d < new Date(_dateFrom)) return false;
-  if (_dateTo   && d > new Date(_dateTo + 'T23:59:59')) return false;
+  if (_dateTo && d > new Date(_dateTo + 'T23:59:59')) return false;
   return true;
 }
 
@@ -256,33 +266,33 @@ function renderProgressReport() {
   const tasks = _tasks.filter(t => inDateRange(t.created_at));
 
   const byStatus = {
-    backlog:     tasks.filter(t => t.status === 'backlog').length,
-    todo:        tasks.filter(t => t.status === 'todo').length,
+    backlog: tasks.filter(t => t.status === 'backlog').length,
+    todo: tasks.filter(t => t.status === 'todo').length,
     in_progress: tasks.filter(t => t.status === 'in_progress').length,
-    in_review:   tasks.filter(t => t.status === 'in_review').length,
-    done:        tasks.filter(t => t.status === 'done').length,
-    cancelled:   tasks.filter(t => t.status === 'cancelled').length,
+    in_review: tasks.filter(t => t.status === 'in_review').length,
+    done: tasks.filter(t => t.status === 'done').length,
+    cancelled: tasks.filter(t => t.status === 'cancelled').length,
   };
   const byPriority = {
     critical: tasks.filter(t => t.priority === 'critical').length,
-    high:     tasks.filter(t => t.priority === 'high').length,
-    medium:   tasks.filter(t => t.priority === 'medium').length,
-    low:      tasks.filter(t => t.priority === 'low').length,
+    high: tasks.filter(t => t.priority === 'high').length,
+    medium: tasks.filter(t => t.priority === 'medium').length,
+    low: tasks.filter(t => t.priority === 'low').length,
   };
   const byType = {
-    story:       tasks.filter(t => t.type === 'story').length,
-    task:        tasks.filter(t => t.type === 'task').length,
-    bug:         tasks.filter(t => t.type === 'bug').length,
+    story: tasks.filter(t => t.type === 'story').length,
+    task: tasks.filter(t => t.type === 'task').length,
+    bug: tasks.filter(t => t.type === 'bug').length,
     enhancement: tasks.filter(t => t.type === 'enhancement').length,
-    epic:        tasks.filter(t => t.type === 'epic').length,
+    epic: tasks.filter(t => t.type === 'epic').length,
   };
 
-  const total   = tasks.length;
-  const done    = byStatus.done;
+  const total = tasks.length;
+  const done = byStatus.done;
   const overdue = tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'done' && t.status !== 'cancelled').length;
-  const pct     = total > 0 ? Math.round((done / total) * 100) : 0;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   const totalSP = tasks.reduce((s, t) => s + (t.story_points || 0), 0);
-  const doneSP  = tasks.filter(t => t.status === 'done').reduce((s, t) => s + (t.story_points || 0), 0);
+  const doneSP = tasks.filter(t => t.status === 'done').reduce((s, t) => s + (t.story_points || 0), 0);
   const timeMin = tasks.reduce((s, t) => s + (t.time_logged || 0), 0);
 
   el.innerHTML = `
@@ -356,8 +366,8 @@ function renderProgressReport() {
     _chartInstances['status'] = new Chart(document.getElementById('chartStatus'), {
       type: 'doughnut',
       data: {
-        labels: ['Backlog','To Do','In Progress','In Review','Done','Cancelled'],
-        datasets: [{ data: Object.values(byStatus), backgroundColor: ['#94A3B8','#3B82F6','#F59E0B','#8B5CF6','#22C55E','#EF4444'], borderWidth: 0 }]
+        labels: ['Backlog', 'To Do', 'In Progress', 'In Review', 'Done', 'Cancelled'],
+        datasets: [{ data: Object.values(byStatus), backgroundColor: ['#94A3B8', '#3B82F6', '#F59E0B', '#8B5CF6', '#22C55E', '#EF4444'], borderWidth: 0 }]
       },
       options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10 } } }, cutout: '62%', maintainAspectRatio: true }
     });
@@ -365,8 +375,8 @@ function renderProgressReport() {
     _chartInstances['priority'] = new Chart(document.getElementById('chartPriority'), {
       type: 'bar',
       data: {
-        labels: ['Critical','High','Medium','Low'],
-        datasets: [{ label: 'Tasks', data: Object.values(byPriority), backgroundColor: ['#EF4444','#F97316','#F59E0B','#22C55E'], borderRadius: 6, borderWidth: 0 }]
+        labels: ['Critical', 'High', 'Medium', 'Low'],
+        datasets: [{ label: 'Tasks', data: Object.values(byPriority), backgroundColor: ['#EF4444', '#F97316', '#F59E0B', '#22C55E'], borderRadius: 6, borderWidth: 0 }]
       },
       options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, maintainAspectRatio: true }
     });
@@ -374,7 +384,7 @@ function renderProgressReport() {
     _chartInstances['type'] = new Chart(document.getElementById('chartType'), {
       type: 'bar',
       data: {
-        labels: ['Story','Task','Bug','Enhancement','Epic'],
+        labels: ['Story', 'Task', 'Bug', 'Enhancement', 'Epic'],
         datasets: [{ label: 'Tasks', data: Object.values(byType), backgroundColor: '#2563EB', borderRadius: 6, borderWidth: 0 }]
       },
       options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, indexAxis: 'y', maintainAspectRatio: true }
@@ -385,9 +395,9 @@ function renderProgressReport() {
 function renderSprintTable() {
   if (_sprints.length === 0) return '<p class="rpt-empty-text">No sprints created.</p>';
   const rows = _sprints.map(sp => {
-    const spTasks  = _tasks.filter(t => t.sprint_id === sp.id);
-    const spDone   = spTasks.filter(t => t.status === 'done').length;
-    const spSP     = spTasks.reduce((s, t) => s + (t.story_points || 0), 0);
+    const spTasks = _tasks.filter(t => t.sprint_id === sp.id);
+    const spDone = spTasks.filter(t => t.status === 'done').length;
+    const spSP = spTasks.reduce((s, t) => s + (t.story_points || 0), 0);
     const spDoneSP = spTasks.filter(t => t.status === 'done').reduce((s, t) => s + (t.story_points || 0), 0);
     const sc = { planning: 'badge--warning', active: 'badge--success', completed: 'badge--info' }[sp.status] || '';
     return `<tr>
@@ -450,12 +460,12 @@ function renderWorkloadReport() {
     return {
       member,
       assigned: assigned.length,
-      done:    assigned.filter(t => t.status === 'done').length,
-      inProg:  assigned.filter(t => t.status === 'in_progress').length,
-      todo:    assigned.filter(t => t.status === 'todo').length,
+      done: assigned.filter(t => t.status === 'done').length,
+      inProg: assigned.filter(t => t.status === 'in_progress').length,
+      todo: assigned.filter(t => t.status === 'todo').length,
       overdue: assigned.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'done' && t.status !== 'cancelled').length,
-      hours:   assigned.reduce((s, t) => s + (t.time_logged || 0), 0),
-      sp:      assigned.reduce((s, t) => s + (t.story_points || 0), 0),
+      hours: assigned.reduce((s, t) => s + (t.time_logged || 0), 0),
+      sp: assigned.reduce((s, t) => s + (t.story_points || 0), 0),
     };
   }).filter(Boolean).sort((a, b) => b.assigned - a.assigned);
 
@@ -486,8 +496,8 @@ function renderWorkloadReport() {
       <div class="card card--report">
         <div class="card__body" style="padding:0">
           ${stats.length === 0
-            ? '<p class="rpt-empty-text">No team members or assignments found.</p>'
-            : `<table class="rpt-table">
+      ? '<p class="rpt-empty-text">No team members or assignments found.</p>'
+      : `<table class="rpt-table">
               <thead><tr><th>Member</th><th>Role</th><th>Assigned</th><th>Done</th><th>In Progress</th><th>Overdue</th><th>Story Pts</th><th>Time Logged</th></tr></thead>
               <tbody>${stats.map(s => `<tr>
                 <td>${sanitize(s.member.full_name)}</td>
@@ -513,9 +523,9 @@ function renderWorkloadReport() {
       data: {
         labels: stats.map(s => s.member.full_name),
         datasets: [
-          { label: 'Done',        data: stats.map(s => s.done),   backgroundColor: '#22C55E', borderRadius: 4, borderWidth: 0 },
+          { label: 'Done', data: stats.map(s => s.done), backgroundColor: '#22C55E', borderRadius: 4, borderWidth: 0 },
           { label: 'In Progress', data: stats.map(s => s.inProg), backgroundColor: '#F59E0B', borderRadius: 4, borderWidth: 0 },
-          { label: 'To Do',       data: stats.map(s => s.todo),   backgroundColor: '#3B82F6', borderRadius: 4, borderWidth: 0 },
+          { label: 'To Do', data: stats.map(s => s.todo), backgroundColor: '#3B82F6', borderRadius: 4, borderWidth: 0 },
         ]
       },
       options: {
@@ -549,7 +559,7 @@ function renderBurndownReport() {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
   document.getElementById('burndownSprintSel').addEventListener('change', (e) => {
-    if (_chartInstances['burndown']) { try { _chartInstances['burndown'].destroy(); } catch(_) {} delete _chartInstances['burndown']; }
+    if (_chartInstances['burndown']) { try { _chartInstances['burndown'].destroy(); } catch (_) { } delete _chartInstances['burndown']; }
     renderBurndownForSprint(e.target.value);
   });
 
@@ -561,7 +571,7 @@ function renderBurndownForSprint(sprintId) {
   const content = document.getElementById('burndownContent');
   if (!sprintId) { content.innerHTML = '<p class="rpt-empty-text">Select a sprint above to view its burndown chart.</p>'; return; }
 
-  const sprint  = _sprints.find(s => s.id === sprintId);
+  const sprint = _sprints.find(s => s.id === sprintId);
   const spTasks = _tasks.filter(t => t.sprint_id === sprintId);
   const totalSP = spTasks.reduce((s, t) => s + (t.story_points || 0), 0);
 
@@ -571,8 +581,8 @@ function renderBurndownForSprint(sprintId) {
   }
 
   const start = new Date(sprint.start_date);
-  const end   = new Date(sprint.end_date);
-  const days  = [];
+  const end = new Date(sprint.end_date);
+  const days = [];
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) days.push(new Date(d));
 
   const idealData = days.map((d, i) => {
@@ -587,7 +597,7 @@ function renderBurndownForSprint(sprintId) {
     return totalSP - completedSP;
   });
 
-  const doneSP   = spTasks.filter(t => t.status === 'done').reduce((s, t) => s + (t.story_points || 0), 0);
+  const doneSP = spTasks.filter(t => t.status === 'done').reduce((s, t) => s + (t.story_points || 0), 0);
   const doneTasks = spTasks.filter(t => t.status === 'done').length;
 
   content.innerHTML = `
@@ -629,9 +639,11 @@ function renderBurndownForSprint(sprintId) {
       data: {
         labels: days.map(d => `${d.getMonth() + 1}/${d.getDate()}`),
         datasets: [
-          { label: 'Ideal',  data: idealData,  borderColor: '#EF4444', borderDash: [6,4], borderWidth: 2, pointRadius: 0, tension: 0, fill: false },
-          { label: 'Actual', data: actualData, borderColor: '#2563EB', borderWidth: 2.5, pointRadius: 3, pointBackgroundColor: '#2563EB', tension: 0.2,
-            fill: { target: 'origin', above: 'rgba(37,99,235,0.06)' } },
+          { label: 'Ideal', data: idealData, borderColor: '#EF4444', borderDash: [6, 4], borderWidth: 2, pointRadius: 0, tension: 0, fill: false },
+          {
+            label: 'Actual', data: actualData, borderColor: '#2563EB', borderWidth: 2.5, pointRadius: 3, pointBackgroundColor: '#2563EB', tension: 0.2,
+            fill: { target: 'origin', above: 'rgba(37,99,235,0.06)' }
+          },
         ]
       },
       options: {
@@ -652,15 +664,15 @@ function renderMaintenanceReport() {
   const el = document.getElementById('rptContent');
   const tickets = _maintenance.filter(t => inDateRange(t.reported_date || t.created_at));
 
-  const total    = tickets.length;
-  const resolved = tickets.filter(t => ['resolved','closed'].includes(t.status)).length;
-  const open     = tickets.filter(t => t.status === 'open').length;
+  const total = tickets.length;
+  const resolved = tickets.filter(t => ['resolved', 'closed'].includes(t.status)).length;
+  const open = tickets.filter(t => t.status === 'open').length;
 
-  const byType   = {};
+  const byType = {};
   const byStatus = {};
   tickets.forEach(t => {
-    byType[t.type || 'other']     = (byType[t.type || 'other'] || 0) + 1;
-    byStatus[t.status || 'open']  = (byStatus[t.status || 'open'] || 0) + 1;
+    byType[t.type || 'other'] = (byType[t.type || 'other'] || 0) + 1;
+    byStatus[t.status || 'open'] = (byStatus[t.status || 'open'] || 0) + 1;
   });
 
   el.innerHTML = `
@@ -700,14 +712,14 @@ function renderMaintenanceReport() {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
   if (typeof Chart !== 'undefined') {
-    const typeColors   = { bug: '#EF4444', adjustment: '#F59E0B', enhancement: '#8B5CF6', user_request: '#3B82F6', incident: '#F97316', other: '#94A3B8' };
+    const typeColors = { bug: '#EF4444', adjustment: '#F59E0B', enhancement: '#8B5CF6', user_request: '#3B82F6', incident: '#F97316', other: '#94A3B8' };
     const statusColors = { open: '#EF4444', in_progress: '#F59E0B', resolved: '#22C55E', closed: '#64748B', rejected: '#DC2626' };
 
     if (document.getElementById('chartMntType') && Object.keys(byType).length > 0) {
       _chartInstances['mntType'] = new Chart(document.getElementById('chartMntType'), {
         type: 'doughnut',
         data: {
-          labels: Object.keys(byType).map(k => k.replace('_',' ').replace(/\b\w/g, c => c.toUpperCase())),
+          labels: Object.keys(byType).map(k => k.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())),
           datasets: [{ data: Object.values(byType), backgroundColor: Object.keys(byType).map(k => typeColors[k] || '#94A3B8'), borderWidth: 0 }]
         },
         options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10 } } }, cutout: '60%', maintainAspectRatio: true }
@@ -718,7 +730,7 @@ function renderMaintenanceReport() {
       _chartInstances['mntStatus'] = new Chart(document.getElementById('chartMntStatus'), {
         type: 'bar',
         data: {
-          labels: Object.keys(byStatus).map(k => k.replace('_',' ').replace(/\b\w/g, c => c.toUpperCase())),
+          labels: Object.keys(byStatus).map(k => k.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())),
           datasets: [{ label: 'Tickets', data: Object.values(byStatus), backgroundColor: Object.keys(byStatus).map(k => statusColors[k] || '#94A3B8'), borderRadius: 6, borderWidth: 0 }]
         },
         options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, maintainAspectRatio: true }
@@ -736,7 +748,7 @@ function renderMaintenanceTable(tickets) {
     return `<tr>
       <td class="text-mono rpt-id-cell">${sanitize(t.id)}</td>
       <td class="rpt-title-cell">${sanitize(t.title)}</td>
-      <td>${sanitize((t.type || '').replace('_',' '))}</td>
+      <td>${sanitize((t.type || '').replace('_', ' '))}</td>
       <td><span class="badge ${sc}">${sanitize(t.status || '')}</span></td>
       <td><span class="badge ${pc}">${sanitize(t.priority || '')}</span></td>
       <td>${sanitize(String(assignee))}</td>
@@ -757,15 +769,15 @@ function renderAssetsReport() {
   const el = document.getElementById('rptContent');
   const assets = _assets;
 
-  const total     = assets.length;
-  const inUse     = assets.filter(a => a.status === 'in_use').length;
+  const total = assets.length;
+  const inUse = assets.filter(a => a.status === 'in_use').length;
   const available = assets.filter(a => a.status === 'available').length;
-  const maint     = assets.filter(a => a.status === 'maintenance').length;
-  const now       = Date.now();
-  const expiring  = assets.filter(a => a.warranty_expiry && new Date(a.warranty_expiry) > new Date() && new Date(a.warranty_expiry) < new Date(now + 30 * 864e5)).length;
+  const maint = assets.filter(a => a.status === 'maintenance').length;
+  const now = Date.now();
+  const expiring = assets.filter(a => a.warranty_expiry && new Date(a.warranty_expiry) > new Date() && new Date(a.warranty_expiry) < new Date(now + 30 * 864e5)).length;
 
   const byCategory = {};
-  const byStatus   = {};
+  const byStatus = {};
   assets.forEach(a => {
     byCategory[a.category || 'other'] = (byCategory[a.category || 'other'] || 0) + 1;
     byStatus[a.status || 'available'] = (byStatus[a.status || 'available'] || 0) + 1;
@@ -809,7 +821,7 @@ function renderAssetsReport() {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
   if (typeof Chart !== 'undefined') {
-    const catColors    = { hardware: '#2563EB', software: '#7C3AED', license: '#F59E0B', document: '#22C55E', other: '#94A3B8' };
+    const catColors = { hardware: '#2563EB', software: '#7C3AED', license: '#F59E0B', document: '#22C55E', other: '#94A3B8' };
     const statusColors = { available: '#22C55E', in_use: '#F59E0B', maintenance: '#3B82F6', retired: '#94A3B8' };
 
     if (document.getElementById('chartAssetCat') && Object.keys(byCategory).length > 0) {
@@ -827,7 +839,7 @@ function renderAssetsReport() {
       _chartInstances['assetStatus'] = new Chart(document.getElementById('chartAssetStatus'), {
         type: 'bar',
         data: {
-          labels: Object.keys(byStatus).map(k => k.replace('_',' ').replace(/\b\w/g, c => c.toUpperCase())),
+          labels: Object.keys(byStatus).map(k => k.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())),
           datasets: [{ label: 'Assets', data: Object.values(byStatus), backgroundColor: Object.keys(byStatus).map(k => statusColors[k] || '#94A3B8'), borderRadius: 6, borderWidth: 0 }]
         },
         options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, maintainAspectRatio: true }
@@ -866,12 +878,12 @@ function renderAssetsTable(assets) {
 // ─── Print Header ─────────────────────────────────────────────────────────────
 
 function buildPrintHeader(reportTitle) {
-  const orgName    = _settings['org_name'] || 'TRACKLY';
-  const projName   = _project ? (_project.name || '') : '';
-  const clientName = _client  ? (_client.company_name || '') : '';
-  const today      = formatDate(new Date().toISOString());
-  const fromLabel  = _dateFrom ? formatDate(_dateFrom) : 'All time';
-  const toLabel    = _dateTo   ? formatDate(_dateTo)   : 'Present';
+  const orgName = _settings['org_name'] || 'TRACKLY';
+  const projName = _project ? (_project.name || '') : '';
+  const clientName = _client ? (_client.company_name || '') : '';
+  const today = formatDate(new Date().toISOString());
+  const fromLabel = _dateFrom ? formatDate(_dateFrom) : 'All time';
+  const toLabel = _dateTo ? formatDate(_dateTo) : 'Present';
 
   return `
     <div class="rpt-print-header print-only">
@@ -890,6 +902,192 @@ function buildPrintHeader(reportTitle) {
       <hr class="rpt-print-header__divider" />
     </div>
   `;
+}
+
+// ─── 6. Time Tracking ─────────────────────────────────────────────────────────
+
+function renderTimeTrackingReport() {
+  const el = document.getElementById('rptContent');
+  const tasks = _tasks.filter(t => inDateRange(t.created_at) && (t.time_logged || 0) > 0);
+  const allTasks = _tasks.filter(t => inDateRange(t.created_at));
+
+  // ── Per-member stats
+  const memberMap = {};
+  allTasks.forEach(t => {
+    (t.assignees || []).forEach(uid => {
+      if (!memberMap[uid]) memberMap[uid] = { tasks: 0, totalMin: 0, sp: 0 };
+      if (t.time_logged > 0) { memberMap[uid].tasks++; memberMap[uid].totalMin += (t.time_logged || 0); }
+      memberMap[uid].sp += (t.story_points || 0);
+    });
+  });
+  const memberStats = Object.entries(memberMap).map(([uid, s]) => {
+    const member = _members.find(m => m.id === uid);
+    return member ? { member, ...s } : null;
+  }).filter(Boolean).sort((a, b) => b.totalMin - a.totalMin);
+
+  // ── Per-sprint stats
+  const sprintMap = {};
+  tasks.forEach(t => {
+    const sid = t.sprint_id || '__none__';
+    if (!sprintMap[sid]) sprintMap[sid] = { totalMin: 0, count: 0 };
+    sprintMap[sid].totalMin += (t.time_logged || 0);
+    sprintMap[sid].count++;
+  });
+
+  // ── Per-task rows (sorted by time desc)
+  const taskRows = tasks
+    .slice()
+    .sort((a, b) => (b.time_logged || 0) - (a.time_logged || 0))
+    .map(t => ({
+      task: t,
+      assigneeNames: (t.assignees || []).map(id => _members.find(m => m.id === id)?.full_name || id).join(', '),
+      sprintName: _sprints.find(s => s.id === t.sprint_id)?.name || '—',
+    }));
+
+  const totalMin = tasks.reduce((s, t) => s + (t.time_logged || 0), 0);
+  const avgMin = tasks.length > 0 ? Math.round(totalMin / tasks.length) : 0;
+
+  el.innerHTML = `
+    ${buildPrintHeader('Time Tracking Report')}
+
+    <div class="rpt-section">
+      <h2 class="rpt-section__title"><i data-lucide="clock"></i> Time Tracking Summary</h2>
+      <div class="rpt-stat-grid rpt-stat-grid--5">
+        ${statCard(tasks.length, 'Tasks with Time Logged')}
+        ${statCard(`${Math.floor(totalMin / 60)}h ${totalMin % 60}m`, 'Total Time Logged', 'rpt-stat-card--info')}
+        ${statCard(`${Math.floor(avgMin / 60)}h ${avgMin % 60}m`, 'Avg per Task')}
+        ${statCard(memberStats.length, 'Members with Time')}
+        ${statCard(allTasks.length - tasks.length, 'Tasks Without Time', allTasks.length - tasks.length > 0 ? 'rpt-stat-card--warning' : '')}
+      </div>
+    </div>
+
+    <div class="rpt-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2);">
+        <h2 class="rpt-section__title" style="margin:0;"><i data-lucide="bar-chart-horizontal"></i> Time per Member</h2>
+        <button class="btn btn--ghost btn--sm no-print" id="btnExportMemberTime"><i data-lucide="download"></i> CSV</button>
+      </div>
+      <div class="card card--report">
+        <div class="card__body">
+          <div class="rpt-chart-wrap rpt-chart-wrap--tall"><canvas id="chartTimePerMember"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rpt-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2);">
+        <h2 class="rpt-section__title" style="margin:0;"><i data-lucide="users"></i> Member Breakdown <span class="rpt-section__badge">${memberStats.length}</span></h2>
+        <button class="btn btn--ghost btn--sm no-print" id="btnExportMemberBreakdown"><i data-lucide="download"></i> CSV</button>
+      </div>
+      <div class="card card--report"><div class="card__body" style="padding:0;">
+        ${memberStats.length === 0 ? '<p class="rpt-empty-text">No time logged by any member for this period.</p>' :
+      `<table class="rpt-table">
+            <thead><tr><th>Member</th><th>Role</th><th>Tasks w/ Time</th><th>Total Time</th><th>Avg / Task</th><th>Story Points</th><th>Min / SP</th></tr></thead>
+            <tbody>${memberStats.map(s => {
+        const avg = s.tasks > 0 ? Math.round(s.totalMin / s.tasks) : 0;
+        const msp = s.sp > 0 ? Math.round(s.totalMin / s.sp) : '—';
+        return `<tr>
+                <td><strong>${sanitize(s.member.full_name)}</strong></td>
+                <td><span class="badge">${sanitize(s.member.role)}</span></td>
+                <td>${s.tasks}</td>
+                <td><span class="rpt-num rpt-num--info">${Math.floor(s.totalMin / 60)}h ${s.totalMin % 60}m</span></td>
+                <td>${Math.floor(avg / 60)}h ${avg % 60}m</td>
+                <td>${s.sp}</td>
+                <td>${msp}${typeof msp === 'number' ? ' min' : ''}</td>
+              </tr>`;
+      }).join('')}</tbody>
+          </table>`}
+      </div></div>
+    </div>
+
+    <div class="rpt-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2);">
+        <h2 class="rpt-section__title" style="margin:0;"><i data-lucide="zap"></i> Time per Sprint</h2>
+      </div>
+      <div class="card card--report"><div class="card__body" style="padding:0;">
+        ${Object.keys(sprintMap).length === 0 ? '<p class="rpt-empty-text">No sprint time data.</p>' :
+      `<table class="rpt-table">
+            <thead><tr><th>Sprint</th><th>Tasks with Time</th><th>Total Time</th></tr></thead>
+            <tbody>${Object.entries(sprintMap).map(([sid, s]) => {
+        const sp = _sprints.find(x => x.id === sid);
+        return `<tr>
+                <td>${sp ? sanitize(sp.name) : '<span class="text-muted">No Sprint</span>'}</td>
+                <td>${s.count}</td>
+                <td><span class="rpt-num rpt-num--info">${Math.floor(s.totalMin / 60)}h ${s.totalMin % 60}m</span></td>
+              </tr>`;
+      }).join('')}</tbody>
+          </table>`}
+      </div></div>
+    </div>
+
+    <div class="rpt-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2);">
+        <h2 class="rpt-section__title" style="margin:0;"><i data-lucide="list"></i> Task Detail <span class="rpt-section__badge">${taskRows.length}</span></h2>
+        <button class="btn btn--ghost btn--sm no-print" id="btnExportTaskTime"><i data-lucide="download"></i> CSV</button>
+      </div>
+      <div class="card card--report"><div class="card__body" style="padding:0;">
+        ${taskRows.length === 0 ? '<p class="rpt-empty-text">No tasks with time logged in this period.</p>' :
+      `<table class="rpt-table">
+            <thead><tr><th>ID</th><th>Title</th><th>Type</th><th>Status</th><th>Assignee(s)</th><th>Sprint</th><th>SP</th><th>Time Logged</th><th>min/SP</th></tr></thead>
+            <tbody>${taskRows.map(r => {
+        const hm = `${Math.floor((r.task.time_logged || 0) / 60)}h ${(r.task.time_logged || 0) % 60}m`;
+        const ratio = (r.task.story_points && r.task.time_logged) ? Math.round(r.task.time_logged / r.task.story_points) : '—';
+        const sc = { done: 'badge--success', in_progress: 'badge--warning', cancelled: 'badge--danger', todo: 'badge--info', in_review: 'badge--secondary', backlog: '' }[r.task.status] || '';
+        return `<tr>
+                <td class="text-mono rpt-id-cell">${sanitize(r.task.id)}</td>
+                <td class="rpt-title-cell">${sanitize(r.task.title)}</td>
+                <td>${sanitize(r.task.type || '')}</td>
+                <td><span class="badge ${sc}">${sanitize(r.task.status || '')}</span></td>
+                <td>${sanitize(r.assigneeNames || '—')}</td>
+                <td>${sanitize(r.sprintName)}</td>
+                <td>${r.task.story_points ?? '—'}</td>
+                <td><strong>${hm}</strong></td>
+                <td>${ratio}${typeof ratio === 'number' ? ' min' : ''}</td>
+              </tr>`;
+      }).join('')}</tbody>
+          </table>`}
+      </div></div>
+    </div>
+  `;
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+
+  // CSV exports
+  document.getElementById('btnExportMemberTime')?.addEventListener('click', () => {
+    downloadTimeTrackingCSV(memberStats, `time-tracking-members-${new Date().toISOString().slice(0, 10)}.csv`);
+  });
+  document.getElementById('btnExportMemberBreakdown')?.addEventListener('click', () => {
+    downloadTimeTrackingCSV(memberStats, `time-tracking-breakdown-${new Date().toISOString().slice(0, 10)}.csv`);
+  });
+  document.getElementById('btnExportTaskTime')?.addEventListener('click', () => {
+    downloadTaskTimeCSV(taskRows, `time-tracking-tasks-${new Date().toISOString().slice(0, 10)}.csv`);
+  });
+
+  // Chart: horizontal bar per member
+  if (typeof Chart !== 'undefined' && memberStats.length > 0) {
+    _chartInstances['timePerMember'] = new Chart(document.getElementById('chartTimePerMember'), {
+      type: 'bar',
+      data: {
+        labels: memberStats.map(s => s.member.full_name),
+        datasets: [{
+          label: 'Time (minutes)',
+          data: memberStats.map(s => s.totalMin),
+          backgroundColor: '#2563EB',
+          borderRadius: 5,
+          borderWidth: 0,
+        }],
+      },
+      options: {
+        indexAxis: 'y',
+        plugins: {
+          legend: { display: false }, tooltip: {
+            callbacks: { label: ctx => { const v = ctx.raw; return ` ${Math.floor(v / 60)}h ${v % 60}m`; } }
+          }
+        },
+        scales: { x: { beginAtZero: true, title: { display: true, text: 'Minutes' } } },
+        maintainAspectRatio: false, responsive: true,
+      },
+    });
+  }
 }
 
 export default { render };
