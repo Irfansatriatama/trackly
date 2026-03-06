@@ -85,7 +85,8 @@ export async function render(params = {}) {
     if (!_calendarDate) _calendarDate = new Date(today.getFullYear(), today.getMonth(), 1);
 
     content.innerHTML = buildCalendarPageHTML();
-    bindCalendarEvents();
+    bindStaticCalendarEvents();
+    bindDynamicCalendarEvents();
     if (typeof lucide !== 'undefined') lucide.createIcons();
   } catch (err) {
     content.innerHTML = `<div class="page-container"><div class="empty-state"><p class="empty-state__title">Error loading meetings</p><p class="empty-state__text">${sanitize(String(err))}</p></div></div>`;
@@ -364,7 +365,9 @@ function buildMeetingCardHTML(meeting) {
 
 // ─── Calendar Event Binding ───────────────────────────────────────────────────
 
-function bindCalendarEvents() {
+// ─── Static events: header buttons that are never destroyed during refresh ──────
+// Call ONCE from render(). Do NOT call again in refreshCalendarPage().
+function bindStaticCalendarEvents() {
   const content = document.getElementById('main-content');
   if (!content) return;
 
@@ -378,7 +381,7 @@ function bindCalendarEvents() {
     refreshCalendarPage();
   });
 
-  // New meeting
+  // New meeting button — only bind once!
   content.querySelector('#newMeetingBtn')?.addEventListener('click', () => openMeetingModal(null));
 
   // Prev/Next navigation
@@ -402,14 +405,27 @@ function bindCalendarEvents() {
     }
     refreshCalendarPage();
   });
+}
 
-  // Day cell click
+// ─── Dynamic events: elements that are re-created on every refresh ────────────
+// Call in refreshCalendarPage() AND once from render() (after initial render).
+function bindDynamicCalendarEvents() {
+  const content = document.getElementById('main-content');
+  if (!content) return;
+
+  // Day cell click (mini cal + week view)
   content.querySelectorAll('.mini-cal__cell[data-date], .week-day-cell[data-date]').forEach(cell => {
     cell.addEventListener('click', () => {
       _selectedDate = cell.dataset.date;
       refreshCalendarPage();
     });
-    cell.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _selectedDate = cell.dataset.date; refreshCalendarPage(); } });
+    cell.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        _selectedDate = cell.dataset.date;
+        refreshCalendarPage();
+      }
+    });
   });
 
   // Edit meeting buttons
@@ -424,27 +440,49 @@ function bindCalendarEvents() {
 }
 
 async function refreshCalendarPage() {
-  [_meetings, _users, _projects] = await Promise.all([
+  const session = getSession();
+  const isManager = requireAdminPm();
+
+  // Fetch fresh data
+  let [allMeetings, users, projects] = await Promise.all([
     getAll('meetings'),
     getAll('users'),
     getAll('projects'),
   ]);
+
+  // Apply same attendee filter as render() — non-managers only see their meetings
+  if (!isManager) {
+    allMeetings = allMeetings.filter(m =>
+      m.created_by === session?.userId ||
+      (Array.isArray(m.attendee_ids) && m.attendee_ids.includes(session?.userId))
+    );
+  }
+
+  _meetings = allMeetings;
+  _users = users;
+  _projects = projects;
+
   const content = document.getElementById('main-content');
   if (!content) return;
-  content.querySelector('.meetings-layout').outerHTML; // Trigger re-render
+
   const page = content.querySelector('.meetings-page');
   if (page) {
-    // Re-render just the calendar panel and day panel
+    // Re-render dynamic parts only (header buttons are NOT touched)
     const calPanel = content.querySelector('.meetings-calendar-panel .card__body');
     if (calPanel) calPanel.innerHTML = buildMiniCalendarHTML();
+
+    // Sync view toggle button styles
     const viewMonthBtn = content.querySelector('#viewMonthBtn');
     const viewWeekBtn = content.querySelector('#viewWeekBtn');
-    if (viewMonthBtn) { viewMonthBtn.className = `btn btn--sm ${_viewMode === 'month' ? 'btn--primary' : 'btn--ghost'}`; viewMonthBtn.setAttribute('aria-pressed', _viewMode === 'month'); }
-    if (viewWeekBtn) { viewWeekBtn.className = `btn btn--sm ${_viewMode === 'week' ? 'btn--primary' : 'btn--ghost'}`; viewWeekBtn.setAttribute('aria-pressed', _viewMode === 'week'); }
+    if (viewMonthBtn) { viewMonthBtn.className = `btn btn--sm ${_viewMode === 'month' ? 'btn--primary' : 'btn--ghost'}`; viewMonthBtn.setAttribute('aria-pressed', String(_viewMode === 'month')); }
+    if (viewWeekBtn) { viewWeekBtn.className = `btn btn--sm ${_viewMode === 'week' ? 'btn--primary' : 'btn--ghost'}`; viewWeekBtn.setAttribute('aria-pressed', String(_viewMode === 'week')); }
+
     const dayPanel = content.querySelector('.meetings-day-panel');
     if (dayPanel) dayPanel.innerHTML = buildDayPanelHTML();
   }
-  bindCalendarEvents();
+
+  // Only re-bind dynamic elements (day cells, meeting cards) — NOT header buttons
+  bindDynamicCalendarEvents();
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
