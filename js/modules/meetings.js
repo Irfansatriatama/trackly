@@ -645,10 +645,11 @@ async function saveMeeting(existing, isEdit) {
 
   const session = getSession();
   const now = nowISO();
-  const allMeetings = await getAll('meetings');
+  // Use timestamp-based ID — avoids extra Firestore read just to get a sequential ID
+  const newId = existing?.id || `${ID_PREFIX.MEETING}-${Date.now()}`;
 
   const record = {
-    id: existing?.id || generateSequentialId(ID_PREFIX.MEETING, allMeetings),
+    id: newId,
     title,
     description: document.getElementById('mtgDescription')?.value.trim() || '',
     type: document.getElementById('mtgType')?.value || 'internal',
@@ -660,12 +661,15 @@ async function saveMeeting(existing, isEdit) {
     attendee_ids: attendeeIds,
     agenda_items: agendaItems,
     status: document.getElementById('mtgStatus')?.value || 'scheduled',
-    notulensi: existing?.notulensi || { content: '', attachments: [], created_by: session?.userId, updated_at: now },
+    notulensi: existing?.notulensi || { content: '', attachments: [], created_by: session?.userId || null, updated_at: now },
     action_items: existing?.action_items || [],
-    created_by: existing?.created_by || session?.userId,
+    created_by: existing?.created_by || session?.userId || null,
     created_at: existing?.created_at || now,
     updated_at: now,
   };
+
+  const saveBtn = document.getElementById('modalSaveBtn');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = isEdit ? 'Saving…' : 'Creating…'; }
 
   try {
     if (isEdit) {
@@ -674,25 +678,29 @@ async function saveMeeting(existing, isEdit) {
       await add('meetings', record);
     }
 
-    await logActivity({
+    // Non-blocking — don't wait for logActivity (it does 4-5 extra Firestore reads)
+    logActivity({
       entity_type: 'meeting',
       entity_id: record.id,
       entity_name: record.title,
       action: isEdit ? 'updated' : 'created',
       project_id: projectIds[0] || null,
-    });
+    }).catch(() => { });
 
     closeModal();
     showToast(isEdit ? 'Meeting updated.' : 'Meeting created.', 'success');
     _selectedDate = date;
     await refreshCalendarPage();
   } catch (err) {
-    showToast('Failed to save meeting: ' + err.message, 'error');
+    console.error('[TRACKLY] saveMeeting failed:', err);
+    showToast('Failed to save meeting: ' + (err.message || String(err)), 'error');
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = isEdit ? 'Save Changes' : 'Create Meeting'; }
   }
 }
 
 async function deleteMeeting(meetingId) {
-  const meeting = await getById('meetings', meetingId);
+  // Use cached data — avoid blocking Firestore read before confirm dialog
+  const meeting = _meetings?.find(m => m.id === meetingId) || await getById('meetings', meetingId);
   if (!meeting) return;
   showConfirm({
     title: 'Delete Meeting',
@@ -702,13 +710,14 @@ async function deleteMeeting(meetingId) {
     onConfirm: async () => {
       try {
         await remove('meetings', meetingId);
-        await logActivity({
+        // Non-blocking — don't wait for logActivity
+        logActivity({
           entity_type: 'meeting',
           entity_id: meetingId,
           entity_name: meeting.title,
           action: 'deleted',
           project_id: meeting.project_ids?.[0] || null,
-        });
+        }).catch(() => { });
         showToast('Meeting deleted.', 'success');
         await refreshCalendarPage();
       } catch (err) {
