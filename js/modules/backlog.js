@@ -488,7 +488,7 @@ async function handleBulkDelete() {
 async function handleDeleteTask(task) {
   showConfirm({
     title: 'Delete Task', message: `Delete <strong>${sanitize(task.title)}</strong>?`, confirmLabel: 'Delete', confirmVariant: 'danger', onConfirm: async () => {
-      try { await remove('tasks', task.id); _tasks = _tasks.filter(t => t.id !== task.id); _computeAllTags(); logActivity({ project_id: _projectId, entity_type: 'task', entity_id: task.id, entity_name: task.title, action: 'deleted' }); showToast(`"${task.title}" deleted.`, 'success'); if (_detailTaskId === task.id) closeSlideover(); refreshContent(); } catch { showToast('Delete failed.', 'error'); }
+      try { await remove('tasks', task.id); _tasks = _tasks.filter(t => t.id !== task.id); _computeAllTags(); logActivity({ project_id: _projectId, entity_type: 'task', entity_id: task.id, entity_name: task.title, action: 'deleted', metadata: { assignees: task.assignees || [], reporter: task.reporter || null } }); showToast(`"${task.title}" deleted.`, 'success'); if (_detailTaskId === task.id) closeSlideover(); refreshContent(); } catch { showToast('Delete failed.', 'error'); }
     }
   });
 }
@@ -678,12 +678,18 @@ async function handleSaveTask(existing, isEdit, tags, checklist, comments) {
       const i = _tasks.findIndex(t => t.id === taskId); if (i !== -1) _tasks[i] = taskData;
       const changes = [];
       if (existing) { for (const f of ['title', 'status', 'priority', 'type', 'due_date', 'assignees', 'sprint_id']) { const ov = JSON.stringify(existing[f] || ''), nv = JSON.stringify(taskData[f] || ''); if (ov !== nv) changes.push({ field: f, old_value: existing[f], new_value: taskData[f] }); } }
-      logActivity({ project_id: _projectId, entity_type: 'task', entity_id: taskId, entity_name: title, action: 'updated', changes });
+      // Detect newly assigned members for personal assignment notifications
+      const oldAssignees = existing?.assignees || [];
+      const newlyAssigned = assignees.filter((uid) => !oldAssignees.includes(uid));
+      if (newlyAssigned.length) {
+        logActivity({ project_id: _projectId, entity_type: 'task', entity_id: taskId, entity_name: title, action: 'assigned', metadata: { assignees, reporter: taskData.reporter, newly_assigned: newlyAssigned } });
+      }
+      logActivity({ project_id: _projectId, entity_type: 'task', entity_id: taskId, entity_name: title, action: 'updated', changes, metadata: { assignees, reporter: taskData.reporter } });
       showToast(`Task "${title}" updated.`, 'success');
     } else {
       await add('tasks', taskData);
       _tasks.push(taskData);
-      logActivity({ project_id: _projectId, entity_type: 'task', entity_id: taskId, entity_name: title, action: 'created' });
+      logActivity({ project_id: _projectId, entity_type: 'task', entity_id: taskId, entity_name: title, action: 'created', metadata: { assignees, reporter: taskData.reporter } });
       showToast(`Task "${title}" created.`, 'success');
     }
     _computeAllTags(); closeModal(); refreshContent();

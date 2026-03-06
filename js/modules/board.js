@@ -433,7 +433,7 @@ async function _handleDrop(e) {
   try {
     await update('tasks', task);
     const col = _columns.find(c => c.status === newStatus);
-    logActivity({ project_id: _projectId, entity_type: 'task', entity_id: task.id, entity_name: task.title, action: 'status_changed', changes: [{ field: 'status', old_value: oldStatus, new_value: newStatus }] });
+    logActivity({ project_id: _projectId, entity_type: 'task', entity_id: task.id, entity_name: task.title, action: 'status_changed', changes: [{ field: 'status', old_value: oldStatus, new_value: newStatus }], metadata: { assignees: task.assignees || [], reporter: task.reporter || null } });
     showToast(`Moved to "${col ? col.label : newStatus}"`, 'success');
   } catch (err) {
     debug('Drop update error:', err);
@@ -763,7 +763,7 @@ async function _saveQuickTask({ title, priority, type, status }) {
     await add('tasks', taskData);
     _tasks.push(taskData);
     _renderColumns();
-    logActivity({ project_id: _projectId, entity_type: 'task', entity_id: taskData.id, entity_name: taskData.title, action: 'created' });
+    logActivity({ project_id: _projectId, entity_type: 'task', entity_id: taskData.id, entity_name: taskData.title, action: 'created', metadata: { assignees: taskData.assignees || [], reporter: taskData.reporter || null } });
     showToast(`Task "${title}" created`, 'success');
   } catch (err) {
     debug('Quick add error:', err);
@@ -904,12 +904,18 @@ async function _handleSaveTaskModal(existingTask) {
       await update('tasks', taskData);
       const i = _tasks.findIndex(t => t.id === taskId);
       if (i !== -1) _tasks[i] = taskData;
-      logActivity({ project_id: _projectId, entity_type: 'task', entity_id: taskId, entity_name: title, action: 'updated' });
+      // Detect newly assigned members for personal assignment notifications
+      const oldAssignees = existingTask?.assignees || [];
+      const newlyAssigned = assignees.filter((uid) => !oldAssignees.includes(uid));
+      if (newlyAssigned.length) {
+        logActivity({ project_id: _projectId, entity_type: 'task', entity_id: taskId, entity_name: title, action: 'assigned', metadata: { assignees, reporter: taskData.reporter, newly_assigned: newlyAssigned } });
+      }
+      logActivity({ project_id: _projectId, entity_type: 'task', entity_id: taskId, entity_name: title, action: 'updated', metadata: { assignees, reporter: taskData.reporter } });
       showToast(`Task "${title}" updated`, 'success');
     } else {
       await add('tasks', taskData);
       _tasks.push(taskData);
-      logActivity({ project_id: _projectId, entity_type: 'task', entity_id: taskData.id, entity_name: title, action: 'created' });
+      logActivity({ project_id: _projectId, entity_type: 'task', entity_id: taskData.id, entity_name: title, action: 'created', metadata: { assignees, reporter: taskData.reporter } });
       showToast(`Task "${title}" created`, 'success');
     }
     _computeAllTags();

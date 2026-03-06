@@ -390,40 +390,109 @@ export async function logActivity({
 
 /**
  * Internal helper — build and persist notifications for an activity event.
+ * 2-tier system:
+ *   Tier 1 (Personal) — sent directly to assignees / reporter / attendees
+ *   Tier 2 (Broadcast) — sent to role-appropriate project members or global admins
  */
 async function _generateNotifications({ add, getAll, actorId, actorName, project_id, entity_type, entity_id, entity_name, action, metadata }) {
   const users = await getAll('users');
 
-  // Determine recipient user IDs
-  let recipientIds = [];
+  // Roles allowed to receive operational/broadcast notifications
+  const OPERATIONAL_ROLES = ['admin', 'pm', 'member'];
 
-  if (entity_type === 'meeting' && metadata?.attendee_ids?.length) {
-    // Meeting: notify attendees
-    recipientIds = metadata.attendee_ids.filter((uid) => uid !== actorId);
-  } else if (project_id) {
-    // Project-scoped: notify all members of the project
-    const projects = await getAll('projects');
-    const project = projects.find((p) => p.id === project_id);
-    if (project && Array.isArray(project.member_ids)) {
-      recipientIds = project.member_ids.filter((uid) => uid !== actorId);
-    }
-  } else {
-    // Global action: notify admins and PMs
-    recipientIds = users
-      .filter((u) => (u.role === 'admin' || u.role === 'pm') && u.id !== actorId)
-      .map((u) => u.id);
+  // personalNotifs: Map<userId, customMessage|null>  (null = use default message)
+  const personalNotifs = new Map();
+  // broadcastIds: Set<userId>  (receives default message, deduped vs personalNotifs)
+  const broadcastIds = new Set();
+
+  // ── 1. Meeting: attendees only ─────────────────────────────────────────────
+  if (entity_type === 'meeting') {
+    (metadata?.attendee_ids || [])
+      .filter((uid) => uid !== actorId)
+      .forEach((uid) => personalNotifs.set(uid, null));
   }
 
-  if (!recipientIds.length) return;
+  // ── 2. Task: 2-tier (personal for assignees/reporter + broadcast for project) ─
+  else if (entity_type === 'task') {
+    const taskAssignees = metadata?.assignees || [];
+    const taskReporter = metadata?.reporter || null;
+    const newlyAssigned = metadata?.newly_assigned || [];
 
-  // Build message
+    // Tier 1a: if action is 'assigned', only ping newly-added assignees with a
+    //          personal message — don't broadcast to whole project
+    if (action === 'assigned' && newlyAssigned.length) {
+      newlyAssigned
+        .filter((uid) => uid !== actorId)
+        .forEach((uid) =>
+          personalNotifs.set(uid, `${actorName} menugaskan kamu pada task "${entity_name}"`)
+        );
+    } else {
+      // Tier 1b: created / updated / deleted / status_changed → ping all assignees + reporter
+      [...taskAssignees, taskReporter]
+        .filter((uid) => uid && uid !== actorId)
+        .forEach((uid) => personalNotifs.set(uid, null));
+    }
+
+    // Tier 2: broadcast to project members (admin, pm, member only) — skip if no project
+    if (project_id) {
+      const projects = await getAll('projects');
+      const project = projects.find((p) => p.id === project_id);
+      (project?.member_ids || [])
+        .map((uid) => users.find((u) => u.id === uid))
+        .filter((u) => u && OPERATIONAL_ROLES.includes(u.role) && u.id !== actorId)
+        .forEach((u) => {
+          if (!personalNotifs.has(u.id)) broadcastIds.add(u.id);
+        });
+    }
+  }
+
+  // ── 3. Sprint / Discussion: project members (admin, pm, member) only ───────
+  else if (['sprint', 'discussion'].includes(entity_type) && project_id) {
+    const projects = await getAll('projects');
+    const project = projects.find((p) => p.id === project_id);
+    (project?.member_ids || [])
+      .map((uid) => users.find((u) => u.id === uid))
+      .filter((u) => u && OPERATIONAL_ROLES.includes(u.role) && u.id !== actorId)
+      .forEach((u) => broadcastIds.add(u.id));
+  }
+
+  // ── 4. Maintenance: admin + PM only ────────────────────────────────────────
+  else if (entity_type === 'maintenance') {
+    users
+      .filter((u) => ['admin', 'pm'].includes(u.role) && u.id !== actorId)
+      .forEach((u) => broadcastIds.add(u.id));
+  }
+
+  // ── 5. Member management: admin only ─────────────────────────────────────
+  else if (entity_type === 'member') {
+    users
+      .filter((u) => u.role === 'admin' && u.id !== actorId)
+      .forEach((u) => broadcastIds.add(u.id));
+  }
+
+  // ── 6. Global / everything else (project, client, asset, invoice): admin + PM
+  else {
+    users
+      .filter((u) => ['admin', 'pm'].includes(u.role) && u.id !== actorId)
+      .forEach((u) => broadcastIds.add(u.id));
+  }
+
+  // Build combined recipient list (personalNotifs + broadcastIds)
+  const allRecipients = new Map(personalNotifs);
+  for (const uid of broadcastIds) {
+    if (!allRecipients.has(uid)) allRecipients.set(uid, null);
+  }
+
+  if (!allRecipients.size) return;
+
+  // ── Build default message ──────────────────────────────────────────────────
   const actionVerbs = {
     created: 'membuat',
     updated: 'mengubah',
     deleted: 'menghapus',
     status_changed: 'mengubah status',
+    assigned: 'menugaskan',
     commented: 'mengomentari',
-    assigned: 'mengassign',
     resolved: 'menyelesaikan',
     reopened: 'membuka kembali',
     closed: 'menutup',
@@ -431,6 +500,9 @@ async function _generateNotifications({ add, getAll, actorId, actorName, project
     restored: 'memulihkan',
     started: 'memulai',
     completed: 'menyelesaikan',
+    sprint_started: 'memulai sprint',
+    sprint_completed: 'menyelesaikan sprint',
+    meeting_completed: 'menyelesaikan meeting',
   };
   const verb = actionVerbs[action] || action;
 
@@ -441,12 +513,9 @@ async function _generateNotifications({ add, getAll, actorId, actorName, project
     projectName = proj?.name || null;
   }
 
-  let message;
-  if (projectName) {
-    message = `${actorName} ${verb} ${entity_name} di ${projectName}`;
-  } else {
-    message = `${actorName} ${verb} ${entity_name}`;
-  }
+  const defaultMessage = projectName
+    ? `${actorName} ${verb} ${entity_name} di ${projectName}`
+    : `${actorName} ${verb} ${entity_name}`;
 
   // Get actor avatar snapshot
   const actorUser = users.find((u) => u.id === actorId);
@@ -458,10 +527,10 @@ async function _generateNotifications({ add, getAll, actorId, actorName, project
 
   const createdAt = nowISO();
 
-  for (const uid of recipientIds) {
+  for (const [uid, customMessage] of allRecipients) {
     notifCounter++;
     const notifId = `NTF-${String(notifCounter).padStart(4, '0')}`;
-    const notif = {
+    await add('notifications', {
       id: notifId,
       user_id: uid,
       actor_id: actorId,
@@ -471,13 +540,12 @@ async function _generateNotifications({ add, getAll, actorId, actorName, project
       entity_id,
       entity_name,
       action,
-      message,
+      message: customMessage || defaultMessage,
       project_id: project_id || null,
       project_name: projectName || null,
       read: false,
       created_at: createdAt,
-    };
-    await add('notifications', notif);
+    });
   }
 }
 
