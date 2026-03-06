@@ -436,7 +436,44 @@ function _sectionBacklog() {
           </div>
         </div>
       </div>
+      <!-- Advanced Features -->
+      <div class="pguide-content-card card">
+        <div class="card__body">
+          <h3 class="pguide-content-card__title"><i data-lucide="zap" aria-hidden="true"></i> Fitur Lanjutan Backlog</h3>
+          <div class="pguide-feature-list">
+            <div class="pguide-feature">
+              <div class="pguide-feature__icon"><i data-lucide="layers" aria-hidden="true"></i></div>
+              <div class="pguide-feature__body">
+                <h4>Group by Epic</h4>
+                <p>Klik tombol <strong>Group by Epic</strong> di toolbar backlog untuk mengelompokkan task di bawah epic masing-masing. Setiap epic header menampilkan <strong>progress bar</strong> (% child tasks yang sudah Done). Toggle kembali ke <strong>Flat List</strong> untuk melihat semua task berurutan. Saat membuat task, pilih <strong>Parent Epic</strong> dari dropdown untuk menetapkan keanggotaannya ke epic tertentu.</p>
+              </div>
+            </div>
+            <div class="pguide-feature">
+              <div class="pguide-feature__icon"><i data-lucide="link-2" aria-hidden="true"></i></div>
+              <div class="pguide-feature__body">
+                <h4>Issue Links (Dependency Tracking)</h4>
+                <p>Di task form, scroll ke bawah ke bagian <strong>Issue Links</strong>. Pilih tipe link:
+                  <span style="background:#FEE2E2;color:#991B1B;padding:1px 6px;border-radius:8px;font-size:11px;font-weight:600;">blocks</span>
+                  <span style="background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:8px;font-size:11px;font-weight:600;">is blocked by</span>
+                  <span style="background:#DBEAFE;color:#1E40AF;padding:1px 6px;border-radius:8px;font-size:11px;font-weight:600;">relates to</span>
+                  <span style="background:#F3F4F6;color:#374151;padding:1px 6px;border-radius:8px;font-size:11px;font-weight:600;">duplicates</span>.
+                  Ketik ID atau judul task di search box &rarr; pilih dari autocomplete &rarr; klik Add. Di task detail slideover, section <strong>Linked Issues</strong> menampilkan semua link — klik untuk navigasi ke task terkait. Backlog row yang punya link menampilkan ikon 🔗.
+                </p>
+              </div>
+            </div>
+            <div class="pguide-feature">
+              <div class="pguide-feature__icon"><i data-lucide="git-branch" aria-hidden="true"></i></div>
+              <div class="pguide-feature__body">
+                <h4>Subtasks (Parent-Child Task)</h4>
+                <p>Saat membuat atau mengedit task (non-epic), gunakan dropdown <strong>Parent Task</strong> untuk menjadikannya subtask dari task lain. Parent task menampilkan hitungan subtask di backlog row. Buka task detail slideover &rarr; section <strong>Subtasks</strong> menampilkan daftar subtask + statusnya. Klik <strong>+ Add Subtask</strong> untuk membuat task baru yang otomatis terhubung ke parent ini.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>`;
+
+
 }
 
 // ─────────────────────────────────────────────

@@ -51,6 +51,7 @@ let _filterAssignee = '';
 let _searchQuery = '';
 let _selectedIds = new Set();
 let _detailTaskId = null;
+let _groupByEpic = false;
 
 export async function render(params = {}) {
   _projectId = params.id;
@@ -133,6 +134,9 @@ async function renderBacklogPage() {
           ${[_filterStatus, _filterPriority, _filterType, _filterAssignee].filter(Boolean).length > 0
       ? `<span class="filter-badge">${[_filterStatus, _filterPriority, _filterType, _filterAssignee].filter(Boolean).length}</span>` : ''}
         </div>
+        <button class="btn btn--ghost backlog-group-toggle${_groupByEpic ? ' is-active' : ''}" id="btnGroupByEpic" title="${_groupByEpic ? 'Show flat list' : 'Group by Epic'}">
+          <i data-lucide="layers" aria-hidden="true"></i> ${_groupByEpic ? 'Flat List' : 'Group by Epic'}
+        </button>
       </div>
       <div class="filter-chips" id="backlogFilterChips" style="padding:0 var(--space-1) var(--space-2);">${renderBacklogFilterChips()}</div>
 
@@ -180,26 +184,80 @@ function renderBacklogContent() {
     return `<div class="empty-state" style="padding:var(--space-10) 0;"><i data-lucide="search-x" class="empty-state__icon"></i><p class="empty-state__title">No tasks match your filters</p><p class="empty-state__text">Try adjusting your search or filter criteria.</p></div>`;
   }
   const allVisible = filtered.length > 0 && filtered.every(t => _selectedIds.has(t.id));
+  const listHeader = `
+    <div class="backlog-list__header">
+      ${_isReadOnly ? '' : `<label class="backlog-check-wrapper" title="Select all">
+        <input type="checkbox" class="backlog-check" id="checkAll" ${allVisible ? 'checked' : ''} />
+      </label>`}
+      <span class="backlog-col backlog-col--title">Task</span>
+      <span class="backlog-col backlog-col--type">Type</span>
+      <span class="backlog-col backlog-col--status">Status</span>
+      <span class="backlog-col backlog-col--priority">Priority</span>
+      <span class="backlog-col backlog-col--assignee">Assignee</span>
+      <span class="backlog-col backlog-col--points">SP</span>
+      <span class="backlog-col backlog-col--due">Due</span>
+      <span class="backlog-col backlog-col--actions"></span>
+    </div>`;
+
+  if (_groupByEpic) {
+    // Group tasks by epic_id. Epics themselves come first as headers.
+    const epics = filtered.filter(t => t.type === 'epic');
+    const childMap = {};
+    const noEpicTasks = [];
+    filtered.filter(t => t.type !== 'epic').forEach(t => {
+      if (t.epic_id) {
+        if (!childMap[t.epic_id]) childMap[t.epic_id] = [];
+        childMap[t.epic_id].push(t);
+      } else {
+        noEpicTasks.push(t);
+      }
+    });
+    // Also include epics that are ref'd by children but not in filtered
+    const allEpicIds = [...new Set(filtered.filter(t => t.epic_id).map(t => t.epic_id))];
+    const epicHeaders = [];
+    allEpicIds.forEach(eid => {
+      if (!epics.find(e => e.id === eid)) {
+        const ep = _tasks.find(t => t.id === eid);
+        if (ep) epicHeaders.push(ep);
+      }
+    });
+    const allEpics = [...epics, ...epicHeaders];
+
+    let rows = '';
+    allEpics.forEach(epic => {
+      const children = childMap[epic.id] || [];
+      const doneCount = children.filter(t => t.status === 'done').length;
+      const pct = children.length > 0 ? Math.round((doneCount / children.length) * 100) : 0;
+      rows += `
+        <div class="epic-group-header" data-epic-id="${sanitize(epic.id)}">
+          <div class="epic-group-header__left">
+            <i data-lucide="layers" class="epic-group-header__icon" aria-hidden="true"></i>
+            <span class="epic-group-header__title">${sanitize(epic.title)}</span>
+            <span class="epic-group-header__id text-mono">${sanitize(epic.id)}</span>
+          </div>
+          <div class="epic-group-header__right">
+            <span class="epic-group-header__count">${children.length} task${children.length !== 1 ? 's' : ''}</span>
+            <div class="epic-progress-bar"><div class="epic-progress-bar__fill" style="width:${pct}%"></div></div>
+            <span class="epic-group-header__pct">${pct}%</span>
+          </div>
+        </div>`;
+      children.forEach(t => { rows += renderTaskRow(t, true); });
+    });
+    if (noEpicTasks.length > 0) {
+      rows += `<div class="epic-group-header epic-group-header--none"><i data-lucide="inbox" aria-hidden="true"></i><span>No Epic</span></div>`;
+      noEpicTasks.forEach(t => { rows += renderTaskRow(t, false); });
+    }
+    return `<div class="backlog-list">${listHeader}${rows}</div>`;
+  }
+
   return `
     <div class="backlog-list">
-      <div class="backlog-list__header">
-        ${_isReadOnly ? '' : `<label class="backlog-check-wrapper" title="Select all">
-          <input type="checkbox" class="backlog-check" id="checkAll" ${allVisible ? 'checked' : ''} />
-        </label>`}
-        <span class="backlog-col backlog-col--title">Task</span>
-        <span class="backlog-col backlog-col--type">Type</span>
-        <span class="backlog-col backlog-col--status">Status</span>
-        <span class="backlog-col backlog-col--priority">Priority</span>
-        <span class="backlog-col backlog-col--assignee">Assignee</span>
-        <span class="backlog-col backlog-col--points">SP</span>
-        <span class="backlog-col backlog-col--due">Due</span>
-        <span class="backlog-col backlog-col--actions"></span>
-      </div>
+      ${listHeader}
       ${filtered.map(task => renderTaskRow(task)).join('')}
     </div>`;
 }
 
-function renderTaskRow(task) {
+function renderTaskRow(task, isChild = false) {
   const isSelected = _selectedIds.has(task.id);
   const statusOpt = TASK_STATUS_OPTIONS.find(s => s.value === task.status);
   const priorityOpt = TASK_PRIORITY_OPTIONS.find(p => p.value === task.priority);
@@ -211,9 +269,11 @@ function renderTaskRow(task) {
   const checklistTotal = (task.checklist || []).length;
   const sprint = _sprints.find(s => s.id === task.sprint_id);
   const btnClass = statusOpt ? `badge--${statusOpt.variant}` : 'badge--neutral';
+  const hasLinks = (task.dependencies || []).length > 0;
+  const subtaskCount = _tasks.filter(t => t.parent_task_id === task.id).length;
 
   return `
-    <div class="backlog-row${isSelected ? ' is-selected' : ''}" data-task-id="${sanitize(task.id)}">
+    <div class="backlog-row${isSelected ? ' is-selected' : ''}${isChild ? ' backlog-row--child' : ''}" data-task-id="${sanitize(task.id)}">
       ${_isReadOnly ? '' : `<div class="backlog-col backlog-col--check" onclick="event.stopPropagation()">
         <input type="checkbox" class="task-check" data-id="${sanitize(task.id)}" ${isSelected ? 'checked' : ''} />
       </div>`}
@@ -226,6 +286,8 @@ function renderTaskRow(task) {
             ${(task.tags || []).slice(0, 2).map(tag => `<span class="badge badge--neutral badge--xs">${sanitize(tag)}</span>`).join('')}
             ${checklistTotal > 0 ? `<span class="backlog-meta-pill text-muted"><i data-lucide="check-square" style="width:11px;height:11px;"></i> ${checklistDone}/${checklistTotal}</span>` : ''}
             ${(task.comments || []).length > 0 ? `<span class="backlog-meta-pill text-muted"><i data-lucide="message-circle" style="width:11px;height:11px;"></i> ${(task.comments || []).length}</span>` : ''}
+            ${hasLinks ? `<span class="backlog-meta-pill backlog-meta-pill--link" title="Has linked issues">🔗 ${(task.dependencies || []).length}</span>` : ''}
+            ${subtaskCount > 0 ? `<span class="backlog-meta-pill text-muted"><i data-lucide="git-branch" style="width:11px;height:11px;"></i> ${subtaskCount}</span>` : ''}
           </div>
         </div>
       </div>
@@ -290,6 +352,7 @@ function bindPageEvents() {
   document.getElementById('backlogSearch')?.addEventListener('input', e => { _searchQuery = e.target.value; refreshContent(); });
   document.getElementById('btnOpenFilterModal')?.addEventListener('click', openBacklogFilterModal);
   document.getElementById('backlogFilterChips')?.addEventListener('click', handleBacklogChipRemove);
+  document.getElementById('btnGroupByEpic')?.addEventListener('click', () => { _groupByEpic = !_groupByEpic; refreshContent(); });
   document.getElementById('sortField')?.addEventListener('change', async e => {
     const newField = e.target.value;
     if (newField === _sortField) { _sortDir = _sortDir === 'asc' ? 'desc' : 'asc'; }
@@ -495,15 +558,38 @@ async function handleDeleteTask(task) {
 
 // ---- TASK MODAL ----
 
-function openTaskModal(task) {
+function openTaskModal(task, prefillParentTaskId = null) {
   const isEdit = !!task;
   const session = getSession();
   let _modalTags = task ? [...(task.tags || [])] : [];
   let _checklist = task ? (task.checklist || []).map(c => ({ ...c })) : [];
   let _comments = task ? (task.comments || []).map(c => ({ ...c })) : [];
+  let _modalLinks = task ? (task.dependencies || []).map(d => ({ ...d })) : [];
 
   const projectMembers = (_project.members || []).map(m => { const uid = m.user_id || m; return _members.find(u => u.id === uid); }).filter(Boolean);
   const sprintOptions = _sprints.filter(s => s.status !== 'completed');
+  const epicOptions = _tasks.filter(t => t.type === 'epic');
+  const nonEpicOptions = _tasks.filter(t => t.type !== 'epic' && t.id !== task?.id);
+
+  const LINK_TYPES = [
+    { value: 'blocks', label: 'blocks' },
+    { value: 'is_blocked_by', label: 'is blocked by' },
+    { value: 'relates_to', label: 'relates to' },
+    { value: 'duplicates', label: 'duplicates' },
+  ];
+
+  function renderLinkRows() {
+    if (_modalLinks.length === 0) return '<p class="text-muted" style="font-size:var(--text-sm);margin:0;">No linked issues.</p>';
+    return _modalLinks.map((lnk, idx) => {
+      const lt = LINK_TYPES.find(l => l.value === lnk.type);
+      const linked = _tasks.find(t => t.id === lnk.taskId);
+      return `<div class="issue-link-row">
+        <span class="issue-link-type issue-link-type--${lnk.type}">${lt?.label || lnk.type}</span>
+        <span class="issue-link-task"><span class="text-mono" style="font-size:0.75rem;">${sanitize(lnk.taskId)}</span> ${linked ? sanitize(linked.title) : '<em>Unknown</em>'}</span>
+        <button type="button" class="btn btn--ghost btn--xs issue-link-remove" data-idx="${idx}" title="Remove link"><i data-lucide="x" style="width:12px;height:12px;"></i></button>
+      </div>`;
+    }).join('');
+  }
 
   const formHtml = `
     <form id="taskForm" novalidate>
@@ -568,6 +654,24 @@ function openTaskModal(task) {
           <input class="form-input" type="number" id="tTimeLogged" min="0" placeholder="0" value="${task?.time_logged || ''}" />
         </div>
       </div>
+      <!-- Fase 5: Parent Epic -->
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label class="form-label" for="tParentEpic">Parent Epic</label>
+          <select class="form-select" id="tParentEpic">
+            <option value="">— No Epic —</option>
+            ${epicOptions.map(e => `<option value="${sanitize(e.id)}" ${task?.epic_id === e.id ? 'selected' : ''}>${sanitize(e.id)} — ${sanitize(e.title)}</option>`).join('')}
+          </select>
+        </div>
+        <!-- Fase 6: Parent Task -->
+        <div class="form-group" style="flex:1;">
+          <label class="form-label" for="tParentTask">Parent Task</label>
+          <select class="form-select" id="tParentTask">
+            <option value="">— No Parent —</option>
+            ${nonEpicOptions.map(t => `<option value="${sanitize(t.id)}" ${(task?.parent_task_id === t.id || prefillParentTaskId === t.id) ? 'selected' : ''}>${sanitize(t.id)} — ${sanitize(t.title)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
       <div class="form-group">
         <label class="form-label" for="tTagInput">Tags</label>
         <div class="tag-input-wrapper" id="tagInputWrapper">
@@ -596,6 +700,21 @@ function openTaskModal(task) {
           </div>
         </div>
       </div>` : ''}
+      <!-- Fase 4: Issue Links -->
+      <div class="form-group">
+        <label class="form-label">Issue Links</label>
+        <div class="issue-links-widget">
+          <div class="issue-links-list" id="issueLinksListEl">${renderLinkRows()}</div>
+          <div class="issue-links-add-row">
+            <select class="form-select" id="tLinkType" style="flex:0 0 auto;width:auto;">
+              ${LINK_TYPES.map(l => `<option value="${l.value}">${l.label}</option>`).join('')}
+            </select>
+            <input class="form-input" type="text" id="tLinkTaskSearch" placeholder="Search task by ID or title..." autocomplete="off" />
+            <button type="button" class="btn btn--secondary btn--sm" id="btnAddIssueLink"><i data-lucide="plus" aria-hidden="true"></i> Add</button>
+          </div>
+          <div class="issue-links-suggestions" id="issueLinkSuggestions" style="display:none;"></div>
+        </div>
+      </div>
     </form>`;
 
   openModal({ title: isEdit ? `Edit Task \u2014 ${sanitize(task.id)}` : 'New Task', size: 'lg', body: formHtml, footer: `<button class="btn btn--secondary" id="btnCancelTask">Cancel</button><button class="btn btn--primary" id="btnSaveTask"><i data-lucide="${isEdit ? 'save' : 'plus'}" aria-hidden="true"></i> ${isEdit ? 'Save Changes' : 'Create Task'}</button>` });
@@ -639,8 +758,57 @@ function openTaskModal(task) {
     });
   }
 
+  // Issue Links (Fase 4)
+  function refreshIssueLinks() {
+    const el = document.getElementById('issueLinksListEl'); if (!el) return;
+    el.innerHTML = renderLinkRows();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    el.querySelectorAll('.issue-link-remove').forEach(btn => {
+      btn.addEventListener('click', () => { const idx = parseInt(btn.dataset.idx); if (!isNaN(idx)) { _modalLinks.splice(idx, 1); refreshIssueLinks(); } });
+    });
+  }
+  // Initial bind for link remove buttons
+  document.getElementById('issueLinksListEl')?.querySelectorAll('.issue-link-remove').forEach(btn => {
+    btn.addEventListener('click', () => { const idx = parseInt(btn.dataset.idx); if (!isNaN(idx)) { _modalLinks.splice(idx, 1); refreshIssueLinks(); } });
+  });
+
+  // Autocomplete for Issue Link search
+  const linkSearchInput = document.getElementById('tLinkTaskSearch');
+  const suggestionsEl = document.getElementById('issueLinkSuggestions');
+  linkSearchInput?.addEventListener('input', () => {
+    const q = linkSearchInput.value.trim().toLowerCase();
+    if (!q) { suggestionsEl.style.display = 'none'; return; }
+    const matches = _tasks.filter(t => t.id !== task?.id &&
+      (t.id.toLowerCase().includes(q) || t.title.toLowerCase().includes(q))).slice(0, 8);
+    if (matches.length === 0) { suggestionsEl.style.display = 'none'; return; }
+    suggestionsEl.innerHTML = matches.map(t =>
+      `<div class="issue-link-suggestion" data-id="${sanitize(t.id)}">
+        <span class="text-mono" style="font-size:0.75rem;color:var(--color-text-muted);">${sanitize(t.id)}</span>
+        <span>${sanitize(t.title)}</span>
+      </div>`).join('');
+    suggestionsEl.style.display = 'block';
+    suggestionsEl.querySelectorAll('.issue-link-suggestion').forEach(el => {
+      el.addEventListener('click', () => {
+        linkSearchInput.value = el.dataset.id;
+        suggestionsEl.style.display = 'none';
+      });
+    });
+  });
+  document.getElementById('btnAddIssueLink')?.addEventListener('click', () => {
+    const type = document.getElementById('tLinkType')?.value;
+    const taskId = linkSearchInput?.value.trim();
+    if (!taskId) { showToast('Please enter a task ID or search for a task.', 'warning'); return; }
+    const target = _tasks.find(t => t.id === taskId);
+    if (!target) { showToast(`Task "${taskId}" not found.`, 'error'); return; }
+    if (_modalLinks.find(l => l.taskId === taskId && l.type === type)) { showToast('This link already exists.', 'warning'); return; }
+    _modalLinks.push({ type, taskId });
+    if (linkSearchInput) linkSearchInput.value = '';
+    suggestionsEl.style.display = 'none';
+    refreshIssueLinks();
+  });
+
   document.getElementById('btnCancelTask')?.addEventListener('click', closeModal);
-  document.getElementById('btnSaveTask')?.addEventListener('click', () => handleSaveTask(task, isEdit, _modalTags, _checklist, _comments));
+  document.getElementById('btnSaveTask')?.addEventListener('click', () => handleSaveTask(task, isEdit, _modalTags, _checklist, _comments, _modalLinks));
 }
 
 function renderChecklistItemEdit(item, idx) {
@@ -651,7 +819,7 @@ function renderCommentView(c) {
   return `<div class="comment-item"><div class="comment-item__header"><span class="comment-item__author">${sanitize(c.author_name || 'Unknown')}</span><span class="comment-item__time text-muted">${formatDate(c.created_at, 'datetime')}</span></div><p class="comment-item__text">${sanitize(c.text)}</p></div>`;
 }
 
-async function handleSaveTask(existing, isEdit, tags, checklist, comments) {
+async function handleSaveTask(existing, isEdit, tags, checklist, comments, links = []) {
   const btn = document.getElementById('btnSaveTask');
   const title = document.getElementById('tTitle')?.value.trim() || '';
   if (!title) { setModalFieldError('tTitle', 'Task title is required.'); return; }
@@ -666,13 +834,15 @@ async function handleSaveTask(existing, isEdit, tags, checklist, comments) {
   const due_date = document.getElementById('tDueDate')?.value || null;
   const time_logged = parseInt(document.getElementById('tTimeLogged')?.value) || 0;
   const assignees = [...document.querySelectorAll('.task-assignee-cb:checked')].map(cb => cb.value);
+  const epic_id = document.getElementById('tParentEpic')?.value || null;
+  const parent_task_id = document.getElementById('tParentTask')?.value || null;
   if (btn) btn.disabled = true;
   try {
     const now = nowISO();
     const allTasks = await getAll('tasks');
     const taskId = isEdit ? existing.id : generateSequentialId('TSK', allTasks);
     const session = getSession();
-    const taskData = { id: taskId, project_id: _projectId, title, description, type, status, priority, assignees, reporter: reporter || session?.userId || null, sprint_id: sprint_id || null, epic_id: existing?.epic_id || null, story_points, start_date, due_date, completed_at: status === 'done' ? (existing?.completed_at || now) : null, tags, attachments: existing?.attachments || [], checklist, comments, time_logged, dependencies: existing?.dependencies || [], created_at: existing?.created_at || now, updated_at: now };
+    const taskData = { id: taskId, project_id: _projectId, title, description, type, status, priority, assignees, reporter: reporter || session?.userId || null, sprint_id: sprint_id || null, epic_id: epic_id || existing?.epic_id || null, parent_task_id: parent_task_id || existing?.parent_task_id || null, story_points, start_date, due_date, completed_at: status === 'done' ? (existing?.completed_at || now) : null, tags, attachments: existing?.attachments || [], checklist, comments, time_logged, dependencies: links, created_at: existing?.created_at || now, updated_at: now };
     if (isEdit) {
       await update('tasks', taskData);
       const i = _tasks.findIndex(t => t.id === taskId); if (i !== -1) _tasks[i] = taskData;
@@ -732,6 +902,11 @@ function renderTaskDetail(task) {
   const checklistTotal = (task.checklist || []).length;
   const checklistPct = checklistTotal > 0 ? Math.round((checklistDone / checklistTotal) * 100) : 0;
   const isOverdue = task.due_date && new Date(task.due_date) < new Date() && !['done', 'cancelled'].includes(task.status);
+  const epicTask = task.epic_id ? _tasks.find(t => t.id === task.epic_id) : null;
+  const parentTask = task.parent_task_id ? _tasks.find(t => t.id === task.parent_task_id) : null;
+  const subtasks = _tasks.filter(t => t.parent_task_id === task.id);
+
+  const LINK_TYPE_LABELS = { blocks: 'blocks', is_blocked_by: 'is blocked by', relates_to: 'relates to', duplicates: 'duplicates' };
 
   panel.innerHTML = `
     <div class="task-detail">
@@ -753,9 +928,11 @@ function renderTaskDetail(task) {
           ${sprint ? `<span class="badge badge--info">${sanitize(sprint.name)}</span>` : ''}
           ${(task.tags || []).map(tag => `<span class="badge badge--neutral">${sanitize(tag)}</span>`).join('')}
         </div>
+        ${epicTask ? `<div class="task-detail__epic-parent"><i data-lucide="layers" style="width:13px;height:13px;"></i> Epic: <strong>${sanitize(epicTask.title)}</strong></div>` : ''}
+        ${parentTask ? `<div class="task-detail__epic-parent"><i data-lucide="git-merge" style="width:13px;height:13px;"></i> Parent: <strong>${sanitize(parentTask.title)}</strong></div>` : ''}
         ${task.description ? `<div class="task-detail__section"><h4 class="task-detail__section-label">Description</h4><div class="task-detail__description">${renderMarkdown(task.description)}</div></div>` : ''}
         <div class="task-detail__meta-grid">
-          <div class="task-detail__meta-item"><span class="task-detail__meta-label text-muted">Assignees</span><div class="task-detail__meta-value">${assigneeUsers.length > 0 ? assigneeUsers.map(m => { const ini = (m.full_name || '?').split(' ').filter(Boolean).slice(0, 2).map(n => n[0].toUpperCase()).join(''); return `<span class="assignee-display"><div class="avatar avatar--xs" style="${m.avatar ? '' : 'background:var(--color-primary);'}">${m.avatar ? `<img src="${m.avatar}" alt="" class="avatar__img" />` : `<span class="avatar__initials">${sanitize(ini)}</span>`}</div> ${sanitize(m.full_name)}</span>`; }).join('') : '<span class="text-muted">Unassigned</span>'}</div></div>
+          <div class="task-detail__meta-item"><span class="task-detail__meta-label text-muted">Assignees</span><div class="task-detail__meta-value">${assigneeUsers.length > 0 ? assigneeUsers.map(m => { const ini = (m.full_name || '?').split(' ').filter(Boolean).slice(0, 2).map(n => n[0].toUpperCase()).join(''); return `<span class="assignee-display"><div class="avatar avatar--xs" style="${m.avatar ? '' : 'background:var(--color-primary);'}">` + (m.avatar ? `<img src="${m.avatar}" alt="" class="avatar__img" />` : `<span class="avatar__initials">${sanitize(ini)}</span>`) + `</div> ${sanitize(m.full_name)}</span>`; }).join('') : '<span class="text-muted">Unassigned</span>'}</div></div>
           <div class="task-detail__meta-item"><span class="task-detail__meta-label text-muted">Reporter</span><span class="task-detail__meta-value">${reporterUser ? sanitize(reporterUser.full_name) : '—'}</span></div>
           <div class="task-detail__meta-item"><span class="task-detail__meta-label text-muted">Start Date</span><span class="task-detail__meta-value">${task.start_date ? formatDate(task.start_date) : '—'}</span></div>
           <div class="task-detail__meta-item"><span class="task-detail__meta-label text-muted">Due Date</span><span class="task-detail__meta-value${isOverdue ? ' text-danger' : ''}">${task.due_date ? formatDate(task.due_date) : '—'}</span></div>
@@ -780,12 +957,63 @@ function renderTaskDetail(task) {
           <h4 class="task-detail__section-label">Comments</h4>
           ${(task.comments || []).map(c => renderCommentView(c)).join('')}
         </div>` : ''}
+        ${(task.dependencies || []).length > 0 ? `
+        <div class="task-detail__section">
+          <h4 class="task-detail__section-label"><i data-lucide="link-2" style="width:14px;height:14px;display:inline-block;vertical-align:middle;"></i> Linked Issues</h4>
+          <div class="task-issue-links">
+            ${(task.dependencies || []).map(lnk => {
+    const linked = _tasks.find(t => t.id === lnk.taskId);
+    const lbl = { blocks: 'blocks', is_blocked_by: 'is blocked by', relates_to: 'relates to', duplicates: 'duplicates' }[lnk.type] || lnk.type;
+    return `<div class="task-issue-link" data-linked-id="${sanitize(lnk.taskId)}" style="cursor:${linked ? 'pointer' : 'default'}">
+                <span class="issue-link-type issue-link-type--${lnk.type}">${lbl}</span>
+                <span class="issue-link-task-ref">
+                  <span class="text-mono" style="font-size:0.75rem;">${sanitize(lnk.taskId)}</span>
+                  ${linked ? sanitize(linked.title) : '<em class="text-muted">Task not found</em>'}
+                </span>
+                ${linked ? `<span class="badge badge--xs badge--${TASK_STATUS_OPTIONS.find(s => s.value === linked.status)?.variant || 'neutral'}">${TASK_STATUS_OPTIONS.find(s => s.value === linked.status)?.label || linked.status}</span>` : ''}
+              </div>`;
+  }).join('')}
+          </div>
+        </div>` : ''}
+        ${subtasks.length > 0 || !_isReadOnly ? `
+        <div class="task-detail__section">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2);">
+            <h4 class="task-detail__section-label" style="margin:0;">Subtasks ${subtasks.length > 0 ? `<span class="text-muted">(${subtasks.filter(t => t.status === 'done').length}/${subtasks.length})</span>` : ''}</h4>
+            ${!_isReadOnly ? `<button class="btn btn--ghost btn--xs" id="btnAddSubtask"><i data-lucide="plus" style="width:13px;height:13px;"></i> Add Subtask</button>` : ''}
+          </div>
+          ${subtasks.length > 0 ? `<div class="task-subtasks-list">
+            ${subtasks.map(st => {
+    const stStatus = TASK_STATUS_OPTIONS.find(s => s.value === st.status);
+    return `<div class="task-subtask-item" data-subtask-id="${sanitize(st.id)}">
+                <span class="badge badge--xs badge--${stStatus?.variant || 'neutral'}" style="flex-shrink:0;">${stStatus?.label || st.status}</span>
+                <span class="task-subtask-item__title">${sanitize(st.id)} — ${sanitize(st.title)}</span>
+              </div>`;
+  }).join('')}
+          </div>` : '<p class="text-muted" style="font-size:var(--text-sm);margin:0;">No subtasks yet.</p>'}
+        </div>` : ''}
       </div>
     </div>`;
 
   if (typeof lucide !== 'undefined') lucide.createIcons();
   document.getElementById('btnDetailClose')?.addEventListener('click', closeSlideover);
   document.getElementById('btnDetailEdit')?.addEventListener('click', () => { closeSlideover(); openTaskModal(task); });
+  document.getElementById('btnAddSubtask')?.addEventListener('click', () => { closeSlideover(); openTaskModal(null, task.id); });
+
+  // Linked Issues — click through to linked task
+  panel.querySelectorAll('.task-issue-link[data-linked-id]').forEach(el => {
+    el.addEventListener('click', () => {
+      const linkedTask = _tasks.find(t => t.id === el.dataset.linkedId);
+      if (linkedTask) openTaskDetail(linkedTask);
+    });
+  });
+
+  // Subtask click — open detail
+  panel.querySelectorAll('.task-subtask-item[data-subtask-id]').forEach(el => {
+    el.addEventListener('click', () => {
+      const st = _tasks.find(t => t.id === el.dataset.subtaskId);
+      if (st) openTaskDetail(st);
+    });
+  });
 
   panel.querySelectorAll('.detail-checklist-check').forEach(cb => {
     cb.addEventListener('change', async e => {
