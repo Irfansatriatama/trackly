@@ -1,53 +1,60 @@
 /**
  * TRACKLY — auth.js
- * Session management via localStorage and Firebase Auth.
+ * Session management via localStorage and Custom DB Auth.
  */
 
-import { app, auth } from './firebase-init.js';
-import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+import { app, auth } from './firebase-init.js'; // Note: auth might be undefined if we remove it from init
 
 const SESSION_KEY = 'trackly_session';
 const SESSION_DURATION_MS = 8 * 60 * 60 * 1000; // 8 hours default
 const SESSION_REMEMBER_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-// The previous local hashing functions are no longer strictly needed for auth,
-// but we keep the exported signatures dummy to prevent module loading errors if imported.
-export async function hashPassword(password) {
-  return "firebase-managed";
-}
-
-export async function verifyPassword(password, hash) {
-  return true; // We use Firebase signInWithEmailAndPassword directly now
-}
-
 /**
- * Perform Firebase login
+ * Hash a password using SHA-256 for local database storage.
+ * @param {string} password
+ * @returns {Promise<string>}
  */
-export async function loginWithEmail(email, password) {
-  return signInWithEmailAndPassword(auth, email, password);
+export async function hashPassword(password) {
+  const msgBuffer = new TextEncoder().encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 /**
- * Create user in Firebase Auth via REST API (Admin client-side bypass)
+ * Verify a password against a hash.
+ * @param {string} password
+ * @param {string} hash
+ * @returns {Promise<boolean>}
+ */
+export async function verifyPassword(password, hash) {
+  const newHash = await hashPassword(password);
+  return newHash === hash;
+}
+
+/**
+ * Validate a user login using Username and Password against Firestore.
+ * This replaces the old Firebase authentication flow.
+ */
+export async function loginWithUsername(username, password) {
+  // Query is handled inside app.js. We just export this as a marker or helper if needed.
+  // Actually, we'll implement the DB lookup in app.js. This function can remain as a deprecated wrapper 
+  // or be completely removed. We'll leave it as a placeholder to avoid breaking any other modules trying to import it.
+  throw new Error("Use app.js custom logic to login via DB directly.");
+}
+
+/**
+ * Create user in Firebase Auth via REST API. Deprecated.
  */
 export async function createFirebaseUser(email, password) {
-  const apiKey = app.options.apiKey;
-  const endpoint = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`;
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, returnSecureToken: false })
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error?.message || 'Firebase Auth Error');
-  return data;
+  throw new Error("Firebase Auth is disabled in this version.");
 }
 
 /**
- * Perform Firebase logout
+ * Perform Firebase logout. Deprecated.
  */
 export async function logoutFirebase() {
-  return signOut(auth);
+  return Promise.resolve();
 }
 
 /**

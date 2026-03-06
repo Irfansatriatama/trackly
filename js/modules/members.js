@@ -304,21 +304,20 @@ function openMemberModal(member) {
           <input class="form-input" type="tel" id="mPhone" placeholder="e.g. +62 812 3456 7890" value="${sanitize(member?.phone_number || '')}" />
         </div>
       </div>
-      ${!isEdit ? `
-      <p class="form-section-title">Password</p>
+      <p class="form-section-title">Password <span class="text-muted" style="font-size:0.8em;font-weight:normal;">${isEdit ? '(Leave blank to keep current)' : ''}</span></p>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label" for="mPassword">Password <span class="required">*</span></label>
+          <label class="form-label" for="mPassword">Password ${isEdit ? '' : '<span class="required">*</span>'}</label>
           <div class="form-input-wrapper">
             <input class="form-input" type="password" id="mPassword" placeholder="Minimum 8 characters" autocomplete="new-password" />
             <button type="button" class="form-input-reveal" id="toggleMPassword" aria-label="Toggle password visibility"><i data-lucide="eye"></i></button>
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label" for="mConfirmPassword">Confirm Password <span class="required">*</span></label>
+          <label class="form-label" for="mConfirmPassword">Confirm Password ${isEdit ? '' : '<span class="required">*</span>'}</label>
           <input class="form-input" type="password" id="mConfirmPassword" placeholder="Re-enter password" autocomplete="new-password" />
         </div>
-      </div>`: ''}
+      </div>
       <p class="form-section-title">Role &amp; Status</p>
       <div class="form-row">
         <div class="form-group">
@@ -475,13 +474,20 @@ async function handleSaveMember(existing, isEdit, getAvatar) {
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setModalFieldError('mEmail', 'Enter a valid email address.'); valid = false; }
 
   let passwordHash = existing?.password_hash || null;
-  if (!isEdit) {
-    const pass = document.getElementById('mPassword')?.value || '';
-    const conf = document.getElementById('mConfirmPassword')?.value || '';
-    if (!pass) { setModalFieldError('mPassword', 'Password is required.'); valid = false; }
-    else if (pass.length < 8) { setModalFieldError('mPassword', 'Password must be at least 8 characters.'); valid = false; }
-    if (pass && conf !== pass) { setModalFieldError('mConfirmPassword', 'Passwords do not match.'); valid = false; }
-    if (valid && pass) passwordHash = await hashPassword(pass);
+  const pass = document.getElementById('mPassword')?.value || '';
+  const conf = document.getElementById('mConfirmPassword')?.value || '';
+
+  if (!isEdit && !pass) {
+    setModalFieldError('mPassword', 'Password is required.'); valid = false;
+  } else if (pass && pass.length < 8) {
+    setModalFieldError('mPassword', 'Password must be at least 8 characters.'); valid = false;
+  }
+  if (pass && conf !== pass) {
+    setModalFieldError('mConfirmPassword', 'Passwords do not match.'); valid = false;
+  }
+  if (valid && pass) {
+    const { hashPassword } = await import('../core/auth.js');
+    passwordHash = await hashPassword(pass);
   }
 
   // Check uniqueness
@@ -526,18 +532,6 @@ async function handleSaveMember(existing, isEdit, getAvatar) {
       logActivity({ project_id: null, entity_type: 'member', entity_id: memberId, entity_name: fullName, action: 'updated' });
       showToast(`${fullName}'s profile has been updated.`, 'success');
     } else {
-      const pass = document.getElementById('mPassword')?.value || '';
-      if (pass) {
-        try {
-          const { createFirebaseUser } = await import('../core/auth.js');
-          await createFirebaseUser(email, pass);
-        } catch (authErr) {
-          showToast('Failed to create login credential: ' + authErr.message, 'error');
-          if (btn) btn.disabled = false;
-          return; // Abort if Firebase Auth creation fails
-        }
-      }
-
       await add('users', memberData);
       _members.push(memberData);
       logActivity({ project_id: null, entity_type: 'member', entity_id: memberData.id, entity_name: fullName, action: 'created' });

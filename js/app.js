@@ -417,9 +417,9 @@ async function renderLogin() {
           </div>
           <form class="login-form" id="loginForm" novalidate>
             <div class="form-group">
-              <label class="form-label" for="loginEmail">Email <span class="required">*</span></label>
-              <input class="form-input" type="email" id="loginEmail" name="loginEmail"
-                placeholder="Enter your email" autocomplete="email" required />
+              <label class="form-label" for="loginUsername">Username <span class="required">*</span></label>
+              <input class="form-input" type="text" id="loginUsername" name="loginUsername"
+                placeholder="Enter your username" autocomplete="username" required />
             </div>
             <div class="form-group">
               <label class="form-label" for="password">Password <span class="required">*</span></label>
@@ -466,7 +466,7 @@ async function renderLogin() {
   }
 
   // Clear field errors on input
-  ['loginEmail', 'password'].forEach((id) => {
+  ['loginUsername', 'password'].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', () => setFieldError(id, null));
   });
@@ -478,17 +478,17 @@ async function renderLogin() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const emailInput = document.getElementById('loginEmail').value.trim();
+    const usernameInput = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('password').value;
     const remember = document.getElementById('rememberMe').checked;
 
     // Client-side validation
     let valid = true;
-    if (!emailInput) {
-      setFieldError('loginEmail', 'Email is required.');
+    if (!usernameInput) {
+      setFieldError('loginUsername', 'Username is required.');
       valid = false;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) {
-      setFieldError('loginEmail', 'Enter a valid email address.');
+    } else if (!/^[a-z0-9_.-]{3,30}$/i.test(usernameInput)) {
+      setFieldError('loginUsername', 'Enter a valid username (3-30 chars).');
       valid = false;
     }
     if (!password) {
@@ -502,46 +502,30 @@ async function renderLogin() {
     submitBtn.querySelector('span').textContent = 'Signing in…';
 
     try {
-      // 💥 FIREBASE AUTH CHECK 💥
-      try {
-        const { loginWithEmail } = await import('./core/auth.js');
-        await loginWithEmail(emailInput, password);
-      } catch (authErr) {
-        debug('Firebase Auth Error:', authErr);
-        setLoginAlert('Invalid email or password. Please try again.');
+      const { verifyPassword } = await import('./core/auth.js');
+
+      // Fetch users and find by username (case-insensitive)
+      const users = await getAll('users');
+      let user = users.find(
+        (u) => u.username && u.username.toLowerCase() === usernameInput.toLowerCase()
+      );
+
+      // Validate user existence and password
+      if (!user) {
+        setLoginAlert('Username not found or invalid password.');
         return;
       }
 
-      // Fetch all users and find by email (case-insensitive)
-      const users = await getAll('users');
-      let user = users.find(
-        (u) => u.email && u.email.toLowerCase() === emailInput.toLowerCase()
-      );
-
-      // If user logs in via Firebase but doesn't exist in Firestore,
-      // create a basic record for them
-      if (!user) {
-        debug('User exists in Auth but not Firestore, creating record');
-        const { generateSequentialId, nowISO } = await import('./core/utils.js');
-        const now = nowISO();
-        user = {
-          id: generateSequentialId('USR', users),
-          email: emailInput,
-          full_name: emailInput.split('@')[0],
-          username: emailInput.split('@')[0],
-          role: 'admin', // Defaulting to admin since this is the first manual login
-          status: 'active',
-          created_at: now,
-          updated_at: now,
-          last_login: null
-        };
-        const { setDoc, doc } = await import('firebase/firestore');
-        const { db } = await import('./core/firebase-init.js');
-        // We use setDoc instead of add to trackly's internal `add` because `add` expects internal structure but this works well
-        try {
-          const { add } = await import('./core/db.js');
-          await add('users', user);
-        } catch (e) { /* non-fatal */ }
+      if (user.password_hash) {
+        const isValid = await verifyPassword(password, user.password_hash);
+        if (!isValid) {
+          setLoginAlert('Username not found or invalid password.');
+          return;
+        }
+      } else {
+        // Fallback for migrated users without local passwords:
+        setLoginAlert('Account requires password reset. Please contact Administrator.');
+        return;
       }
 
       if (user && user.status === 'inactive') {
