@@ -104,12 +104,10 @@ function registerAllRoutes() {
     navigate(isAuthenticated() ? '/dashboard' : '/login');
   });
 
-  // Setup wizard (first-run) — also accessible directly
+  // Setup wizard (first-run) — now redirects to login directly
   registerRoute('/setup', async () => {
     if (isAuthenticated()) { navigate('/dashboard'); return; }
-    const firstRun = await isFirstRun();
-    if (!firstRun) { navigate('/login'); return; }
-    renderWizard();
+    navigate('/login');
   });
 
   // Login
@@ -378,13 +376,6 @@ function setLoginAlert(message, type = 'error') {
  * Render the login page and wire up the submit handler.
  */
 async function renderLogin() {
-  // If no users exist, redirect to wizard instead
-  const firstRun = await isFirstRun();
-  if (firstRun) {
-    renderWizard();
-    return;
-  }
-
   const app = document.getElementById('app');
   if (!app) return;
 
@@ -423,7 +414,7 @@ async function renderLogin() {
               <span>Sign In</span>
             </button>
             <p class="login-hint text-muted">
-              No account yet? The first-run wizard will create your Admin account automatically.
+              No account yet? Please contact your administrator to create one.
             </p>
           </form>
         </div>
@@ -1028,14 +1019,6 @@ async function bootstrap() {
     debug('IndexedDB ready');
   } catch (err) {
     debug('IndexedDB error:', err);
-  }
-
-  // Phase 4: First-run detection — show wizard if no users exist
-  const firstRun = await isFirstRun();
-  if (firstRun) {
-    debug('First run detected — showing setup wizard');
-    renderWizard();
-    return;
   }
 
   // Determine initial view
