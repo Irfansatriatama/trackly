@@ -746,15 +746,13 @@ async function _handleFileAttach(files) {
       continue;
     }
     try {
-      const data = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      showToast(`Uploading ${file.name}...`, 'info');
+      const { uploadFile } = await import('../core/cloudinary.js');
+      const data = await uploadFile(file, file.name);
       _pendingAttachments.push({ name: file.name, data, size: file.size, mime_type: file.type });
+      showToast(`Uploaded ${file.name}`, 'success');
     } catch {
-      showToast(`Failed to read "${file.name}".`, 'error');
+      showToast(`Failed to upload "${file.name}".`, 'error');
     }
   }
   _refreshAttachmentList();

@@ -1,41 +1,43 @@
 /**
  * TRACKLY — auth.js
- * Session management via localStorage.
- * Password hashing with Web Crypto API (SHA-256).
- * Full implementation in Phase 3.
+ * Session management via localStorage and Firebase Auth.
  */
+
+import { auth } from './firebase-init.js';
+import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 
 const SESSION_KEY = 'trackly_session';
 const SESSION_DURATION_MS = 8 * 60 * 60 * 1000; // 8 hours default
 const SESSION_REMEMBER_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-/**
- * Hash a plaintext password using SHA-256 (Web Crypto API).
- * @param {string} password
- * @returns {Promise<string>} Hex-encoded hash
- */
+// The previous local hashing functions are no longer strictly needed for auth,
+// but we keep the exported signatures dummy to prevent module loading errors if imported.
 export async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  return "firebase-managed";
+}
+
+export async function verifyPassword(password, hash) {
+  return true; // We use Firebase signInWithEmailAndPassword directly now
 }
 
 /**
- * Verify a plaintext password against a stored hash.
- * @param {string} password
- * @param {string} hash
- * @returns {Promise<boolean>}
+ * Perform Firebase login
  */
-export async function verifyPassword(password, hash) {
-  const computed = await hashPassword(password);
-  return computed === hash;
+export async function loginWithEmail(email, password) {
+  return signInWithEmailAndPassword(auth, email, password);
+}
+
+/**
+ * Perform Firebase logout
+ */
+export async function logoutFirebase() {
+  return signOut(auth);
 }
 
 /**
  * Store a session in localStorage.
- * @param {Object} user  The authenticated user object
+ * Keeps synchronous 'getSession()' working across all modules without refactoring them.
+ * @param {Object} user  The authenticated user object (from Firestore users collection)
  * @param {boolean} remember  Extend expiry if true
  */
 export function createSession(user, remember = false) {
@@ -85,6 +87,7 @@ export function isAuthenticated() {
  */
 export function clearSession() {
   localStorage.removeItem(SESSION_KEY);
+  logoutFirebase().catch(() => { });
 }
 
 /**
@@ -97,4 +100,4 @@ export function refreshSession() {
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
 }
 
-export default { hashPassword, verifyPassword, createSession, getSession, isAuthenticated, clearSession, refreshSession };
+export default { hashPassword, verifyPassword, loginWithEmail, logoutFirebase, createSession, getSession, isAuthenticated, clearSession, refreshSession };

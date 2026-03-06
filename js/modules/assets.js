@@ -660,6 +660,15 @@ async function handleSaveAsset(existing, isEdit, getImage) {
     const assetId = isEdit ? existing.id : generateSequentialId('AST', all);
     const image = getImage();
 
+    let imageUrl = existing?.image || null;
+    if (image && image.startsWith('data:')) {
+      showToast('Uploading image...', 'info');
+      const { uploadFile } = await import('../core/cloudinary.js');
+      imageUrl = await uploadFile(image, `asset_${assetId}`);
+    } else if (!image) {
+      imageUrl = null;
+    }
+
     const assetData = {
       id: assetId,
       name,
@@ -674,7 +683,7 @@ async function handleSaveAsset(existing, isEdit, getImage) {
       status,
       warranty_expiry: warrantyExpiry || null,
       notes,
-      image: image || null,
+      image: imageUrl,
       created_at: existing?.created_at || now,
       updated_at: now,
     };

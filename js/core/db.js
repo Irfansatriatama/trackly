@@ -1,97 +1,39 @@
 /**
- * TRACKLY — db.js
- * IndexedDB wrapper with CRUD helpers for all object stores.
- * All database operations must go through this module.
- * Full implementation in Phase 3.
+ * TRACKLY — db.js (Firebase Firestore Version)
+ * Replaces IndexedDB wrapper with Firebase Firestore SDK.
+ * Export signatures mirror the previous local versions to avoid breaking module imports.
  */
 
-const DB_NAME = 'trackly_db';
-const DB_VERSION = 8;
-
-/** @type {IDBDatabase|null} */
-let _db = null;
+import { db } from './firebase-init.js';
+import {
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  setDoc,
+  deleteDoc,
+  query,
+  where,
+  getCountFromServer,
+  writeBatch
+} from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
 /**
- * Object store definitions: name → { keyPath, indexes }
+ * Open/init database. Now just returns the firestore instance.
+ * @returns {Promise<Object>}
  */
-const STORES = {
-  users: { keyPath: 'id', indexes: [] },
-  projects: { keyPath: 'id', indexes: ['parent_id'] },
-  tasks: { keyPath: 'id', indexes: ['project_id', 'sprint_id'] },
-  sprints: { keyPath: 'id', indexes: ['project_id'] },
-  clients: { keyPath: 'id', indexes: [] },
-  assets: { keyPath: 'id', indexes: [] },
-  maintenance: { keyPath: 'id', indexes: ['project_id', 'status'] },
-  invoices: { keyPath: 'id', indexes: ['project_id'] },
-  activity_log: { keyPath: 'id', indexes: ['project_id', 'user_id'] },
-  meetings: { keyPath: 'id', indexes: ['date'] },
-  discussions: { keyPath: 'id', indexes: ['project_id'] },
-  settings: { keyPath: 'key', indexes: [] },
-  notifications: { keyPath: 'id', indexes: ['user_id', 'read', 'created_at'] },
-  notes: { keyPath: 'id', indexes: ['user_id', 'folder_id', 'created_at', 'updated_at', 'pinned'] },
-  note_audit: { keyPath: 'id', indexes: ['note_id', 'user_id', 'action', 'created_at'] },
-};
-
-/**
- * Open (or reuse) the IndexedDB connection.
- * @returns {Promise<IDBDatabase>}
- */
-export function openDB() {
-  if (_db) return Promise.resolve(_db);
-
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      const transaction = event.target.transaction;
-
-      for (const [storeName, config] of Object.entries(STORES)) {
-        let store;
-        if (!db.objectStoreNames.contains(storeName)) {
-          store = db.createObjectStore(storeName, { keyPath: config.keyPath });
-          for (const index of config.indexes) {
-            store.createIndex(index, index, { unique: false });
-          }
-        } else {
-          store = transaction.objectStore(storeName);
-        }
-        // Add shared_with multiEntry index on notes store if missing
-        if (storeName === 'notes' && !store.indexNames.contains('shared_with')) {
-          store.createIndex('shared_with', 'shared_with', { multiEntry: true });
-        }
-        // Add parent_id index on projects store if missing
-        if (storeName === 'projects' && !store.indexNames.contains('parent_id')) {
-          store.createIndex('parent_id', 'parent_id', { unique: false });
-        }
-      }
-    };
-
-    request.onsuccess = (event) => {
-      _db = event.target.result;
-      resolve(_db);
-    };
-
-    request.onerror = (event) => {
-      reject(new Error(`IndexedDB open error: ${event.target.error}`));
-    };
-  });
+export async function openDB() {
+  return Promise.resolve(db);
 }
 
 /**
  * Get all records from a store.
- * @param {string} storeName
+ * @param {string} storeName (aka collection name)
  * @returns {Promise<Array>}
  */
 export async function getAll(storeName) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readonly');
-    const store = tx.objectStore(storeName);
-    const request = store.getAll();
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
+  const querySnapshot = await getDocs(collection(db, storeName));
+  return querySnapshot.docs.map(doc => doc.data());
 }
 
 /**
@@ -101,14 +43,9 @@ export async function getAll(storeName) {
  * @returns {Promise<Object|undefined>}
  */
 export async function getById(storeName, id) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readonly');
-    const store = tx.objectStore(storeName);
-    const request = store.get(id);
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
+  const docRef = doc(db, storeName, id);
+  const docSnap = await getDoc(docRef);
+  return docSnap.exists() ? docSnap.data() : undefined;
 }
 
 /**
@@ -119,15 +56,13 @@ export async function getById(storeName, id) {
  * @returns {Promise<Array>}
  */
 export async function getByIndex(storeName, indexName, value) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readonly');
-    const store = tx.objectStore(storeName);
-    const index = store.index(indexName);
-    const request = index.getAll(value);
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
+  // In Trackly, 'shared_with' is an array with multiEntry: true locally. 
+  // In Firestore, this requires 'array-contains'.
+  const operator = indexName === 'shared_with' ? 'array-contains' : '==';
+  const q = query(collection(db, storeName), where(indexName, operator, value));
+
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => doc.data());
 }
 
 /**
@@ -137,31 +72,29 @@ export async function getByIndex(storeName, indexName, value) {
  * @returns {Promise<string>} The generated key
  */
 export async function add(storeName, record) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readwrite');
-    const store = tx.objectStore(storeName);
-    const request = store.add(record);
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
+  if (!record.id) {
+    throw new Error('Record is missing an ID');
+  }
+  const docRef = doc(db, storeName, record.id);
+  // setDoc without merge completely overwrites or creates, matching IDB store.add/put behavior
+  await setDoc(docRef, record);
+  return record.id;
 }
 
 /**
- * Update an existing record (full replace).
+ * Update an existing record.
  * @param {string} storeName
  * @param {Object} record
  * @returns {Promise<string>}
  */
 export async function update(storeName, record) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readwrite');
-    const store = tx.objectStore(storeName);
-    const request = store.put(record);
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
+  if (!record.id) {
+    throw new Error('Record is missing an ID');
+  }
+  const docRef = doc(db, storeName, record.id);
+  // Using setDoc directly simulates IDB's full-object replace.
+  await setDoc(docRef, record);
+  return record.id;
 }
 
 /**
@@ -171,30 +104,25 @@ export async function update(storeName, record) {
  * @returns {Promise<void>}
  */
 export async function remove(storeName, id) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readwrite');
-    const store = tx.objectStore(storeName);
-    const request = store.delete(id);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
+  const docRef = doc(db, storeName, id);
+  await deleteDoc(docRef);
 }
 
 /**
  * Clear all records from a store.
+ * Not recommended for large Firestore collections but functional for small test data and the "Reset data" settings.
  * @param {string} storeName
  * @returns {Promise<void>}
  */
 export async function clearStore(storeName) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readwrite');
-    const store = tx.objectStore(storeName);
-    const request = store.clear();
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
+  const querySnapshot = await getDocs(collection(db, storeName));
+  const batch = writeBatch(db);
+
+  querySnapshot.docs.forEach((d) => {
+    batch.delete(d.ref);
   });
+
+  await batch.commit();
 }
 
 /**
@@ -203,14 +131,9 @@ export async function clearStore(storeName) {
  * @returns {Promise<number>}
  */
 export async function count(storeName) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readonly');
-    const store = tx.objectStore(storeName);
-    const request = store.count();
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
+  const coll = collection(db, storeName);
+  const snapshot = await getCountFromServer(coll);
+  return snapshot.data().count;
 }
 
 export default { openDB, getAll, getById, getByIndex, add, update, remove, clearStore, count };

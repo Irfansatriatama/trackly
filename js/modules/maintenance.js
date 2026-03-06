@@ -979,9 +979,12 @@ async function _handleFileAttach(files) {
   for (const file of files) {
     if (file.size > 5 * 1024 * 1024) { showToast(`"${file.name}" exceeds 5MB limit.`, 'warning'); continue; }
     try {
-      const data = await new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(file); });
+      showToast(`Uploading ${file.name}...`, 'info');
+      const { uploadFile } = await import('../core/cloudinary.js');
+      const data = await uploadFile(file, file.name);
       _pendingAttachments.push({ name: file.name, data, size: file.size, mime_type: file.type });
-    } catch { showToast(`Failed to read "${file.name}".`, 'error'); }
+      showToast(`Uploaded ${file.name}`, 'success');
+    } catch { showToast(`Failed to upload "${file.name}".`, 'error'); }
   }
   _refreshPendingAttachments();
 }

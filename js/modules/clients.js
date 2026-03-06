@@ -498,6 +498,15 @@ async function handleSaveClient(existing, isEdit, getLogo) {
     const clientId = isEdit ? existing.id : generateSequentialId('CLT', allClients);
     const logoBase64 = getLogo();
 
+    let logoUrl = existing?.logo || '';
+    if (logoBase64 && logoBase64.startsWith('data:')) {
+      showToast('Uploading logo...', 'info');
+      const { uploadFile } = await import('../core/cloudinary.js');
+      logoUrl = await uploadFile(logoBase64, `client_${clientId}`);
+    } else if (!logoBase64) {
+      logoUrl = '';
+    }
+
     const clientData = {
       id: clientId,
       company_name: companyName,
@@ -507,7 +516,7 @@ async function handleSaveClient(existing, isEdit, getLogo) {
       contact_phone: contactPhone,
       address,
       website,
-      logo: logoBase64 || '',
+      logo: logoUrl,
       notes,
       status,
       created_at: existing?.created_at || now,

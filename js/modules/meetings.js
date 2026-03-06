@@ -1196,37 +1196,38 @@ async function uploadNotulensiFile(meeting, file) {
   const session = getSession();
   if (!meeting.notulensi) meeting.notulensi = { content: '', attachments: [], created_by: session?.userId };
 
-  const reader = new FileReader();
-  reader.onload = async (e) => {
+  showToast('Uploading document...', 'info');
+  try {
+    const { uploadFile } = await import('../core/cloudinary.js');
+    const url = await uploadFile(file, `meeting_${meeting.id}_att`);
+
     const attachment = {
       name: file.name,
       size: file.size,
       mime_type: file.type,
-      data: e.target.result, // base64 data URL
+      data: url,
       uploaded_at: nowISO(),
     };
+
     meeting.notulensi.attachments = meeting.notulensi.attachments || [];
     meeting.notulensi.attachments.push(attachment);
     meeting.notulensi.updated_at = nowISO();
     meeting.updated_at = nowISO();
-    try {
-      await update('meetings', meeting);
-      await logActivity({
-        entity_type: 'meeting',
-        entity_id: meeting.id,
-        entity_name: meeting.title,
-        action: 'uploaded',
-        project_id: meeting.project_ids?.[0] || null,
-        metadata: { filename: file.name },
-      });
-      showToast(`File "${file.name}" uploaded.`, 'success');
-      await renderDetail({ id: meeting.id });
-    } catch (err) {
-      showToast('Upload failed: ' + err.message, 'error');
-    }
-  };
-  reader.onerror = () => showToast('Failed to read file.', 'error');
-  reader.readAsDataURL(file);
+
+    await update('meetings', meeting);
+    await logActivity({
+      entity_type: 'meeting',
+      entity_id: meeting.id,
+      entity_name: meeting.title,
+      action: 'uploaded',
+      project_id: meeting.project_ids?.[0] || null,
+      metadata: { filename: file.name },
+    });
+    showToast(`File "${file.name}" uploaded.`, 'success');
+    await renderDetail({ id: meeting.id });
+  } catch (err) {
+    showToast('Upload failed: ' + err.message, 'error');
+  }
 }
 
 // ─── Action Items ─────────────────────────────────────────────────────────────

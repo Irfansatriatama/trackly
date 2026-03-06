@@ -498,9 +498,14 @@ async function renderLogin() {
         return;
       }
 
-      // Verify password
-      const passwordOk = await verifyPassword(password, user.password_hash);
-      if (!passwordOk) {
+      // 💥 FIREBASE AUTH CHECK 💥
+      try {
+        const { loginWithEmail } = await import('./core/auth.js');
+        // We use the email retrieved from Firestore (from the user object) 
+        // because the UI asks for username.
+        await loginWithEmail(user.email, password);
+      } catch (authErr) {
+        debug('Firebase Auth Error:', authErr);
         setLoginAlert('Invalid username or password. Please try again.');
         return;
       }

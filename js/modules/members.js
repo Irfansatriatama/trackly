@@ -505,10 +505,19 @@ async function handleSaveMember(existing, isEdit, getAvatar) {
     const memberId = isEdit ? existing.id : generateSequentialId('USR', allUsers);
     const avatarBase64 = getAvatar();
 
+    let avatarUrl = existing?.avatar || '';
+    if (avatarBase64 && avatarBase64.startsWith('data:')) {
+      showToast('Uploading avatar...', 'info');
+      const { uploadFile } = await import('../core/cloudinary.js');
+      avatarUrl = await uploadFile(avatarBase64, `avatar_${memberId}`);
+    } else if (!avatarBase64) {
+      avatarUrl = '';
+    }
+
     const memberData = {
       id: memberId, username, full_name: fullName, email,
       password_hash: passwordHash, phone_number: phone,
-      avatar: avatarBase64 || '', company, department, position, role,
+      avatar: avatarUrl, company, department, position, role,
       project_roles: existing?.project_roles || {},
       bio, linkedin, github, status,
       last_login: existing?.last_login || null,
