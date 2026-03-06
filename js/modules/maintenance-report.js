@@ -416,7 +416,7 @@ function _renderReportTable() {
             <th style="width:40px;text-align:center;">No</th>
             <th style="width:110px;">Ticket No</th>
             <th>Task Title</th>
-            ${_includeSubProjects ? '<th>Project</th>' : ''}
+            <th>Project</th>
             <th style="width:120px;">PIC Pemohon</th>
             <th style="width:130px;">Status</th>
             <th style="width:120px;">Assign Date</th>
@@ -434,7 +434,7 @@ function _renderReportTable() {
               <td style="text-align:center;">${idx + 1}</td>
               <td class="text-mono" style="font-size:12px;">${sanitize(t.ticket_number || t.id || '')}</td>
               <td>${sanitize(t.title || '')}</td>
-              ${_includeSubProjects ? `<td>${sanitize(proj?.name || '')}</td>` : ''}
+              <td>${sanitize(proj?.name || '')}</td>
               <td>${sanitize(picClientName)}</td>
               <td>${sanitize(_getLabelFor(TICKET_STATUS_OPTIONS, t.status))}</td>
               <td class="text-nowrap">${t.assigned_date ? formatDateID(t.assigned_date) : '—'}</td>

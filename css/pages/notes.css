@@ -1189,3 +1189,39 @@
   text-align: center;
   padding: 0.5rem;
 }
+
+/* --- Audit diff styles --- */
+
+.notes-audit__diff {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-surface, #ffffff);
+}
+
+.notes-audit__diff-line {
+  padding: 0.15rem 0.5rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.notes-audit__diff-line--added {
+  background-color: var(--color-success-bg, #f0fdf4);
+  color: var(--color-success-dark, #166534);
+}
+
+.notes-audit__diff-line--removed {
+  background-color: var(--color-danger-bg, #fef2f2);
+  color: var(--color-danger-dark, #991b1b);
+}
+
+.notes-audit__diff-symbol {
+  user-select: none;
+  opacity: 0.6;
+  font-weight: 600;
+}

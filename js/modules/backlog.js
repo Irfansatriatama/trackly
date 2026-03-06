@@ -783,6 +783,11 @@ function renderTaskDetail(task) {
 
   panel.querySelectorAll('.detail-checklist-check').forEach(cb => {
     cb.addEventListener('change', async e => {
+      if (typeof _isReadOnly !== 'undefined' && _isReadOnly) {
+        e.target.checked = !e.target.checked;
+        if (typeof showToast !== 'undefined') showToast('You do not have permission to edit this checklist', 'warning');
+        return;
+      }
       const text = e.target.dataset.text; const checked = e.target.checked;
       const taskCopy = { ...task, checklist: (task.checklist || []).map(item => item.text === text ? { ...item, done: checked } : item), updated_at: nowISO() };
       try {

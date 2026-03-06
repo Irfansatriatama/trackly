@@ -488,6 +488,9 @@ function _bindDrag(barsEl, min, dayW) {
   }
 
   barsEl._dragHandler = e => {
+    const session = getSession();
+    const isReadOnly = session && ['viewer', 'client'].includes(session.role);
+    if (isReadOnly) return;
     const bar = e.target.closest('.gantt-bar');
     if (!bar) return;
 
@@ -569,12 +572,10 @@ async function _handleDragEnd(e) {
     const MS = 86400000;
 
     if (_drag.type === 'move') {
-      if (task.start_date) {
-        task.start_date = new Date(new Date(task.start_date).getTime() + deltaDays * MS).toISOString().slice(0, 10);
-      }
-      if (task.due_date) {
-        task.due_date = new Date(new Date(task.due_date).getTime() + deltaDays * MS).toISOString().slice(0, 10);
-      }
+      const newStart = new Date(new Date(task.start_date).getTime() + deltaDays * MS);
+      const newEnd = new Date(new Date(task.due_date).getTime() + deltaDays * MS);
+      task.start_date = newStart.toISOString().slice(0, 10);
+      task.due_date = newEnd.toISOString().slice(0, 10);
     } else {
       if (task.due_date) {
         const newEnd = new Date(new Date(task.due_date).getTime() + deltaDays * MS);

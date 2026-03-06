@@ -842,6 +842,7 @@ function buildDetailPageHTML(meeting, users, projects) {
             <div class="meeting-detail-type-tag" style="background:${typeColor}">
               ${sanitize(typeLabel)}
             </div>
+            ${!isManager && isAttendee ? `<span class="badge badge--warning" style="margin-left:0.5rem;font-size:0.75rem;"><i data-lucide="user-check" style="width:12px;height:12px;margin-right:4px;"></i> Invited Guest</span>` : ''}
             <h1 class="page-header__title">${sanitize(meeting.title)}</h1>
             <div class="meeting-detail-meta text-muted text-sm">
               <span class="meeting-detail-meta-item">
@@ -921,7 +922,7 @@ function buildDetailPageHTML(meeting, users, projects) {
                   <textarea id="notulensiEditor" class="form-textarea notulensi-textarea" rows="10"
                     placeholder="Write meeting notes in Markdown...">${sanitize(notulensi.content || '')}</textarea>
                 </div>
-                <div id="notulensi-preview-wrap" class="notulensi-preview markdown-body" style="display:none"></div>
+                <div id="notulensi-preview-wrap" class="notulensi-preview markdown-body notulensi-document" style="display:none"></div>
                 <div class="notulensi-editor-actions" style="margin-top:var(--space-3)">
                   <button class="btn btn--primary btn--sm" id="saveNotulensiBtn">
                     <i data-lucide="save" aria-hidden="true"></i> Save Notes
@@ -945,7 +946,7 @@ function buildDetailPageHTML(meeting, users, projects) {
               </div>
               ` : `
               <div class="notulensi-panel">
-                <div class="notulensi-preview markdown-body" style="padding:1rem;background:var(--color-surface-secondary, #f9fafb);border-radius:var(--radius-md, 6px);min-height:200px;border:1px solid var(--color-border, #e5e7eb)">
+                <div class="notulensi-preview markdown-body notulensi-document">
                   ${notulensi.content ? renderMarkdown(notulensi.content) : '<p class="text-muted text-sm">No notes provided for this meeting.</p>'}
                 </div>
                 ${notulensi.attachments?.length ? `

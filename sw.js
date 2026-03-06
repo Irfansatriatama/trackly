@@ -4,7 +4,7 @@
  * Cache-first for all static assets; network-first for external resources.
  */
 
-const CACHE_NAME = 'trackly-v1.6.0';
+const CACHE_NAME = 'trackly-v1.6.1';
 
 const STATIC_ASSETS = [
   './',
@@ -64,21 +64,16 @@ const STATIC_ASSETS = [
   './assets/icons/icon-512.png',
 ];
 
-// Install: cache all static assets
+// Force update by clearing ALL caches immediately on install
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-  );
   self.skipWaiting();
 });
 
-// Activate: remove old caches
+// Activate: remove all caches to ensure fresh requests
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      )
+      Promise.all(keys.map((key) => caches.delete(key)))
     )
   );
   self.clients.claim();

@@ -154,7 +154,7 @@ function getNoteTitle(note) {
 // AUDIT LOG
 // ============================================================
 
-async function logNoteAudit(noteId, action, detail = null) {
+async function logNoteAudit(noteId, action, detail = null, diff = null) {
   try {
     const session = getSession();
     if (!session) return;
@@ -168,7 +168,7 @@ async function logNoteAudit(noteId, action, detail = null) {
     }
     const allAudit = await getAll('note_audit');
     const id = generateSequentialId(ID_PREFIX.NAUD, allAudit);
-    await add('note_audit', { id, note_id: noteId, user_id: session.userId, user_name: userName, action, detail: detail || null, created_at: nowISO() });
+    await add('note_audit', { id, note_id: noteId, user_id: session.userId, user_name: userName, action, detail: detail || null, diff: diff || null, created_at: nowISO() });
   } catch (err) {
     if (localStorage.getItem('trackly_debug') === 'true') console.warn('[TRACKLY] logNoteAudit failed:', err);
   }
@@ -360,11 +360,18 @@ async function renderAuditLog(note) {
   return `<div class="notes-audit__timeline">${entries.map((entry) => {
     const label = AUDIT_ACTION_LABELS[entry.action] || entry.action;
     const detail = entry.detail ? `<div class="notes-audit__detail">↳ ${sanitize(entry.detail)}</div>` : '';
+    let diffHtml = '';
+    if (entry.diff && Array.isArray(entry.diff)) {
+      diffHtml = `<div class="notes-audit__diff">${entry.diff.map(d => {
+        const symbol = d.type === 'added' ? '+' : '-';
+        return `<div class="notes-audit__diff-line notes-audit__diff-line--${d.type}"><span class="notes-audit__diff-symbol">${symbol}</span><span>${sanitize(d.text) || ' '}</span></div>`;
+      }).join('')}</div>`;
+    }
     const initials = (entry.user_name || '?').split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
     let hash = 0;
     for (let i = 0; i < (entry.user_id || '').length; i++) { hash = ((hash << 5) - hash) + (entry.user_id || '').charCodeAt(i); hash |= 0; }
     const color = COLORS[Math.abs(hash) % COLORS.length];
-    return `<div class="notes-audit__entry"><div class="notes-audit__avatar" style="background:${color}">${sanitize(initials)}</div><div class="notes-audit__content"><span class="notes-audit__name">${sanitize(entry.user_name)}</span> <span class="notes-audit__action">${sanitize(label)}</span><span class="notes-audit__time">${formatRelativeDate(entry.created_at)}</span>${detail}</div></div>`;
+    return `<div class="notes-audit__entry"><div class="notes-audit__avatar" style="background:${color}">${sanitize(initials)}</div><div class="notes-audit__content"><span class="notes-audit__name">${sanitize(entry.user_name)}</span> <span class="notes-audit__action">${sanitize(label)}</span><span class="notes-audit__time">${formatRelativeDate(entry.created_at)}</span>${detail}${diffHtml}</div></div>`;
   }).join('')}</div>`;
 }
 
@@ -649,8 +656,17 @@ function wireEvents(userId) {
     else if (e.target.closest('#btnExportNote')) exportNoteAsMd(userId);
     else if (e.target.closest('#btnShareNote')) { const note = _state.notes.find((n) => n.id === _state.activeNoteId); if (note) openShareModal(note, userId); }
     else if (e.target.closest('#btnCloseNote')) { _state.activeNoteId = null; refreshAll(userId); }
-    else if (e.target.closest('#btnFullscreenNote')) { document.getElementById('notesPanelRight').classList.toggle('notes-is-fullscreen'); }
-    else if (e.target.closest('#btnCopyNote')) {
+    else if (e.target.closest('#btnFullscreenNote') || (e.target.closest('button') && e.target.closest('button').id === 'btnFullscreenNote')) {
+      const panel = document.getElementById('notesPanelRight');
+      if (panel) {
+        panel.classList.toggle('notes-mode-fullscreen');
+        const icon = panel.classList.contains('notes-mode-fullscreen') ? 'minimize' : 'maximize';
+        const btn = e.target.closest('#btnFullscreenNote') || e.target.closest('button');
+        if (btn) btn.innerHTML = `<i data-lucide="${icon}" style="width:14px;height:14px"></i>`;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+    }
+    else if (e.target.closest('#btnCopyNote') || (e.target.closest('button') && e.target.closest('button').id === 'btnCopyNote')) {
       const note = _state.notes.find((n) => n.id === _state.activeNoteId);
       if (note) navigator.clipboard.writeText(note.content).then(() => showToast('Markdown Copied!', 'success'));
     }
@@ -756,6 +772,26 @@ function triggerAutosave(userId) {
   _state.saveTimer = setTimeout(() => persistCurrentNote(userId), 800);
 }
 
+function computeNoteDiff(oldStr, newStr) {
+  const oldLines = oldStr.split('\n');
+  const newLines = newStr.split('\n');
+  const dp = Array(oldLines.length + 1).fill(null).map(() => Array(newLines.length + 1).fill(0));
+  for (let i = 1; i <= oldLines.length; i++) {
+    for (let j = 1; j <= newLines.length; j++) {
+      if (oldLines[i - 1] === newLines[j - 1]) dp[i][j] = dp[i - 1][j - 1] + 1;
+      else dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+  let i = oldLines.length, j = newLines.length;
+  const diff = [];
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && oldLines[i - 1] === newLines[j - 1]) { i--; j--; }
+    else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) { diff.unshift({ type: 'added', text: newLines[j - 1] }); j--; }
+    else if (i > 0 && (j === 0 || dp[i][j - 1] < dp[i - 1][j])) { diff.unshift({ type: 'removed', text: oldLines[i - 1] }); i--; }
+  }
+  return diff.length > 0 ? diff : null;
+}
+
 async function persistCurrentNote(userId) {
   const note = _state.notes.find((n) => n.id === _state.activeNoteId);
   if (!note) return;
@@ -763,12 +799,28 @@ async function persistCurrentNote(userId) {
   if (access === 'view') return;
   const titleInput = document.getElementById('noteTitleInput');
   const contentTextarea = document.getElementById('noteContentTextarea');
-  if (titleInput) note.title = titleInput.value;
-  if (contentTextarea) note.content = contentTextarea.value;
+
+  const oldContent = note.content || '';
+  const newContent = contentTextarea ? contentTextarea.value : oldContent;
+  const oldTitle = note.title || '';
+  const newTitle = titleInput ? titleInput.value : oldTitle;
+
+  const contentChanged = oldContent !== newContent;
+  const titleChanged = oldTitle !== newTitle;
+
+  if (!contentChanged && !titleChanged) return;
+
+  let diff = null;
+  if (contentChanged) diff = computeNoteDiff(oldContent, newContent);
+
+  note.title = newTitle;
+  note.content = newContent;
   note.updated_at = nowISO();
   await saveNote(note);
-  if (access === 'owner') await logNoteAudit(note.id, 'note_edited');
-  else if (access === 'edit') await logNoteAudit(note.id, 'note_edited_shared');
+
+  if (access === 'owner') await logNoteAudit(note.id, 'note_edited', null, diff);
+  else if (access === 'edit') await logNoteAudit(note.id, 'note_edited_shared', null, diff);
+
   const indicator = document.getElementById('noteSaveIndicator');
   if (indicator) {
     indicator.innerHTML = '<i data-lucide="check" style="width:12px;height:12px;display:inline-block;vertical-align:middle"></i> Tersimpan';
@@ -869,9 +921,10 @@ function applyFormatting(fmt, userId) {
   const selectedText = value.slice(start, end);
 
   if (fmt === 'timestamp') {
-    const dt = new Date().toLocaleString('id-ID'); // Get local date string
-    textarea.value = value.slice(0, start) + dt + value.slice(end);
-    textarea.selectionStart = start + dt.length; textarea.selectionEnd = start + dt.length;
+    const dt = new Date().toLocaleString('id-ID'); // Format: DD/MM/YYYY, HH.mm.ss
+    const insert = `\n> *Inserted at: ${dt}*\n`;
+    textarea.value = value.slice(0, start) + insert + value.slice(end);
+    textarea.selectionStart = start + insert.length; textarea.selectionEnd = start + insert.length;
   } else if (fmt === 'bold' || fmt === 'italic' || fmt === 'strikethrough') {
     const marker = fmt === 'bold' ? '**' : fmt === 'italic' ? '*' : '~~';
     const placeholder = fmt === 'bold' ? 'teks bold' : fmt === 'italic' ? 'teks italic' : 'dicoret';
@@ -892,27 +945,29 @@ function applyFormatting(fmt, userId) {
     }
   } else if (['h1', 'h2', 'h3', 'ul', 'ol'].includes(fmt)) {
     const prefix = fmt === 'h1' ? '# ' : fmt === 'h2' ? '## ' : fmt === 'h3' ? '### ' : fmt === 'ul' ? '- ' : '1. ';
-    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
-    const lineEnd = value.indexOf('\n', start);
-    const lineEndActual = lineEnd === -1 ? value.length : lineEnd;
-    const lineContent = value.slice(lineStart, lineEndActual);
-    const stripped = lineContent.replace(/^(#{1,3}\s+|- \s+|\d+\.\s+)/, '');
-    const newLine = lineContent.startsWith(prefix) ? stripped : prefix + stripped;
-    textarea.value = value.slice(0, lineStart) + newLine + value.slice(lineEndActual);
-    const cursorPos = lineStart + newLine.length;
-    textarea.selectionStart = cursorPos; textarea.selectionEnd = cursorPos;
-  }
-  textarea.focus();
-  triggerAutosave(userId);
 
-  // Custom update of word count after formatting
-  const wcEl = document.getElementById('notesWordCount');
-  if (wcEl) {
-    const content = textarea.value;
-    const words = content.trim().split(/\s+/).filter(w => w.length > 0).length;
-    const chars = content.length;
-    wcEl.textContent = `${words} words, ${chars} chars`;
+    // Find absolute boundaries of the line the cursor is currently on
+    const beforeStart = value.slice(0, start);
+    let lineStart = beforeStart.lastIndexOf('\n');
+    lineStart = lineStart === -1 ? 0 : lineStart + 1;
+
+    const afterStart = value.slice(start);
+    let lineEnd = afterStart.indexOf('\n');
+    lineEnd = lineEnd === -1 ? value.length : start + lineEnd;
+
+    const lineContent = value.slice(lineStart, lineEnd);
+
+    // Strip existing prefixes so headers/lists don't stack up
+    const stripped = lineContent.replace(/^(#{1,3}\s+|- \s+|\d+\.\s+)/, '');
+    const isAlreadyFormatted = lineContent.startsWith(prefix);
+
+    const newLine = isAlreadyFormatted ? stripped : prefix + stripped;
+    textarea.value = value.slice(0, lineStart) + newLine + value.slice(lineEnd);
+
+    textarea.selectionStart = lineStart + newLine.length;
+    textarea.selectionEnd = lineStart + newLine.length;
   }
+  triggerAutosave(userId);
 }
 
 // ============================================================

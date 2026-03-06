@@ -20,7 +20,7 @@ const NAV_ITEMS = [
   {
     section: 'Management',
     items: [
-      { route: '/meetings', icon: 'calendar', label: 'Meetings', tooltip: 'Schedule and manage meetings, agendas, and notulensi', adminOnly: true },
+      { route: '/meetings', icon: 'calendar', label: 'Meetings', tooltip: 'Schedule and manage meetings, agendas, and notulensi' },
       { route: '/notes', icon: 'file-text', label: 'Personal Notes', tooltip: 'Personal notes and memos — private to you' },
       { route: '/clients', icon: 'building-2', label: 'Clients', tooltip: 'Manage client companies and contacts' },
       { route: '/members', icon: 'users', label: 'Members', tooltip: 'Manage team members, roles, and accounts', adminOnly: true },

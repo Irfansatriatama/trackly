@@ -110,7 +110,7 @@
 }
 
 .mini-cal__cell--selected.mini-cal__cell--has-events::after {
-  background: rgba(255,255,255,0.8);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 /* ─── Week Calendar ───────────────────────────────────────────────────────── */
@@ -177,7 +177,7 @@
 }
 
 .week-day-cell--selected .week-day-cell__dot {
-  background: rgba(255,255,255,0.8);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 /* ─── Day Panel ──────────────────────────────────────────────────────────── */
@@ -720,9 +720,24 @@
   flex-shrink: 0;
 }
 
+/* ─── Notulensi Document Style ───────────────────────────────────────────── */
+.notulensi-document {
+  padding: 2.5rem 3rem;
+  background: var(--color-surface, #ffffff);
+  border-radius: 8px;
+  min-height: 350px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-border, #e5e7eb);
+  margin-top: var(--space-4);
+}
+
 /* ─── Mobile ─────────────────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
+  .notulensi-document {
+    padding: 1.5rem 1rem;
+  }
+
   .meeting-card__top {
     flex-direction: column;
     gap: var(--space-2);
