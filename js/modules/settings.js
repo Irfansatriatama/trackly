@@ -554,16 +554,24 @@ async function handleResetData() {
   if (!c1) return;
   const c2 = await confirmAsync({
     title: 'Are you absolutely sure?',
-    message: 'All your data will be lost forever. TRACKLY will reload to the first-run wizard.',
+    message: 'All your data will be lost forever. You will be logged out.',
     confirmLabel: 'Yes, Reset Now', confirmClass: 'btn--danger',
   });
   if (!c2) return;
   try {
-    indexedDB.deleteDatabase('trackly_db');
-    localStorage.clear();
+    const stores = ['users', 'projects', 'tasks', 'sprints', 'clients', 'assets', 'maintenance', 'invoices', 'activity_log', 'settings', 'meetings', 'discussions', 'notifications', 'notes'];
+    const { clearStore } = await import('../core/db.js');
+    for (const store of stores) {
+      await clearStore(store);
+    }
+    const { clearSession } = await import('../core/auth.js');
+    clearSession();
     showToast('All data deleted. Reloading in 2 seconds...', 'info');
     setTimeout(() => window.location.reload(), 2000);
-  } catch (err) { showToast('Reset failed.', 'error'); }
+  } catch (err) {
+    showToast('Reset failed.', 'error');
+    debug('Reset Error: ', err);
+  }
 }
 
 async function checkPWAStatus() {
