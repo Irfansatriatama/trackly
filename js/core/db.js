@@ -115,14 +115,26 @@ export async function remove(storeName, id) {
  * @returns {Promise<void>}
  */
 export async function clearStore(storeName) {
-  const querySnapshot = await getDocs(collection(db, storeName));
-  const batch = writeBatch(db);
+  try {
+    const querySnapshot = await getDocs(collection(db, storeName));
+    if (querySnapshot.empty) return;
 
-  querySnapshot.docs.forEach((d) => {
-    batch.delete(d.ref);
-  });
+    // Firestore batches have a 500 doc limit. We chunk by 400.
+    const docs = querySnapshot.docs;
+    const chunkMap = [];
+    for (let i = 0; i < docs.length; i += 400) {
+      chunkMap.push(docs.slice(i, i + 400));
+    }
 
-  await batch.commit();
+    for (const chunk of chunkMap) {
+      const batch = writeBatch(db);
+      chunk.forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+    }
+  } catch (err) {
+    console.error(`Failed to clear store ${storeName}:`, err);
+    throw err;
+  }
 }
 
 /**

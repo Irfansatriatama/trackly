@@ -19,10 +19,13 @@ import { initTopbar } from './components/topbar.js';
 async function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     try {
-      const registration = await navigator.serviceWorker.register('./sw.js');
-      debug('Service Worker registered:', registration.scope);
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (let registration of registrations) {
+        await registration.unregister();
+      }
+      debug('Service Workers unregistered (PWA Disabled)');
     } catch (err) {
-      debug('Service Worker registration failed:', err);
+      debug('Service Worker unregistration failed:', err);
     }
   }
 }
@@ -967,16 +970,7 @@ function renderWizard() {
 let _deferredInstallPrompt = null;
 
 function initPWAInstallBanner() {
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    _deferredInstallPrompt = e;
-    showInstallBanner();
-  });
-
-  window.addEventListener('appinstalled', () => {
-    hidePWABanner();
-    debug('PWA installed');
-  });
+  // PWA features disabled for online version
 }
 
 function showInstallBanner() {

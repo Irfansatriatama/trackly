@@ -321,34 +321,41 @@ function renderSettingsPage() {
               <div>
                 <p class="settings-data-card__title">Export All Data</p>
                 <p class="settings-data-card__desc">Download a complete JSON backup of all TRACKLY data — projects, tasks, members, clients, assets, and settings.</p>
+                <p class="settings-data-card__desc text-muted" style="margin-top:var(--space-2);font-weight:500;">* Fitur ini ditutup sementara sejak perilisan full online database.</p>
               </div>
             </div>
-            <button class="btn btn--outline" id="btnExportData">
+            <button class="btn btn--outline" id="btnExportData" disabled>
               <i data-lucide="download" aria-hidden="true"></i> Export JSON
             </button>
           </div>
-          <div class="settings-data-card">
             <div class="settings-data-card__info">
               <i data-lucide="upload" aria-hidden="true"></i>
               <div>
                 <p class="settings-data-card__title">Import Data</p>
                 <p class="settings-data-card__desc">Restore from a previously exported TRACKLY JSON backup. Records with matching IDs will be overwritten.</p>
+                <p class="settings-data-card__desc text-muted" style="margin-top:var(--space-2);font-weight:500;">* Fitur ini ditutup sementara sejak perilisan full online database.</p>
               </div>
             </div>
-            <label class="btn btn--outline" style="cursor:pointer;" tabindex="0" role="button" aria-label="Import JSON backup file">
+            <button class="btn btn--outline" disabled>
               <i data-lucide="upload" aria-hidden="true"></i> Import JSON
-              <input type="file" id="importFileInput" accept=".json" class="is-hidden" aria-hidden="true" />
-            </label>
+            </button>
           </div>
           <div class="settings-data-card settings-data-card--danger">
             <div class="settings-data-card__info">
               <i data-lucide="trash-2" aria-hidden="true"></i>
               <div>
                 <p class="settings-data-card__title">Reset All Data</p>
-                <p class="settings-data-card__desc">Permanently delete ALL data including projects, tasks, and members. This cannot be undone.</p>
+                <p class="settings-data-card__desc">Permanently delete ALL data including projects, tasks, and members.</p>
+                <div class="alert alert--info" style="margin-top:var(--space-4);">
+                  <i data-lucide="info" aria-hidden="true"></i>
+                  <div>
+                    <strong>Data is Live 🔴</strong>
+                    <p>Mulai v1.10, Trackly terhubung ke database Cloud langsung (Firebase Firestore). Data yang Anda lihat saat ini adalah data riil dari server, bukan dari cache lokal browser Anda. Oleh karena itu, fitur Export, Import, dan Reset Data dari dalam aplikasi dimatikan. Jika Anda ingin mengosongkan keseluruhan data, silakan lakukan langsung melalui Firebase Console Anda.</p>
+                  </div>
+                </div>
               </div>
             </div>
-            <button class="btn btn--danger" id="btnResetData">
+            <button class="btn btn--danger" id="btnResetData" disabled>
               <i data-lucide="alert-triangle" aria-hidden="true"></i> Reset Data
             </button>
           </div>
@@ -359,12 +366,12 @@ function renderSettingsPage() {
         <div class="card__body">
           <h2 class="settings-section-title">Progressive Web App</h2>
           <div class="pwa-status-card">
-            <div class="pwa-status-icon" id="pwaStatusIcon">
-              <i data-lucide="wifi" aria-hidden="true"></i>
+            <div class="pwa-status-icon" style="background:var(--color-warning-alpha);color:var(--color-warning);">
+              <i data-lucide="wifi-off" aria-hidden="true"></i>
             </div>
             <div>
-              <p class="pwa-status-title" id="pwaStatusTitle">Checking PWA status...</p>
-              <p class="pwa-status-desc text-muted" id="pwaStatusDesc">Please wait</p>
+              <p class="pwa-status-title">PWA Disabled</p>
+              <p class="pwa-status-desc text-muted">Fitur PWA / Offline Mode telah dimatikan sementara sejak perilisan full online database.</p>
             </div>
           </div>
           <div class="settings-data-card" style="margin-top:var(--space-4);">
@@ -375,7 +382,7 @@ function renderSettingsPage() {
                 <p class="settings-data-card__desc">Install TRACKLY on your device for offline access and a faster, app-like experience.</p>
               </div>
             </div>
-            <button class="btn btn--primary" id="pwaInstallSettingsBtn">
+            <button class="btn btn--primary" id="pwaInstallSettingsBtn" disabled>
               <i data-lucide="download" aria-hidden="true"></i> Install
             </button>
           </div>
@@ -432,7 +439,6 @@ function renderSettingsPage() {
 
   if (typeof lucide !== 'undefined') lucide.createIcons();
   bindSettingsEvents();
-  checkPWAStatus();
 }
 
 function switchTab(tabId) {
@@ -444,7 +450,6 @@ function switchTab(tabId) {
   document.querySelectorAll('.settings-panel').forEach(p => {
     p.classList.toggle('is-hidden', p.id !== `tab-${tabId}`);
   });
-  if (tabId === 'pwa') checkPWAStatus();
 }
 
 function bindSettingsEvents() {
@@ -575,30 +580,7 @@ async function handleResetData() {
 }
 
 async function checkPWAStatus() {
-  const titleEl = document.getElementById('pwaStatusTitle');
-  const descEl = document.getElementById('pwaStatusDesc');
-  const iconEl = document.getElementById('pwaStatusIcon');
-  if (!titleEl) return;
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-  const swReg = await navigator.serviceWorker?.getRegistration().catch(() => null);
-  const swActive = !!swReg;
-  if (isStandalone) {
-    iconEl.style.cssText = 'background:var(--color-success-alpha);color:var(--color-success);';
-    iconEl.querySelector('[data-lucide]')?.setAttribute('data-lucide', 'check-circle');
-    titleEl.textContent = 'Running as Installed App';
-    descEl.textContent = 'TRACKLY is installed and running as a standalone PWA.';
-  } else if (swActive) {
-    iconEl.style.cssText = 'background:var(--color-primary-alpha);color:var(--color-primary);';
-    iconEl.querySelector('[data-lucide]')?.setAttribute('data-lucide', 'wifi');
-    titleEl.textContent = 'Service Worker Active — Offline Ready';
-    descEl.textContent = 'TRACKLY is cached for offline use. Click Install to add it to your device.';
-  } else {
-    iconEl.style.cssText = 'background:var(--color-warning-alpha);color:var(--color-warning);';
-    iconEl.querySelector('[data-lucide]')?.setAttribute('data-lucide', 'wifi-off');
-    titleEl.textContent = 'Service Worker Not Active';
-    descEl.textContent = 'Serve TRACKLY over HTTP/HTTPS (not file://) to enable PWA features.';
-  }
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  // PWA checks disabled
 }
 
 export default { render };
