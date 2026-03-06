@@ -3,7 +3,7 @@
  * Session management via localStorage and Custom DB Auth.
  */
 
-import { app, auth } from './firebase-init.js'; // Note: auth might be undefined if we remove it from init
+import { app } from './firebase-init.js';
 
 const SESSION_KEY = 'trackly_session';
 const SESSION_DURATION_MS = 8 * 60 * 60 * 1000; // 8 hours default
