@@ -3,7 +3,7 @@
  * Phase 5: Member Management — Full CRUD for users/members.
  */
 
-import { getAll, add, update } from '../core/db.js';
+import { getAll, add, update, remove } from '../core/db.js';
 import { hashPassword } from '../core/auth.js';
 import { generateSequentialId, nowISO, formatRelativeDate, getInitials, sanitize, logActivity } from '../core/utils.js';
 import { showToast } from '../components/toast.js';
@@ -158,9 +158,12 @@ function renderMemberRow(m) {
             <i data-lucide="pencil" aria-hidden="true"></i>
           </button>
           ${m.status === 'active'
-      ? `<button class="btn btn--ghost btn--sm btn-deactivate-member" data-id="${sanitize(m.id)}" title="Deactivate" style="color:var(--color-danger);"><i data-lucide="user-x"></i></button>`
+      ? `<button class="btn btn--ghost btn--sm btn-deactivate-member" data-id="${sanitize(m.id)}" title="Deactivate" style="color:var(--color-warning);"><i data-lucide="user-x"></i></button>`
       : `<button class="btn btn--ghost btn--sm btn-activate-member" data-id="${sanitize(m.id)}" title="Activate" style="color:var(--color-success);"><i data-lucide="user-check"></i></button>`
     }
+          <button class="btn btn--ghost btn--sm btn-delete-member" data-id="${sanitize(m.id)}" title="Delete member" style="color:var(--color-danger);">
+            <i data-lucide="trash-2" aria-hidden="true"></i>
+          </button>
         </div>
       </td>
     </tr>`;
@@ -262,9 +265,11 @@ function handleTableAction(e) {
   const editBtn = e.target.closest('.btn-edit-member');
   const deactivateBtn = e.target.closest('.btn-deactivate-member');
   const activateBtn = e.target.closest('.btn-activate-member');
+  const deleteBtn = e.target.closest('.btn-delete-member');
   if (editBtn) { const m = _members.find(x => x.id === editBtn.dataset.id); if (m) openMemberModal(m); }
   else if (deactivateBtn) { const m = _members.find(x => x.id === deactivateBtn.dataset.id); if (m) handleDeactivate(m); }
   else if (activateBtn) { const m = _members.find(x => x.id === activateBtn.dataset.id); if (m) handleActivate(m); }
+  else if (deleteBtn) { const m = _members.find(x => x.id === deleteBtn.dataset.id); if (m) handleDelete(m); }
 }
 
 function refreshTable() {
@@ -581,6 +586,24 @@ async function handleActivate(member) {
     showToast(`${member.full_name} has been reactivated.`, 'success');
     refreshTable();
   } catch { showToast('Failed to activate member.', 'error'); }
+}
+
+async function handleDelete(member) {
+  showConfirm({
+    title: 'Delete Member',
+    message: `Are you sure you want to permanently delete <strong>${sanitize(member.full_name)}</strong>? This action cannot be undone.`,
+    confirmLabel: 'Delete',
+    confirmVariant: 'danger',
+    onConfirm: async () => {
+      try {
+        await remove('users', member.id);
+        _members = _members.filter(m => m.id !== member.id);
+        logActivity({ project_id: null, entity_type: 'member', entity_id: member.id, entity_name: member.full_name, action: 'deleted' });
+        showToast(`${member.full_name} has been deleted.`, 'success');
+        refreshTable();
+      } catch { showToast('Failed to delete member.', 'error'); }
+    },
+  });
 }
 
 // ============================================================
