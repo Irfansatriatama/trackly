@@ -403,8 +403,7 @@ function buildGuideHTML() {
           <ul>
             <li>Create new members with full profile details including avatar, position, and department</li>
             <li>Assign global roles (Admin, PM, Developer, Viewer)</li>
-            <li>Change passwords for any user</li>
-            <li>Deactivate or reactivate user accounts</li>
+            <li>Deactivate users to block login access</li>
             <li>Search and filter by role or status</li>
           </ul>
           <div class="guide-warning">
