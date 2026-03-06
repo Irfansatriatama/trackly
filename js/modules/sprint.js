@@ -87,6 +87,7 @@ async function _renderPage() {
         <button class="sprint-tab${_activeTab === 'list' ? ' is-active' : ''}" data-tab="list"><i data-lucide="list" aria-hidden="true"></i> Sprints</button>
         <button class="sprint-tab${_activeTab === 'planning' ? ' is-active' : ''}" data-tab="planning"><i data-lucide="move" aria-hidden="true"></i> Planning</button>
         <button class="sprint-tab${_activeTab === 'board' ? ' is-active' : ''}" data-tab="board"><i data-lucide="kanban" aria-hidden="true"></i> Sprint Board</button>
+        <button class="sprint-tab${_activeTab === 'burndown' ? ' is-active' : ''}" data-tab="burndown"><i data-lucide="trending-down" aria-hidden="true"></i> Burndown</button>
         <button class="sprint-tab${_activeTab === 'velocity' ? ' is-active' : ''}" data-tab="velocity"><i data-lucide="bar-chart-2" aria-hidden="true"></i> Velocity</button>
       </div>
       <div class="sprint-view" id="sprintView">${_renderActiveTabContent()}</div>
@@ -99,6 +100,7 @@ async function _renderPage() {
   });
   _bindPageEvents();
   if (_activeTab === 'velocity') requestAnimationFrame(() => _drawVelocityChart());
+  if (_activeTab === 'burndown') requestAnimationFrame(() => _drawBurndownChart());
   if (_activeTab === 'planning') requestAnimationFrame(() => _bindPlanningDragDrop());
   if (_activeTab === 'board') requestAnimationFrame(() => _bindSprintBoardDragDrop());
 }
@@ -131,6 +133,7 @@ function _renderActiveTabContent() {
     case 'list': return _renderSprintList();
     case 'planning': return _renderPlanningView();
     case 'board': return _renderSprintBoardTab();
+    case 'burndown': return _renderBurndownTab();
     case 'velocity': return _renderVelocityTab();
     default: return _renderSprintList();
   }
@@ -301,6 +304,150 @@ function _renderSprintBoardCard(task) {
       </div>
     </div>`;
 }
+
+// ─── BURNDOWN CHART TAB ──────────────────────────────────────────────────────
+
+function _renderBurndownTab() {
+  const activeSprint = _sprints.find(s => s.status === 'active') || _sprints.find(s => s.status === 'completed');
+  if (!activeSprint) {
+    return `<div class="sprint-list-empty"><div class="empty-state"><i data-lucide="trending-down" class="empty-state__icon"></i><p class="empty-state__title">No sprint data</p><p class="empty-state__text">Start a sprint to track burndown progress.</p></div></div>`;
+  }
+  const sprintTasks = _tasks.filter(t => t.sprint_id === activeSprint.id);
+  const totalSP = sprintTasks.reduce((s, t) => s + (t.story_points || 0), 0);
+  const doneSP = sprintTasks.filter(t => t.status === 'done').reduce((s, t) => s + (t.story_points || 0), 0);
+  const remainSP = totalSP - doneSP;
+  const startDate = activeSprint.start_date ? new Date(activeSprint.start_date) : null;
+  const endDate = activeSprint.end_date ? new Date(activeSprint.end_date) : null;
+  const daysTotal = (startDate && endDate) ? Math.ceil((endDate - startDate) / 86400000) + 1 : null;
+  const daysGone = startDate ? Math.max(0, Math.ceil((new Date() - startDate) / 86400000)) : null;
+  const daysLeft = (daysTotal && daysGone !== null) ? Math.max(0, daysTotal - daysGone) : null;
+  return `
+    <div style="padding: var(--space-3) 0;">
+      <div style="margin-bottom:var(--space-4);display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;">
+        <span class="badge badge--success">Sprint</span>
+        <span style="font-weight:600;">${sanitize(activeSprint.name)}</span>
+        ${activeSprint.end_date ? `<span class="text-muted" style="font-size:var(--text-sm);">Ends ${formatDate(activeSprint.end_date)}</span>` : ''}
+      </div>
+      <div class="burndown-stats-row">
+        <div class="burndown-stat"><span class="burndown-stat__label">Total SP</span><span class="burndown-stat__value">${totalSP}</span></div>
+        <div class="burndown-stat"><span class="burndown-stat__label">Completed SP</span><span class="burndown-stat__value burndown-stat__value--success">${doneSP}</span></div>
+        <div class="burndown-stat"><span class="burndown-stat__label">Remaining SP</span><span class="burndown-stat__value${remainSP > 0 ? ' burndown-stat__value--warning' : ''} ">${remainSP}</span></div>
+        ${daysLeft !== null ? `<div class="burndown-stat"><span class="burndown-stat__label">Days Left</span><span class="burndown-stat__value">${daysLeft}</span></div>` : ''}
+      </div>
+      <div class="velocity-chart-wrapper">
+        <div class="velocity-chart-title">Burndown Chart — ${sanitize(activeSprint.name)}</div>
+        <div class="velocity-chart-canvas-wrap">
+          <canvas id="burndownCanvas" width="700" height="280"></canvas>
+        </div>
+        <div style="display:flex;gap:var(--space-4);margin-top:var(--space-3);font-size:var(--text-xs);color:var(--color-text-muted);">
+          <span style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:3px;background:#CBD5E1;display:inline-block;border-radius:2px;"></span> Ideal Burndown</span>
+          <span style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:3px;background:#2563EB;display:inline-block;border-radius:2px;"></span> Actual Remaining SP</span>
+        </div>
+        ${totalSP === 0 ? '<p style="font-size:var(--text-sm);color:var(--color-warning);margin-top:var(--space-3);">⚠️ No story points assigned to sprint tasks. Add story points to tasks for an accurate burndown.</p>' : ''}
+      </div>
+    </div>`;
+}
+
+function _drawBurndownChart() {
+  const canvas = document.getElementById('burndownCanvas');
+  if (!canvas || !canvas.getContext) return;
+  const ctx = canvas.getContext('2d');
+  const activeSprint = _sprints.find(s => s.status === 'active') || _sprints.find(s => s.status === 'completed');
+  if (!activeSprint) return;
+
+  const sprintTasks = _tasks.filter(t => t.sprint_id === activeSprint.id);
+  const totalSP = sprintTasks.reduce((s, t) => s + (t.story_points || 0), 0);
+  if (totalSP === 0) return;
+
+  const startDate = activeSprint.start_date ? new Date(activeSprint.start_date) : null;
+  const endDate = activeSprint.end_date ? new Date(activeSprint.end_date) : null;
+  if (!startDate || !endDate) return;
+
+  const daysTotal = Math.ceil((endDate - startDate) / 86400000) + 1;
+  const today = new Date();
+  const daysElapsed = Math.min(daysTotal, Math.max(0, Math.ceil((today - startDate) / 86400000) + 1));
+
+  // Build ideal burndown line (day 0 = totalSP, day N = 0)
+  const idealPoints = Array.from({ length: daysTotal + 1 }, (_, i) => totalSP - (totalSP * i / daysTotal));
+
+  // Build actual: approximate by assuming tasks completed today, simplified
+  // For a real burndown we'd need daily snapshots — here we show current SP remaining at today's day
+  const doneSP = sprintTasks.filter(t => t.status === 'done').reduce((s, t) => s + (t.story_points || 0), 0);
+  const remainSP = totalSP - doneSP;
+  // Approximate actual as linear from totalSP → remainSP over daysElapsed
+  const actualPoints = [];
+  for (let i = 0; i <= daysElapsed - 1; i++) {
+    actualPoints.push(totalSP - (doneSP * i / Math.max(1, daysElapsed - 1)));
+  }
+  actualPoints.push(remainSP); // current actual
+
+  const W = canvas.offsetWidth || 700;
+  canvas.width = W;
+  const H = 280;
+  const PAD = { top: 30, right: 20, bottom: 55, left: 50 };
+  const chartW = W - PAD.left - PAD.right;
+  const chartH = H - PAD.top - PAD.bottom;
+  const yMax = totalSP;
+  const xSteps = daysTotal;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = '#E2E8F0'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const y = PAD.top + chartH - (i / 5) * chartH;
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + chartW, y); ctx.stroke();
+    ctx.fillStyle = '#94A3B8'; ctx.font = '11px Inter,sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(Math.round((i / 5) * yMax), PAD.left - 6, y + 4);
+  }
+  // X axis labels
+  const labelStep = Math.max(1, Math.floor(xSteps / 8));
+  for (let i = 0; i <= xSteps; i += labelStep) {
+    const x = PAD.left + (i / xSteps) * chartW;
+    const d = new Date(startDate.getTime() + i * 86400000);
+    ctx.fillStyle = '#94A3B8'; ctx.font = '10px Inter,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), x, PAD.top + chartH + 18);
+  }
+
+  // Ideal burndown line (grey dashed)
+  ctx.beginPath(); ctx.strokeStyle = '#CBD5E1'; ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  idealPoints.forEach((sp, i) => {
+    const x = PAD.left + (i / xSteps) * chartW;
+    const y = PAD.top + chartH - (sp / yMax) * chartH;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // Actual burndown line (blue solid)
+  ctx.beginPath(); ctx.strokeStyle = '#2563EB'; ctx.lineWidth = 2.5;
+  actualPoints.forEach((sp, i) => {
+    const x = PAD.left + (i / xSteps) * chartW;
+    const y = PAD.top + chartH - (Math.max(0, sp) / yMax) * chartH;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Today vertical line
+  if (daysElapsed > 0 && daysElapsed <= daysTotal) {
+    const todayX = PAD.left + ((daysElapsed - 1) / xSteps) * chartW;
+    ctx.strokeStyle = '#EF4444'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(todayX, PAD.top); ctx.lineTo(todayX, PAD.top + chartH); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#EF4444'; ctx.font = '600 9px Inter,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('TODAY', todayX, PAD.top - 6);
+  }
+
+  // Dot at current actual
+  const lastX = PAD.left + ((actualPoints.length - 1) / xSteps) * chartW;
+  const lastY = PAD.top + chartH - (Math.max(0, remainSP) / yMax) * chartH;
+  ctx.beginPath(); ctx.arc(lastX, lastY, 5, 0, Math.PI * 2);
+  ctx.fillStyle = '#2563EB'; ctx.fill();
+  ctx.fillStyle = '#1D4ED8'; ctx.font = 'bold 11px Inter,sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText(`${remainSP} SP`, lastX + 8, lastY + 4);
+}
+
+// ─── VELOCITY TAB ──────────────────────────────────────────────────────────────
 
 function _renderVelocityTab() {
   const completed = _sprints.filter(s => s.status !== 'planning');

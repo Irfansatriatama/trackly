@@ -184,21 +184,32 @@
 }
 
 .board-task-card:hover {
-  box-shadow: var(--shadow-card), 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: var(--shadow-card), 0 2px 8px rgba(0, 0, 0, 0.06);
   transform: translateY(-1px);
 }
 
 .board-task-card.is-dragging {
   opacity: 0.5;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   transform: rotate(1.5deg) scale(1.01);
 }
 
 /* Priority border colors */
-.board-task-card--critical { border-left-color: #DC2626; }
-.board-task-card--high     { border-left-color: #D97706; }
-.board-task-card--medium   { border-left-color: #0891B2; }
-.board-task-card--low      { border-left-color: #64748B; }
+.board-task-card--critical {
+  border-left-color: #DC2626;
+}
+
+.board-task-card--high {
+  border-left-color: #D97706;
+}
+
+.board-task-card--medium {
+  border-left-color: #0891B2;
+}
+
+.board-task-card--low {
+  border-left-color: #64748B;
+}
 
 .board-task-card__top {
   display: flex;
@@ -394,4 +405,31 @@
 
 .btn.is-active-toggle:hover {
   background: var(--color-primary-dark);
+}
+
+/* ── WIP Limit indicator ────────────────────────────────────────────────────── */
+
+.board-col-wip {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.board-col-wip--over {
+  background: #FEE2E2;
+  border-color: #FCA5A5;
+  color: #DC2626;
+}
+
+.board-column--wip-over>.board-column__header {
+  background: #FFF5F5;
+}
+
+.board-column--wip-over {
+  border-color: #FCA5A5;
 }

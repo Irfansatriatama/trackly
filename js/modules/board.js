@@ -226,15 +226,22 @@ function _buildColumnHTML(col, filteredTasks) {
   const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
   colTasks.sort((a, b) => (priorityOrder[a.priority] ?? 99) - (priorityOrder[b.priority] ?? 99));
 
+  const wipLimit = col.wip_limit || 0;
+  const isOverWip = wipLimit > 0 && colTasks.length > wipLimit;
+  const wipIndicator = wipLimit > 0
+    ? `<span class="board-col-wip ${isOverWip ? 'board-col-wip--over' : ''}" title="WIP Limit: ${wipLimit}">${colTasks.length}/${wipLimit}</span>`
+    : '';
+
   return `
-    <div class="board-column" data-col-status="${sanitize(col.status)}" data-col-id="${sanitize(col.id)}">
+    <div class="board-column${isOverWip ? ' board-column--wip-over' : ''}" data-col-status="${sanitize(col.status)}" data-col-id="${sanitize(col.id)}">
       <div class="board-column__header">
         <div class="board-column__header-left">
           <span class="board-column__label">${sanitize(col.label)}</span>
           <span class="board-column__count">${colTasks.length}</span>
+          ${wipIndicator}
         </div>
         ${_isReadOnly ? '' : `<div class="board-column__header-actions">
-          <button class="btn btn--ghost btn--xs btn-col-rename" data-col-id="${sanitize(col.id)}" title="Rename column"><i data-lucide="pencil" aria-hidden="true"></i></button>
+          <button class="btn btn--ghost btn--xs btn-col-rename" data-col-id="${sanitize(col.id)}" title="Edit column"><i data-lucide="pencil" aria-hidden="true"></i></button>
           <button class="btn btn--ghost btn--xs btn-col-delete" data-col-id="${sanitize(col.id)}" title="Delete column"><i data-lucide="trash-2" aria-hidden="true"></i></button>
           <button class="btn btn--ghost btn--xs btn-col-add-task" data-col-status="${sanitize(col.status)}" title="Quick add task"><i data-lucide="plus" aria-hidden="true"></i></button>
         </div>`}
@@ -622,17 +629,22 @@ function _openRenameColumnModal(colId) {
   if (!col) return;
 
   openModal({
-    title: 'Rename Column',
+    title: 'Edit Column',
     size: 'sm',
     body: `
       <div class="form-group">
         <label class="form-label" for="renameColLabel">Column Name <span class="text-danger">*</span></label>
         <input type="text" class="form-input" id="renameColLabel" value="${sanitize(col.label)}" maxlength="40" />
       </div>
+      <div class="form-group">
+        <label class="form-label" for="renameColWip">WIP Limit <span style="font-weight:400;color:var(--color-text-muted);">(0 = no limit)</span></label>
+        <input type="number" class="form-input" id="renameColWip" value="${col.wip_limit || 0}" min="0" max="99" style="max-width:120px;" />
+        <p class="form-hint" style="margin-top:4px;">Columns exceeding the WIP limit will show a red warning indicator.</p>
+      </div>
     `,
     footer: `
       <button class="btn btn--secondary" id="modalCancel">Cancel</button>
-      <button class="btn btn--primary" id="modalSave">Rename</button>
+      <button class="btn btn--primary" id="modalSave">Save</button>
     `,
   });
 
@@ -641,11 +653,13 @@ function _openRenameColumnModal(colId) {
   document.getElementById('modalSave')?.addEventListener('click', () => {
     const label = document.getElementById('renameColLabel')?.value.trim();
     if (!label) { showToast('Column name is required', 'warning'); return; }
+    const wipInput = parseInt(document.getElementById('renameColWip')?.value, 10);
     col.label = label;
+    col.wip_limit = isNaN(wipInput) || wipInput < 0 ? 0 : wipInput;
     _saveColumns();
     closeModal();
     _renderColumns();
-    showToast(`Column renamed to "${label}"`, 'success');
+    showToast(`Column "${label}" updated`, 'success');
   });
 }
 

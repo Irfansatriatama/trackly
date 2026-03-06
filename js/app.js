@@ -321,9 +321,16 @@ function registerAllRoutes() {
     await renderGuide({});
   });
 
-  // Project Feature Guide — Backlog / Board / Sprint / Gantt
+  // Project Feature Guide — Backlog / Board / Sprint / Gantt (Admin & PM only)
   registerRoute('/project-guide', async () => {
     if (!requireAuth()) return;
+    const s = getSession();
+    if (!s || !['admin', 'pm'].includes(s.role)) {
+      const { showToast: t } = await import('./components/toast.js');
+      t('Access denied. Project Guide is for Admin and PM only.', 'error');
+      navigate('/dashboard');
+      return;
+    }
     setContent('<div class="page-container page-enter"><div class="app-loading"><div class="app-loading__spinner"></div><p class="app-loading__text">Loading guide...</p></div></div>');
     const { render: renderProjectGuide } = await import('./modules/project-guide.js');
     await renderProjectGuide({});

@@ -1015,3 +1015,190 @@
     color: var(--color-text-muted);
     line-height: var(--leading-relaxed);
 }
+
+/* ────────────────────────────────────────────
+   ROLE NOTICE
+   ──────────────────────────────────────────── */
+.pguide-role-notice {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-primary-alpha);
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    color: var(--color-text);
+}
+
+.pguide-role-notice svg {
+    width: 18px;
+    height: 18px;
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+/* ────────────────────────────────────────────
+   ROLE GRID (Admin/PM vs Developer cards)
+   ──────────────────────────────────────────── */
+.pguide-role-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-4);
+}
+
+.pguide-role-card {
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--color-border);
+    overflow: hidden;
+}
+
+.pguide-role-card__head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: white;
+}
+
+.pguide-role-card__head svg {
+    width: 16px;
+    height: 16px;
+}
+
+.pguide-role-card--pm .pguide-role-card__head {
+    background: linear-gradient(135deg, #7C3AED, #6D28D9);
+}
+
+.pguide-role-card--dev .pguide-role-card__head {
+    background: linear-gradient(135deg, #0369A1, #0284C7);
+}
+
+.pguide-role-card ul {
+    list-style: none;
+    padding: var(--space-4);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.pguide-role-card li {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    padding-left: var(--space-4);
+    position: relative;
+    line-height: var(--leading-relaxed);
+}
+
+.pguide-role-card li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* ────────────────────────────────────────────
+   COMPARE TABLE
+   ──────────────────────────────────────────── */
+.pguide-compare {
+    margin-bottom: 0;
+}
+
+.pguide-compare__title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.pguide-compare__title svg {
+    width: 18px;
+    height: 18px;
+    color: var(--color-primary);
+}
+
+.pguide-compare-table-wrap {
+    overflow-x: auto;
+}
+
+.pguide-compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+}
+
+.pguide-compare-table th {
+    background: var(--color-surface);
+    padding: var(--space-3) var(--space-4);
+    text-align: left;
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    border-bottom: 2px solid var(--color-border);
+    white-space: nowrap;
+}
+
+.pguide-compare-table th:first-child {
+    width: 130px;
+}
+
+.pguide-compare-table th svg {
+    display: inline;
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+    margin-right: 4px;
+    color: var(--color-primary);
+}
+
+.pguide-compare-table td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    line-height: var(--leading-relaxed);
+    vertical-align: top;
+}
+
+.pguide-compare-table td:first-child {
+    color: var(--color-text);
+}
+
+.pguide-compare-table tr:last-child td {
+    border-bottom: none;
+}
+
+.pguide-compare-table tr:nth-child(even) td {
+    background: var(--color-surface);
+}
+
+/* ────────────────────────────────────────────
+   FLOW STEP: small subtitle
+   ──────────────────────────────────────────── */
+.pguide-flow-step small {
+    font-size: 10px;
+    color: var(--color-text-muted);
+}
+
+/* ────────────────────────────────────────────
+   WHO BADGE (step heading annotation)
+   ──────────────────────────────────────────── */
+.pguide-who {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: var(--weight-normal);
+    color: var(--color-text-muted);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    padding: 1px 8px;
+    margin-left: var(--space-2);
+    vertical-align: middle;
+}

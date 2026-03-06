@@ -30,7 +30,7 @@
 }
 
 .sprint-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .sprint-card__header {
@@ -118,9 +118,17 @@
   color: var(--color-text);
 }
 
-.sprint-stat__value--success { color: var(--color-success); }
-.sprint-stat__value--warning { color: var(--color-warning); }
-.sprint-stat__value--danger  { color: var(--color-danger); }
+.sprint-stat__value--success {
+  color: var(--color-success);
+}
+
+.sprint-stat__value--warning {
+  color: var(--color-warning);
+}
+
+.sprint-stat__value--danger {
+  color: var(--color-danger);
+}
 
 /* ── Progress bar (sprint) ──────────────────────────────────────────────────── */
 
@@ -341,10 +349,21 @@
   cursor: grabbing;
 }
 
-.plan-task-card[data-priority="critical"] { border-left-color: var(--color-danger); }
-.plan-task-card[data-priority="high"]     { border-left-color: var(--color-warning); }
-.plan-task-card[data-priority="medium"]   { border-left-color: var(--color-info); }
-.plan-task-card[data-priority="low"]      { border-left-color: #94A3B8; }
+.plan-task-card[data-priority="critical"] {
+  border-left-color: var(--color-danger);
+}
+
+.plan-task-card[data-priority="high"] {
+  border-left-color: var(--color-warning);
+}
+
+.plan-task-card[data-priority="medium"] {
+  border-left-color: var(--color-info);
+}
+
+.plan-task-card[data-priority="low"] {
+  border-left-color: #94A3B8;
+}
 
 .plan-task-card__title {
   font-size: var(--text-sm);
@@ -577,4 +596,41 @@
 .sprint-board-tab-content {
   flex: 1;
   overflow: hidden;
+}
+
+/* ── Burndown chart stats row ───────────────────────────────────────────────── */
+
+.burndown-stats-row {
+  display: flex;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.burndown-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.burndown-stat__label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.burndown-stat__value {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.burndown-stat__value--success {
+  color: var(--color-success);
+}
+
+.burndown-stat__value--warning {
+  color: var(--color-warning);
 }

@@ -31,7 +31,7 @@ const NAV_ITEMS = [
     section: 'System',
     items: [
       { route: '/guide', icon: 'book-open', label: 'User Guide', tooltip: 'In-app user guide and feature documentation' },
-      { route: '/project-guide', icon: 'map', label: 'Project Guide', tooltip: 'How to use Backlog, Board, Sprint, and Gantt Chart' },
+      { route: '/project-guide', icon: 'map', label: 'Project Guide', tooltip: 'How to use Backlog, Board, Sprint, and Gantt Chart', adminPmOnly: true },
       { route: '/settings', icon: 'settings', label: 'Settings', tooltip: 'Configure system preferences and manage data' },
     ],
   },
