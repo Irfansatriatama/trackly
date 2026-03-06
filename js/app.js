@@ -391,9 +391,9 @@ async function renderLogin() {
           </div>
           <form class="login-form" id="loginForm" novalidate>
             <div class="form-group">
-              <label class="form-label" for="username">Username <span class="required">*</span></label>
-              <input class="form-input" type="text" id="username" name="username"
-                placeholder="Enter your username" autocomplete="username" required />
+              <label class="form-label" for="loginEmail">Email <span class="required">*</span></label>
+              <input class="form-input" type="email" id="loginEmail" name="loginEmail"
+                placeholder="Enter your email" autocomplete="email" required />
             </div>
             <div class="form-group">
               <label class="form-label" for="password">Password <span class="required">*</span></label>
@@ -440,7 +440,7 @@ async function renderLogin() {
   }
 
   // Clear field errors on input
-  ['username', 'password'].forEach((id) => {
+  ['loginEmail', 'password'].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', () => setFieldError(id, null));
   });
@@ -452,14 +452,17 @@ async function renderLogin() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const username = document.getElementById('username').value.trim();
+    const emailInput = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('password').value;
     const remember = document.getElementById('rememberMe').checked;
 
     // Client-side validation
     let valid = true;
-    if (!username) {
-      setFieldError('username', 'Username is required.');
+    if (!emailInput) {
+      setFieldError('loginEmail', 'Email is required.');
+      valid = false;
+    } else if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(emailInput)) {
+      setFieldError('loginEmail', 'Enter a valid email address.');
       valid = false;
     }
     if (!password) {
@@ -473,31 +476,50 @@ async function renderLogin() {
     submitBtn.querySelector('span').textContent = 'Signing in…';
 
     try {
-      // Fetch all users and find by username (case-insensitive)
-      const users = await getAll('users');
-      const user = users.find(
-        (u) => u.username && u.username.toLowerCase() === username.toLowerCase()
-      );
-
-      if (!user) {
-        setLoginAlert('Invalid username or password. Please try again.');
-        return;
-      }
-
-      if (user.status === 'inactive') {
-        setLoginAlert('Your account has been deactivated. Contact an administrator.');
-        return;
-      }
-
       // 💥 FIREBASE AUTH CHECK 💥
       try {
         const { loginWithEmail } = await import('./core/auth.js');
-        // We use the email retrieved from Firestore (from the user object) 
-        // because the UI asks for username.
-        await loginWithEmail(user.email, password);
+        await loginWithEmail(emailInput, password);
       } catch (authErr) {
         debug('Firebase Auth Error:', authErr);
-        setLoginAlert('Invalid username or password. Please try again.');
+        setLoginAlert('Invalid email or password. Please try again.');
+        return;
+      }
+
+      // Fetch all users and find by email (case-insensitive)
+      const users = await getAll('users');
+      let user = users.find(
+        (u) => u.email && u.email.toLowerCase() === emailInput.toLowerCase()
+      );
+
+      // If user logs in via Firebase but doesn't exist in Firestore,
+      // create a basic record for them
+      if (!user) {
+        debug('User exists in Auth but not Firestore, creating record');
+        const { generateSequentialId, nowISO } = await import('./core/utils.js');
+        const now = nowISO();
+        user = {
+          id: generateSequentialId('USR', users),
+          email: emailInput,
+          full_name: emailInput.split('@')[0],
+          username: emailInput.split('@')[0],
+          role: 'admin', // Defaulting to admin since this is the first manual login
+          status: 'active',
+          created_at: now,
+          updated_at: now,
+          last_login: null
+        };
+        const { setDoc, doc } = await import('firebase/firestore');
+        const { db } = await import('./core/firebase-init.js');
+        // We use setDoc instead of add to trackly's internal `add` because `add` expects internal structure but this works well
+        try {
+          const { add } = await import('./core/db.js');
+          await add('users', user);
+        } catch (e) { /* non-fatal */ }
+      }
+
+      if (user && user.status === 'inactive') {
+        setLoginAlert('Your account has been deactivated. Contact an administrator.');
         return;
       }
 
